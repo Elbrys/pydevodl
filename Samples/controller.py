@@ -18,7 +18,8 @@ def enum(*args):
     enums = dict(zip(args, range(len(args))))
     return type('Enum', (), enums)
 
-CTRL_STATUS = enum('OK', 'CONN_ERROR', 'DATA_NOT_FOUND', 'BAD_REQUEST', 'UNAUTHORIZED_ACCESS', 'N_A')
+CTRL_STATUS = enum('OK', 'CONN_ERROR', 'DATA_NOT_FOUND', 'BAD_REQUEST',
+                   'UNAUTHORIZED_ACCESS', 'INTERNAL_SRV_ERROR', 'N_A')
 NODE_STATUS = enum('CONNECTED', 'DISONNECTED', 'NOT_FOUND', 'CONFIGURED', 'N_A')
 
 #================================
@@ -31,6 +32,7 @@ class Status(object):
                           CTRL_STATUS.DATA_NOT_FOUND,
                           CTRL_STATUS.BAD_REQUEST,
                           CTRL_STATUS.UNAUTHORIZED_ACCESS,
+                          CTRL_STATUS.INTERNAL_SRV_ERROR,
                           CTRL_STATUS.N_A,
                           NODE_STATUS.CONNECTED,
                           NODE_STATUS.DISONNECTED,
@@ -52,6 +54,8 @@ class Status(object):
             return "bad or invalid data in request"
         if( self.status == CTRL_STATUS.UNAUTHORIZED_ACCESS):
             return "server unauthorized access"
+        if( self.status == CTRL_STATUS.INTERNAL_SRV_ERROR):
+            return "Internal Server Error"        
         if( self.status == CTRL_STATUS.N_A):
             return "unknown error"        
         if( self.status == NODE_STATUS.CONNECTED):
@@ -75,19 +79,19 @@ class Controller(object):
         self.adminName = adminName
         self.adminPassword = adminPassword
 
-    def ctrl_get_request(self, url, uname, passwd):
+    def ctrl_get_request(self, url):
         resp = None
         status = None            
 
         try:
-            resp = requests.get(url, auth=HTTPBasicAuth(uname, passwd))
+            resp = requests.get(url, auth=HTTPBasicAuth(self.adminName, self.adminPassword))
             status = CTRL_STATUS.OK
         except ConnectionError:
             status = CTRL_STATUS.CONN_ERROR
         
         return (status, resp)
     
-    def ctrl_post_request(self, url, data, headers, uname, passwd):
+    def ctrl_post_request(self, url, data, headers):
         resp = None
         status = None            
 
@@ -99,7 +103,19 @@ class Controller(object):
             status = CTRL_STATUS.CONN_ERROR
         
         return (status, resp)
+    
+    def ctrl_delete_request(self, url):
+        resp = None
+        status = None            
 
+        try:
+            resp = requests.delete(url, auth=HTTPBasicAuth(self.adminName, self.adminPassword))
+            status = CTRL_STATUS.OK
+        except ConnectionError:
+            status = CTRL_STATUS.CONN_ERROR
+        
+        return (status, resp)
+    
     def check_node_config_status(self, nodeId):
         templateUrl = "http://{}:{}/restconf/config/opendaylight-inventory:nodes"
         url = templateUrl.format(self.ipAddr, self.portNum)
@@ -217,12 +233,12 @@ class Controller(object):
     def get_all_supported_schemas(self, nodeName):
         templateUrl = "http://{}:{}/restconf/operational/opendaylight-inventory:nodes/node/{}/yang-ext:mount/ietf-netconf-monitoring:netconf-state/schemas"
         url = templateUrl.format(self.ipAddr, self.portNum, nodeName)
-        slist = []
+        slist = None
         
         result = self.ctrl_get_request(url, self.adminName, self.adminPassword)
         status = result[0]
         if (status == CTRL_STATUS.CONN_ERROR):
-            return status
+            return (status, slist)
        
         response = result[1]
         if (response.status_code == 401):
@@ -238,10 +254,8 @@ class Controller(object):
         
         return (status, slist)
 
-
-
 #================================
-# TBD
+# KEEP
 #================================
     def get_schema(self, nodeName, schemaId, schemaVersion):
         templateUrl = "http://{}:{}/restconf/operations/opendaylight-inventory:nodes/node/{}/yang-ext:mount/ietf-netconf-monitoring:get-schema"
@@ -261,7 +275,6 @@ class Controller(object):
             elif (response.status_code == 200):
 #                print response.headers.get('content-type')
                 if(response.headers.get('content-type') == "application/xml"):
-#                    print "XML content type"
                     doc = xmltodict.parse(response.content)
                     try:
                         tmp = doc['get-schema']['output']['data']
@@ -276,8 +289,133 @@ class Controller(object):
         
         return (status, schema)
 
+#================================
+# KEEP
+#================================
+    def add_netconf_node_to_config(self, node):
+        templateUrl = "http://{}:{}/restconf/config/opendaylight-inventory:nodes/node/controller-config/yang-ext:mount/config:modules"        
+        xmlPayloadTemplate = '''
+        <module xmlns="urn:opendaylight:params:xml:ns:yang:controller:config">
+          <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:md:sal:connector:netconf">prefix:sal-netconf-connector</type>
+          <name>{}</name>
+          <address xmlns="urn:opendaylight:params:xml:ns:yang:controller:md:sal:connector:netconf">{}</address>
+          <port xmlns="urn:opendaylight:params:xml:ns:yang:controller:md:sal:connector:netconf">{}</port>
+          <username xmlns="urn:opendaylight:params:xml:ns:yang:controller:md:sal:connector:netconf">{}</username>
+          <password xmlns="urn:opendaylight:params:xml:ns:yang:controller:md:sal:connector:netconf">{}</password>
+          <tcp-only xmlns="urn:opendaylight:params:xml:ns:yang:controller:md:sal:connector:netconf">{}</tcp-only>
+          <event-executor xmlns="urn:opendaylight:params:xml:ns:yang:controller:md:sal:connector:netconf">
+            <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:netty">prefix:netty-event-executor</type>
+            <name>global-event-executor</name>
+          </event-executor>
+          <binding-registry xmlns="urn:opendaylight:params:xml:ns:yang:controller:md:sal:connector:netconf">
+            <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:md:sal:binding">prefix:binding-broker-osgi-registry</type>
+            <name>binding-osgi-broker</name>
+          </binding-registry>
+          <dom-registry xmlns="urn:opendaylight:params:xml:ns:yang:controller:md:sal:connector:netconf">
+            <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:md:sal:dom">prefix:dom-broker-osgi-registry</type>
+            <name>dom-broker</name>
+          </dom-registry>
+          <client-dispatcher xmlns="urn:opendaylight:params:xml:ns:yang:controller:md:sal:connector:netconf">
+            <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:config:netconf">prefix:netconf-client-dispatcher</type>
+            <name>global-netconf-dispatcher</name>
+          </client-dispatcher>
+          <processing-executor xmlns="urn:opendaylight:params:xml:ns:yang:controller:md:sal:connector:netconf">
+            <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:threadpool">prefix:threadpool</type>
+            <name>global-netconf-processing-executor</name>
+          </processing-executor>
+        </module>
+        '''
+        payload = xmlPayloadTemplate.format(node.devName, node.ipAddr, node.portNum, node.adminName, node.adminPassword, node.tcpOnly)
+#        print payload
+        url = templateUrl.format(self.ipAddr, self.portNum)
+#        print url
+        headers = {'content-type': 'application/xml', 'accept': 'application/xml'}
+        result = self.ctrl_post_request(url, payload, headers)
+        status = result[0]
+#        print status
+        if (status != CTRL_STATUS.CONN_ERROR):
+            response = result[1]
+#            print response
+            if (response.status_code == 401):
+                status = CTRL_STATUS.UNAUTHORIZED_ACCESS        
+            elif (response.status_code == 400):
+                status = CTRL_STATUS.BAD_REQUEST      
+            elif (response.status_code == 200 or
+                  response.status_code == 204):
+                status = CTRL_STATUS.OK
+        
+        return (status, None)
 
+#================================
+# TBD
+#================================
+    def delete_netconf_node_from_config(self, netconfdev):
+        templateUrl = "http://{}:{}/restconf/config/opendaylight-inventory:nodes/node/controller-config/yang-ext:mount/config:modules/module/odl-sal-netconf-connector-cfg:sal-netconf-connector/{}"
+        url = templateUrl.format(self.ipAddr, self.portNum, netconfdev.devName)
 
+        print url
+        result = self.ctrl_delete_request(url)
+        status = result[0]
+#        print status
+        if (status != CTRL_STATUS.CONN_ERROR):
+            response = result[1]
+#            print response.status_code
+            if (response.status_code == 200 or response.status_code == 204):
+                status = CTRL_STATUS.OK                        
+            elif (response.status_code == 401):
+                status = CTRL_STATUS.UNAUTHORIZED_ACCESS        
+            elif (response.status_code == 400):
+                status = CTRL_STATUS.BAD_REQUEST      
+            elif (response.status_code == 500):
+                status = CTRL_STATUS.INTERNAL_SRV_ERROR
+        
+        return (status, None)
+        
+#==============================================================================
+# TBD: 
+# NOTE: It is unclear what NETCONF node attributes are allowed for dynamic
+#       configuration changes. For now just follow the example that is
+#       published on ODL wiki:
+#       https://wiki.opendaylight.org/view/OpenDaylight_Controller:Config:Examples:Netconf
+#==============================================================================
+    def modify_netconf_node_in_config(self, netconfdev):
+        templateUrl = "http://{}:{}/restconf/config/opendaylight-inventory:nodes/node/controller-config/yang-ext:mount/config:modules"      
+        url = templateUrl.format(self.ipAddr, self.portNum)
+        xmlPayloadTemplate = '''
+        <module xmlns="urn:opendaylight:params:xml:ns:yang:controller:config">
+          <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:md:sal:connector:netconf">prefix:sal-netconf-connector</type>
+          <name>{}</name>
+          <username xmlns="urn:opendaylight:params:xml:ns:yang:controller:md:sal:connector:netconf">{}</username>
+          <password xmlns="urn:opendaylight:params:xml:ns:yang:controller:md:sal:connector:netconf">{}</password>
+        </module>
+        '''
+        payload = xmlPayloadTemplate.format(netconfdev.devName, netconfdev.adminName, netconfdev.adminPassword)
+        headers = {'content-type': 'application/xml', 'accept': 'application/xml'}
+        result = self.ctrl_post_request(url, payload, headers)                
+        status = result[0]
+        if (status != CTRL_STATUS.CONN_ERROR):
+            response = result[1]
+            if (response.status_code == 200 or response.status_code == 204):
+                status = CTRL_STATUS.OK                        
+            elif (response.status_code == 401):
+                status = CTRL_STATUS.UNAUTHORIZED_ACCESS        
+            elif (response.status_code == 400):
+                status = CTRL_STATUS.BAD_REQUEST      
+            elif (response.status_code == 500):
+                status = CTRL_STATUS.INTERNAL_SRV_ERROR
+            else:
+                status = CTRL_STATUS.N_A
+        
+        return (status, None)
+        
+        
+        
+        
+    
+    
+    
+    
+    
 
 def get_nodes_operational_datastore(ipAddr, portNum, uname, passwd, nodeId):
 #    url="http://" + ipAddr + ":" + portNum + "/restconf/operational/opendaylight-inventory:nodes"

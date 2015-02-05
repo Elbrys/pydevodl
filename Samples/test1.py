@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 from controller import *
+from netconfdev import *
 '''
 from utils import Status
 from utils import CTRL_STATUS
@@ -22,7 +23,7 @@ if __name__ == "__main__":
     
     ctrl = Controller(bvcIpAddr, bvcPortNum, bvcUname, bvcPswd)
     
-    
+    '''
     print "\n"
     print ("1) <<< Get all configured nodes >>>")
     result = ctrl.get_all_nodes_in_config()
@@ -34,7 +35,7 @@ if __name__ == "__main__":
             print "   '{}'".format(item)   
     else:
         print ("Error: %s" % Status(status).string())
-    
+    '''
     
     '''
     print "\n"
@@ -115,7 +116,7 @@ if __name__ == "__main__":
     '''
 
     '''
-    print ("8 >>> get schema from the 'vRouter' node>>>")
+    print ("8) >>> get schema from the 'vRouter' node>>>")
     result = ctrl.get_schema("vRouter", "vyatta-system-syslog", "2014-10-28")
     status = result[0]
     if (status == CTRL_STATUS.OK):
@@ -124,23 +125,43 @@ if __name__ == "__main__":
     else:
         print ("Error: %s" % Status(status).string())
     '''
-
-    '''
-    curl -u admin:admin -v -X DELETE http://172.22.18.245:8080/restconf/config/opendaylight-inventory:nodes/node/controller-config/yang-ext:mount/config:modules/module/odl-sal-netconf-connector-cfg:sal-netconf-connector/vRouter
-    '''
-
-
-
-
-
-
-
-
-
-
-
-
-
+    
+    print ("9) >>> add new NETCONF device to the Controller's configuration>>>")
+    devName = "vRouter"
+    devIpAddr = "172.22.17.107"
+    devPortNum = 830
+    devUname = "vyatta"
+    devPswd = "vyatta"
+    tcpOnly="false"
+    netconfdev = NetconfDevice(devName, devIpAddr, devPortNum, tcpOnly, devUname, devPswd)
+    result = ctrl.add_netconf_node_to_config(netconfdev)
+    status = result[0]
+    if (status == CTRL_STATUS.OK):
+        print "NETCONF device '{}' was successfully mounted on the Controller".format(devName)
+    else:
+        print ("Error: %s" % Status(status).string())
+    
+    print ("10) >>> modify configuration of a NETCONF device that does already exist on the Controller>>>")
+    netconfdev.devName = "vRouter"
+    netconfdev.adminName = "vyatta"
+    netconfdev.adminPassword = "vyatta"
+    result = ctrl.modify_netconf_node_in_config(netconfdev)
+    status = result[0]
+    if (status == CTRL_STATUS.OK):
+        print "Configuration of NETCONF device '{}' was successfully updated on the Controller".format(devName)
+    else:
+        print ("Error: %s" % Status(status).string())
+    
+    
+    print ("11) >>> delete NETCONF device from the Controller's configuration>>>")
+    result = ctrl.delete_netconf_node_from_config(netconfdev)
+    status = result[0]
+    if (status == CTRL_STATUS.OK):
+        print "Netconf device '{}' was successfully removed from the Controller".format(devName)
+    else:
+        print ("Error: %s" % Status(status).string())
+    
+    
 
 
 
