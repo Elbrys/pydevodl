@@ -1,0 +1,130 @@
+== Info: Hostname was NOT found in DNS cache
+== Info:   Trying 172.22.18.245...
+== Info: Connected to 172.22.18.245 (172.22.18.245) port 8080 (#0)
+== Info: Server auth using Basic with user 'admin'
+=> Send header, 345 bytes (0x159)
+0000: POST /restconf/operations/opendaylight-inventory:nodes/node/cont
+0040: roller-config/yang-ext:mount/ietf-netconf-monitoring:get-schema 
+0080: HTTP/1.1
+008a: Authorization: Basic YWRtaW46YWRtaW4=
+00b1: User-Agent: curl/7.35.0
+00ca: Host: 172.22.18.245:8080
+00e4: Content-Type: application/yang.data+json
+010e: Accept: text/json, text/html, application/xml, */*
+0142: Content-Length: 125
+0157: 
+=> Send data, 125 bytes (0x7d)
+0000: .{.  "input" :.  {.     "identifier" : "opendaylight-flow-types"
+0040: ,.     "version" : "2013-10-26",.     "format" : "yang".  }.}
+== Info: upload completely sent off: 125 out of 125 bytes
+<= Recv header, 17 bytes (0x11)
+0000: HTTP/1.1 200 OK
+== Info: Server Apache-Coyote/1.1 is not blacklisted
+<= Recv header, 27 bytes (0x1b)
+0000: Server: Apache-Coyote/1.1
+<= Recv header, 31 bytes (0x1f)
+0000: Content-Type: application/xml
+<= Recv header, 28 bytes (0x1c)
+0000: Transfer-Encoding: chunked
+<= Recv header, 37 bytes (0x25)
+0000: Date: Thu, 05 Feb 2015 16:44:35 GMT
+<= Recv header, 2 bytes (0x2)
+0000: 
+<= Recv data, 5929 bytes (0x1729)
+0000: 171c
+0006: <?xml version="1.0" encoding="UTF-8" standalone="no"?><get-schem
+0046: a xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring"><o
+0086: utput><data>module opendaylight-flow-types {.    namespace "urn:
+00c6: opendaylight:flow:types";.    prefix flow;..    import ietf-yang
+0106: -types {prefix yang; revision-date "2010-09-24";}    .    import
+0146:  opendaylight-match-types {prefix match; revision-date "2013-10-
+0186: 26";}.    import opendaylight-action-types {prefix action;}.    
+01c6: import opendaylight-meter-types {prefix meter; revision-date "20
+0206: 13-09-18";}..    revision "2013-10-26" {.        description "In
+0246: itial revision of flow service";.    }.    .    typedef flow-ref
+0286:  {.        type instance-identifier;.    }.    .    typedef flow
+02c6: -cookie {.        description "openflow specific type - flow coo
+0306: kie / flow cookie mask";.        type uint64;.    }.    .    typ
+0346: edef output-port-values {.        type enumeration {.           
+0386:  enum MAX {.                value 1;.            }.            e
+03c6: num IN_PORT {.                value 2;.            }.           
+0406:  enum TABLE {.                value 3;.            }.           
+0446:  enum NORMAL {.                value 4;.            }.          
+0486:   enum FLOOD {.                value 5;.            }.          
+04c6:   enum ALL {.                value 6;.            }.            
+0506: enum CONTROLLER {.                value 7;.            }.       
+0546:      enum LOCAL {.                value 8;.            }.       
+0586:      enum ANY {.                value 9;.            }..     enu
+05c6: m NONE {.                value 10;.            }..        }.    
+0606: }.    grouping instruction-list {.        list instruction {.   
+0646:          key "order";.            uses action:ordered;.         
+0686:    uses instruction;.        }.    }..     grouping instruction 
+06c6: {.         choice instruction {.            case go-to-table-cas
+0706: e {.                container go-to-table {.                 lea
+0746: f table_id {.                     type uint8;.                 }
+0786: .             }.            }.             .            case wri
+07c6: te-metadata-case {.                container write-metadata {.  
+0806:                leaf metadata {.                     type uint64;
+0846: .                 }.                 .                 leaf meta
+0886: data-mask {.                     type uint64;.                 }
+08c6: .             }.            }.             .            case wri
+0906: te-actions-case {.                container write-actions {.    
+0946:              uses action:action-list;.             }.           
+0986:  }.             .            case apply-actions-case {.         
+09c6:        container apply-actions {.                 uses action:ac
+0a06: tion-list;.             }.            }.             .          
+0a46:   case clear-actions-case {.                container clear-acti
+0a86: ons {.                 uses action:action-list;.             }. 
+0ac6:            }.             .            case meter-case {.       
+0b06:          container meter {.                     leaf meter-id {.
+0b46:                         type meter:meter-id;.                   
+0b86:   } .                 }.             }.         }.    }.    .   
+0bc6:  typedef flow-mod-flags {.        type bits {.            bit CH
+0c06: ECK_OVERLAP;.            bit RESET_COUNTS;.            bit NO_PK
+0c46: T_COUNTS;.            bit NO_BYT_COUNTS;.            bit SEND_FL
+0c86: OW_REM;.        }.    }..    typedef removed_reason_flags {.    
+0cc6:     type bits {.            bit IDLE_TIMEOUT;.            bit HA
+0d06: RD_TIMEOUT;.            bit DELETE;.            bit GROUP_DELETE
+0d46: ;.        }.    }.    .    grouping generic_flow_attributes {.  
+0d86:       leaf priority {.            type uint16;.        }.       
+0dc6:  .        leaf idle-timeout {.            type uint16;.        }
+0e06: .        .        leaf hard-timeout {.            type uint16;. 
+0e46:        }.        .        leaf cookie {.            type flow-co
+0e86: okie;.        }.        .        leaf table_id {.            typ
+0ec6: e uint8;.        }.    }.    .    grouping flow {.        contai
+0f06: ner match {.            uses match:match;.        }.        .   
+0f46:      container instructions {.            uses instruction-list;
+0f86: .        }          .         .        uses generic_flow_attribu
+0fc6: tes;.        .        leaf container-name {.            type str
+1006: ing; .        }.        .        leaf cookie_mask {.            
+1046: type flow-cookie;.        }.        .        leaf buffer_id {.  
+1086:           type uint32;.        }.        .        leaf out_port 
+10c6: {.            type uint64;.        }.        .        leaf out_g
+1106: roup {.            type uint32;.        }.        .        leaf 
+1146: flags {.            type flow-mod-flags;.        }.        .    
+1186:     leaf flow-name {.            type string;.        }.        
+11c6: .        leaf installHw {.            type boolean;.        }.. 
+1206:        leaf barrier {.            type boolean;.        }..     
+1246:    leaf strict {.            type boolean;.            default "
+1286: false";.        }..    }..    grouping flow-statistics {.       
+12c6:  leaf packet-count {.            type yang:counter64;.        }.
+1306: .        leaf byte-count {.            type yang:counter64;.    
+1346:     }..        container duration {.            leaf second {.  
+1386:               type yang:counter64;.            }.            lea
+13c6: f nanosecond {.                type yang:counter64;.            
+1406: }.        }.    }..    grouping flow-table-statistics {.        
+1446: leaf active {.            type yang:counter64;.        } ..     
+1486:    leaf lookup {.            type yang:counter64;.        }..   
+14c6:      leaf matched {.            type yang:counter64;   .        
+1506: }.    }.    .    grouping flow-mod-removed {.        uses generi
+1546: c_flow_attributes;.        .        leaf removed_reason {.      
+1586:       type removed_reason_flags;.        }..        leaf duratio
+15c6: n_nsec {.            type uint32;.        }.        .        lea
+1606: f duration_sec {.            type uint32;.        }..        lea
+1646: f packet_count {.            type uint64;.        }..        lea
+1686: f byte_count {.            type uint64;.        }....        con
+16c6: tainer match {.            uses match:match;.        }.    }.}.<
+1706: /data></output></get-schema>
+1724: 0
+1727: 
+== Info: Connection #0 to host 172.22.18.245 left intact
