@@ -4,12 +4,12 @@ Created on Feb 3, 2015
 @author: sergei
 '''
 
-import requests
-from requests.auth import HTTPBasicAuth
-from requests.exceptions import ConnectionError
+#import requests
+#from requests.auth import HTTPBasicAuth
+#from requests.exceptions import ConnectionError
 #import pprint
-import xmltodict
-import json
+#import xmltodict
+#import json
 
 #================================
 # KEEP
@@ -22,3 +22,8 @@ class NetconfDevice(object):
         self.portNum = portNum
         self.adminName = adminName
         self.adminPassword = adminPassword
+
+    def to_string(self):
+        return str(vars(self))
+
+ 

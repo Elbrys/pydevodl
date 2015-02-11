@@ -6,10 +6,14 @@ Created on Feb 3, 2015
 
 import requests
 from requests.auth import HTTPBasicAuth
-from requests.exceptions import ConnectionError
+from requests.exceptions import ConnectionError, Timeout
+#from requests.exceptions import Timeout
 #import pprint
 import xmltodict
 import json
+
+#import logging
+#logging.basicConfig(level=logging.DEBUG)
 
 #================================
 # KEEP
@@ -18,56 +22,57 @@ def enum(*args):
     enums = dict(zip(args, range(len(args))))
     return type('Enum', (), enums)
 
-CTRL_STATUS = enum('OK', 'CONN_ERROR', 'DATA_NOT_FOUND', 'BAD_REQUEST',
-                   'UNAUTHORIZED_ACCESS', 'INTERNAL_SRV_ERROR', 'N_A')
-NODE_STATUS = enum('CONNECTED', 'DISONNECTED', 'NOT_FOUND', 'CONFIGURED', 'N_A')
+STATUS = enum('CTRL_OK', 'CTRL_CONN_ERROR', 'CTRL_DATA_NOT_FOUND', 'CTRL_BAD_REQUEST',
+               'CTRL_UNAUTHORIZED_ACCESS', 'CTRL_INTERNAL_ERROR',
+               'NODE_CONNECTED', 'NODE_DISONNECTED', 'NODE_NOT_FOUND', 'NODE_CONFIGURED',                   
+               'N_A')
+#NODE_STATUS = enum('CONNECTED', 'DISONNECTED', 'NOT_FOUND', 'CONFIGURED', 'N_A')
 
 #================================
 # KEEP
 #================================
 class Status(object):
     def __init__(self, status):
-        if status not in (CTRL_STATUS.OK,
-                          CTRL_STATUS.CONN_ERROR,
-                          CTRL_STATUS.DATA_NOT_FOUND,
-                          CTRL_STATUS.BAD_REQUEST,
-                          CTRL_STATUS.UNAUTHORIZED_ACCESS,
-                          CTRL_STATUS.INTERNAL_SRV_ERROR,
-                          CTRL_STATUS.N_A,
-                          NODE_STATUS.CONNECTED,
-                          NODE_STATUS.DISONNECTED,
-                          NODE_STATUS.NOT_FOUND,
-                          NODE_STATUS.CONFIGURED,
-                          NODE_STATUS.N_A
+        if status not in (STATUS.CTRL_OK,
+                          STATUS.CTRL_CONN_ERROR,
+                          STATUS.CTRL_DATA_NOT_FOUND,
+                          STATUS.CTRL_BAD_REQUEST,
+                          STATUS.CTRL_UNAUTHORIZED_ACCESS,
+                          STATUS.CTRL_INTERNAL_ERROR,
+                          STATUS.NODE_CONNECTED,
+                          STATUS.NODE_DISONNECTED,
+                          STATUS.NODE_NOT_FOUND,
+                          STATUS.NODE_CONFIGURED,
+                          STATUS.N_A
                           ):
             raise ValueError('undefined status value')
         self.status = status
     
     def string(self):
-        if (self.status == CTRL_STATUS.OK):
+        if (self.status == STATUS.CTRL_OK):
             return "success"
-        if( self.status == CTRL_STATUS.CONN_ERROR):
+        elif( self.status == STATUS.CTRL_CONN_ERROR):
             return "server connection error"
-        if( self.status == CTRL_STATUS.DATA_NOT_FOUND):
+        elif( self.status == STATUS.CTRL_DATA_NOT_FOUND):
             return "requested data is not found"
-        if( self.status == CTRL_STATUS.BAD_REQUEST):
+        elif( self.status == STATUS.CTRL_BAD_REQUEST):
             return "bad or invalid data in request"
-        if( self.status == CTRL_STATUS.UNAUTHORIZED_ACCESS):
+        elif( self.status == STATUS.CTRL_UNAUTHORIZED_ACCESS):
             return "server unauthorized access"
-        if( self.status == CTRL_STATUS.INTERNAL_SRV_ERROR):
+        elif( self.status == STATUS.CTRL_INTERNAL_ERROR):
             return "Internal Server Error"        
-        if( self.status == CTRL_STATUS.N_A):
-            return "unknown error"        
-        if( self.status == NODE_STATUS.CONNECTED):
+        elif( self.status == STATUS.NODE_CONNECTED):
             return "node is connected"
-        if( self.status == NODE_STATUS.DISONNECTED):
+        elif( self.status == STATUS.NODE_DISONNECTED):
             return "node is disconnected"
-        if( self.status == NODE_STATUS.NOT_FOUND):
+        elif( self.status == STATUS.NODE_NOT_FOUND):
             return "unknown error"
-        if( self.status == NODE_STATUS.CONFIGURED):
+        elif( self.status == STATUS.NODE_CONFIGURED):
             return "node is configured"
-        if( self.status == NODE_STATUS.N_A):
+        elif( self.status == STATUS.N_A):
             return "unknown error"
+        else:
+            raise ValueError('undefined status value')
 
 #================================
 # KEEP
@@ -79,15 +84,21 @@ class Controller(object):
         self.adminName = adminName
         self.adminPassword = adminPassword
 
+    def to_string(self):
+        return str(vars(self))
+
     def ctrl_get_request(self, url):
         resp = None
         status = None            
 
         try:
-            resp = requests.get(url, auth=HTTPBasicAuth(self.adminName, self.adminPassword))
-            status = CTRL_STATUS.OK
-        except ConnectionError:
-            status = CTRL_STATUS.CONN_ERROR
+#            print ("+++++[ctrl_get_request] name=%s, pswd=%s" % (self.adminName, self.adminPassword))
+            resp = requests.get(url, auth=HTTPBasicAuth(self.adminName, self.adminPassword), timeout=(5))
+#            print ("+++ got resp")
+            status = STATUS.CTRL_OK
+        except (ConnectionError, Timeout) as e:
+            print "Error: " + repr(e)
+            status = STATUS.CTRL_CONN_ERROR
         
         return (status, resp)
     
@@ -97,22 +108,44 @@ class Controller(object):
 
         try:
             resp = requests.post(url, auth=HTTPBasicAuth(self.adminName, self.adminPassword),
-                                 data=data, headers=headers)
-            status = CTRL_STATUS.OK
-        except ConnectionError:
-            status = CTRL_STATUS.CONN_ERROR
+                                 data=data, headers=headers, timeout=(5))
+            status = STATUS.CTRL_OK
+        except (ConnectionError, Timeout) as e:
+            print "Error: " + repr(e)
+            status = STATUS.CTRL_CONN_ERROR
         
         return (status, resp)
+
+
+    def ctrl_put_request(self, url, data, headers):
+        resp = None
+        status = None            
+
+        try:
+            resp = requests.put(url, auth=HTTPBasicAuth(self.adminName, self.adminPassword),
+                                data=data, headers=headers, timeout=(5))
+            status = STATUS.CTRL_OK
+        except (ConnectionError, Timeout) as e:
+            print "Error: " + repr(e)
+            status = STATUS.CTRL_CONN_ERROR
+        
+        return (status, resp)
+
+
+
+
     
     def ctrl_delete_request(self, url):
         resp = None
         status = None            
 
         try:
-            resp = requests.delete(url, auth=HTTPBasicAuth(self.adminName, self.adminPassword))
-            status = CTRL_STATUS.OK
-        except ConnectionError:
-            status = CTRL_STATUS.CONN_ERROR
+            resp = requests.delete(url, auth=HTTPBasicAuth(self.adminName, self.adminPassword),
+                                   timeout=(5))
+            status = STATUS.CTRL_OK
+        except (ConnectionError, Timeout) as e:
+            print "Error: " + repr(e)
+            status = STATUS.CTRL_CONN_ERROR
         
         return (status, resp)
     
@@ -120,24 +153,24 @@ class Controller(object):
         templateUrl = "http://{}:{}/restconf/config/opendaylight-inventory:nodes"
         url = templateUrl.format(self.ipAddr, self.portNum)
         
-        result = self.ctrl_get_request(url, self.adminName, self.adminPassword)
+        result = self.ctrl_get_request(url)
         status = result[0]
-        if (status == CTRL_STATUS.CONN_ERROR):
+        if (status == STATUS.CTRL_CONN_ERROR):
             return status
         
         response = result[1]
         if (response.status_code == 401):
-            return CTRL_STATUS.UNAUTHORIZED_ACCESS    
+            return STATUS.CTRL_UNAUTHORIZED_ACCESS    
         
         if (response.status_code == 400):
-            return CTRL_STATUS.BAD_REQUEST
+            return STATUS.CTRL_BAD_REQUEST
     
         if (response.status_code == 200):
             elemlist = json.loads(response.content).get('nodes').get('node')
-            status = NODE_STATUS.NOT_FOUND
+            status = STATUS.NODE_NOT_FOUND
             for elem in elemlist:
                 if(elem['id'] == nodeId):
-                    status = NODE_STATUS.CONFIGURED
+                    status = STATUS.NODE_CONFIGURED
         
         return status
     
@@ -145,27 +178,27 @@ class Controller(object):
         templateUrl = "http://{}:{}/restconf/operational/opendaylight-inventory:nodes"
         url = templateUrl.format(self.ipAddr, self.portNum)
            
-        result = self.ctrl_get_request(url, self.adminName, self.adminPassword)
+        result = self.ctrl_get_request(url)
         status = result[0]
-        if (status == CTRL_STATUS.CONN_ERROR):
+        if (status == STATUS.CTRL_CONN_ERROR):
             return status
         
         response = result[1]
         if (response.status_code == 401):
-            return CTRL_STATUS.UNAUTHORIZED_ACCESS    
+            return STATUS.CTRL_UNAUTHORIZED_ACCESS    
         
         if (response.status_code == 400):
-            return CTRL_STATUS.BAD_REQUEST
+            return STATUS.CTRL_BAD_REQUEST
         
         if (response.status_code == 200):
             elemlist = json.loads(response.content).get('nodes').get('node')
-            status = NODE_STATUS.NOT_FOUND
+            status = STATUS.NODE_NOT_FOUND
             for elem in elemlist:
                 if(elem['id'] == nodeId):
-                    status = NODE_STATUS.DISONNECTED
+                    status = STATUS.NODE_DISONNECTED
                     if (('netconf-node-inventory:connected' in elem) and
                         (elem['netconf-node-inventory:connected'] == True)):
-                        status = NODE_STATUS.CONNECTED                        
+                        status = STATUS.NODE_CONNECTED                        
                     break
         
         return status
@@ -175,17 +208,17 @@ class Controller(object):
         url = templateUrl.format(self.ipAddr, self.portNum)        
         nlist = [] 
         
-        result = self.ctrl_get_request(url, self.adminName, self.adminPassword)
+        result = self.ctrl_get_request(url)
         status = result[0]
-        if (status == CTRL_STATUS.CONN_ERROR):
-            return status
+        if (status == STATUS.CTRL_CONN_ERROR):
+            return (status, None)
        
         response = result[1]
         if (response.status_code == 401):
-            return CTRL_STATUS.UNAUTHORIZED_ACCESS    
+            return (STATUS.CTRL_UNAUTHORIZED_ACCESS, None)    
         
         if (response.status_code == 400):
-            return CTRL_STATUS.BAD_REQUEST
+            return (STATUS.CTRL_BAD_REQUEST, None)
     
         if (response.status_code == 200):
             elemlist = json.loads(response.content).get('nodes').get('node')
@@ -200,17 +233,17 @@ class Controller(object):
         url = templateUrl.format(self.ipAddr, self.portNum)
         nlist = [] 
 
-        result = self.ctrl_get_request(url, self.adminName, self.adminPassword)
+        result = self.ctrl_get_request(url)
         status = result[0]
-        if (status == CTRL_STATUS.CONN_ERROR):
-            return status
+        if (status == STATUS.CTRL_CONN_ERROR):
+            return (status, None)
        
         response = result[1]
         if (response.status_code == 401):
-            return CTRL_STATUS.UNAUTHORIZED_ACCESS    
+            return (STATUS.CTRL_UNAUTHORIZED_ACCESS, None)  
         
         if (response.status_code == 400):
-            return CTRL_STATUS.BAD_REQUEST
+            return (STATUS.CTRL_BAD_REQUEST, None)
     
         if (response.status_code == 200):
             elemlist = json.loads(response.content).get('nodes').get('node')            
@@ -235,22 +268,26 @@ class Controller(object):
         url = templateUrl.format(self.ipAddr, self.portNum, nodeName)
         slist = None
         
-        result = self.ctrl_get_request(url, self.adminName, self.adminPassword)
+        print "+++ url:" + url
+        result = self.ctrl_get_request(url)
         status = result[0]
-        if (status == CTRL_STATUS.CONN_ERROR):
-            return (status, slist)
+        if (status == STATUS.CTRL_CONN_ERROR):
+            return (status, None)
        
         response = result[1]
         if (response.status_code == 401):
-            return CTRL_STATUS.UNAUTHORIZED_ACCESS    
+            return (STATUS.CTRL_UNAUTHORIZED_ACCESS , None)
         
         if (response.status_code == 400):
-            return CTRL_STATUS.BAD_REQUEST
+            return (STATUS.CTRL_BAD_REQUEST, None)
     
         if (response.status_code == 200):
-            data = json.loads(response.content)
-            elemlist = json.loads(response.content).get('schemas').get('schema')
-            slist = data.get('schemas').get('schema')
+            print ("+++[get_all_supported_schemas] OK")
+#            data = json.loads(response.content)
+            data = json.loads(response.content).get('schemas').get('schema')
+            print data
+#            slist = data.get('schemas').get('schema')
+            slist = data
         
         return (status, slist)
 
@@ -264,14 +301,14 @@ class Controller(object):
         payload = {'input': {'identifier' : schemaId, 'version' : schemaVersion, 'format' : 'yang'}}
         schema = None
 
-        result = self.ctrl_post_request(url, json.dumps(payload), headers, self.adminName, self.adminPassword)
+        result = self.ctrl_post_request(url, json.dumps(payload), headers)
         status = result[0]
-        if (status != CTRL_STATUS.CONN_ERROR):
+        if (status != STATUS.CTRL_CONN_ERROR):
             response = result[1]
             if (response.status_code == 401):
-                status = CTRL_STATUS.UNAUTHORIZED_ACCESS        
+                status = STATUS.CTRL_UNAUTHORIZED_ACCESS        
             elif (response.status_code == 400):
-                status = CTRL_STATUS.BAD_REQUEST      
+                status = STATUS.CTRL_BAD_REQUEST      
             elif (response.status_code == 200):
 #                print response.headers.get('content-type')
                 if(response.headers.get('content-type') == "application/xml"):
@@ -280,10 +317,10 @@ class Controller(object):
                         tmp = doc['get-schema']['output']['data']
                         if(tmp):
                             schema = tmp
-                            status = CTRL_STATUS.OK
+                            status = STATUS.CTRL_OK
                     except KeyError:
 #                        print "error"
-                        status = CTRL_STATUS.DATA_NOT_FOUND
+                        status = STATUS.CTRL_DATA_NOT_FOUND
                 else:
                     print "TBD content type"
         
@@ -333,48 +370,48 @@ class Controller(object):
         result = self.ctrl_post_request(url, payload, headers)
         status = result[0]
 #        print status
-        if (status != CTRL_STATUS.CONN_ERROR):
+        if (status != STATUS.CTRL_CONN_ERROR):
             response = result[1]
 #            print response
             if (response.status_code == 401):
-                status = CTRL_STATUS.UNAUTHORIZED_ACCESS        
+                status = STATUS.CTRL_UNAUTHORIZED_ACCESS        
             elif (response.status_code == 400):
-                status = CTRL_STATUS.BAD_REQUEST      
+                status = STATUS.CTRL_BAD_REQUEST      
             elif (response.status_code == 200 or
                   response.status_code == 204):
-                status = CTRL_STATUS.OK
+                status = STATUS.CTRL_OK
         
         return (status, None)
 
 #================================
-# TBD
+# KEEP
 #================================
     def delete_netconf_node_from_config(self, netconfdev):
         templateUrl = "http://{}:{}/restconf/config/opendaylight-inventory:nodes/node/controller-config/yang-ext:mount/config:modules/module/odl-sal-netconf-connector-cfg:sal-netconf-connector/{}"
         url = templateUrl.format(self.ipAddr, self.portNum, netconfdev.devName)
 
-        print url
+#        print url
         result = self.ctrl_delete_request(url)
         status = result[0]
 #        print status
-        if (status != CTRL_STATUS.CONN_ERROR):
+        if (status != STATUS.CTRL_CONN_ERROR):
             response = result[1]
 #            print response.status_code
             if (response.status_code == 200 or response.status_code == 204):
-                status = CTRL_STATUS.OK                        
+                status = STATUS.CTRL_OK                        
             elif (response.status_code == 401):
-                status = CTRL_STATUS.UNAUTHORIZED_ACCESS        
+                status = STATUS.CTRL_UNAUTHORIZED_ACCESS        
             elif (response.status_code == 400):
-                status = CTRL_STATUS.BAD_REQUEST      
+                status = STATUS.CTRL_BAD_REQUEST      
             elif (response.status_code == 500):
-                status = CTRL_STATUS.INTERNAL_SRV_ERROR
+                status = STATUS.CTRL_INTERNAL_ERROR
         
         return (status, None)
         
 #==============================================================================
 # TBD: 
 # NOTE: It is unclear what NETCONF node attributes are allowed for dynamic
-#       configuration changes. For now just follow the example that is
+#       configuration changes. For now I am just follow the example that is
 #       published on ODL wiki:
 #       https://wiki.opendaylight.org/view/OpenDaylight_Controller:Config:Examples:Netconf
 #==============================================================================
@@ -393,24 +430,36 @@ class Controller(object):
         headers = {'content-type': 'application/xml', 'accept': 'application/xml'}
         result = self.ctrl_post_request(url, payload, headers)                
         status = result[0]
-        if (status != CTRL_STATUS.CONN_ERROR):
+        if (status != STATUS.CTRL_CONN_ERROR):
             response = result[1]
             if (response.status_code == 200 or response.status_code == 204):
-                status = CTRL_STATUS.OK                        
+                status = STATUS.CTRL_OK                        
             elif (response.status_code == 401):
-                status = CTRL_STATUS.UNAUTHORIZED_ACCESS        
+                status = STATUS.CTRL_UNAUTHORIZED_ACCESS        
             elif (response.status_code == 400):
-                status = CTRL_STATUS.BAD_REQUEST      
+                status = STATUS.CTRL_BAD_REQUEST      
             elif (response.status_code == 500):
-                status = CTRL_STATUS.INTERNAL_SRV_ERROR
+                status = STATUS.CTRL_INTERNAL_ERROR
             else:
-                status = CTRL_STATUS.N_A
+                status = STATUS.N_A
         
         return (status, None)
         
-        
-        
-        
+    def get_ext_mount_cfg_url(self, node):
+        templateUrl = "http://{}:{}/restconf/config/opendaylight-inventory:nodes/node/{}/yang-ext:mount/"
+#        print templateUrl
+        url = templateUrl.format(self.ipAddr, self.portNum, node)
+#        print url
+        return url
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
     
     
