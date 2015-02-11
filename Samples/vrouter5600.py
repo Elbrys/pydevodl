@@ -212,21 +212,42 @@ class VRouter5600(NetconfDevice):
         result = ctrl.ctrl_put_request(url1, json.dumps(payload), headers)
         print result
         
+#================================
+# TBD
+#================================
+    def delete_firewall_from_interface(self, ifName):        
+        templateModelRef = "vyatta-interfaces:interfaces/vyatta-interfaces-dataplane:dataplane/{}/vyatta-security-firewall:firewall/"
+        modelref = templateModelRef.format(ifName)
+        myname = self.node.devName
+        ctrl = self.controller
+        url = ctrl.get_ext_mount_cfg_url(myname)
+        print ("+++ url: " + url)
+        print ("+++ modelref: " + modelref)
+        print ("+++ both: " + url + modelref)
+        
+        result = ctrl.ctrl_delete_request(url + modelref)
+        status = result[0]
+        if (status == STATUS.CTRL_CONN_ERROR):
+            return (status, None)
+        
+        response = result[1]
+        if (response.status_code == 401):
+            return (STATUS.CTRL_UNAUTHORIZED_ACCESS, None)
+        
+        if (response.status_code == 400):
+            return (STATUS.CTRL_BAD_REQUEST, None)
+    
+        if (response.status_code == 200 or response.status_code == 204):
+            status = STATUS.CTRL_OK
+        
+        print (status, response)
+        return (status, response)
 
 
+#http://172.22.18.186:8080/restconf/config/opendaylight-inventory:nodes/node/vRouter/yang-ext:mount/vyatta-interfaces:interfaces/vyatta-interfaces-dataplane:dataplane/dp0p1p7/vyatta-security-firewall:firewall/
 
-
-
-
-
-
-
-
-
-
-
-
-
+#   def delete_firewall_from_interface(self, ifName, fwInstanceName):        
+#
 
 
 

@@ -179,3 +179,8 @@ if __name__ == "__main__":
     vrouter.apply_firewall_instance_to_interface(ifName, fwInstanceName)
     
     
+    vrouter.delete_firewall_from_interface(ifName)
+    
+
+    
+    
