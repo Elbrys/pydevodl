@@ -97,7 +97,7 @@ class VRouter5600(NetconfDevice):
 
         
 #================================
-# KEEP
+# TBD
 #================================
     def create_firewall_instance_cfg(self, name):        
 #        templateModelRef = ""     
@@ -252,7 +252,72 @@ class VRouter5600(NetconfDevice):
 
 
 
+#================================
+# TBD
+#================================
+    def create_firewall_instance(self, fwInstance):        
+        ctrl = self.controller
+        myname = self.node.devName
+        url = ctrl.get_ext_mount_cfg_url(myname)
+        print url
+        headers = {'content-type': 'application/yang.data+json'}
+        print headers
+        payload = fwInstance.get_payload()
+        print payload
+#        ext = fwInstance.get_url_extension()
+#        print ext
+#        url += ext
+#        print url
+        result = ctrl.ctrl_post_request(url, payload, headers)
+#        print result[1].content
+        return result
 
+
+class Firewall():
+    mn1 = "vyatta-security:security"
+    mn2 = "vyatta-security-firewall:firewall"
+    def __init__(self):
+        self.name = []
+    def to_string(self):
+        return str(vars(self))
+    def to_json(self):
+        return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4) 
+    def get_payload(self):
+        obj = json.loads(self.to_json())
+        payload = {self.mn1:{self.mn2:obj}}
+        return json.dumps(payload, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+    def get_url_extension(self):
+        return (self.mn1 + "/" +  self.mn2)
+    def add_rules(self, rules):
+        self.name.append(rules)    
+
+class Rules():
+    def __init__(self, name):
+        self.tagnode = name
+        self.rule = []
+    def to_string(self):
+        return str(vars(self))
+    def to_json(self):
+        return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+    def add_rule(self, rule):
+        self.rule.append(rule)
+
+class Rule():
+    def __init__(self, number):
+        self.tagnode = number
+        self.source = Object()
+    def to_string(self):
+        return str(vars(self))
+    def to_json(self):
+        return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+    def add_action(self, action):
+        self.action = action
+    def add_source_address(self, srcAddr):
+        self.source.address = srcAddr
+
+       
+class Object():
+    pass
 
 
 

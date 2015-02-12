@@ -101,7 +101,67 @@ if __name__ == "__main__":
         print ("Error: %s" % Status(status).string())
     '''
     
+    
+    firewall = Firewall()
+#    print firewall.to_string()
+#    print firewall.to_json()
+
+    groupname = "FW-889"
+    rules = Rules(groupname)
+    
+    rulenum = 33
+    rule = Rule(rulenum)
+    rule.add_action("accept")
+    rule.add_source_address("172.22.17.108")
+    
+    rules.add_rule(rule)
+
+    firewall.add_rules(rules)
         
+#    payload = firewall.get_payload()
+#    print payload    
+    result = vrouter.create_firewall_instance(firewall)
+    status = result[0]
+    if (status == STATUS.CTRL_OK):
+        print ("Firewall instance '%s' was successfully created" % groupname)
+#        response = result[1]
+#        content = response.content
+#        print content
+    else:
+        print ("Error: %s" % Status(status).string())
+    
+    
+    '''
+    number = 33
+    rule = Rule(number)
+    rule.action = "accept"
+    rule.source.address = "172.22.17.108"
+#    print rule.to_string()
+#    print rule.to_json()
+    
+    print type(firewall.rule)
+#    firewall.rule.append(rule)   
+#    firewall.rule = rule
+    
+    firewall.name.append(rule)
+    
+    
+    print firewall.to_json()
+    '''
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    '''
     print("\n")
     fwInstanceName = "FW-889"
     result = vrouter.create_firewall_instance_cfg(fwInstanceName)
@@ -113,6 +173,7 @@ if __name__ == "__main__":
         response = result[1]
         if(response):
             print response
+    '''
     
     '''
     print("\n")
@@ -173,13 +234,17 @@ if __name__ == "__main__":
     else:
         print ("Error: %s" % Status(status).string())
     '''
-
+    
+    
+    '''
     print("\n")
     ifName = "dp0p1p7"
     vrouter.apply_firewall_instance_to_interface(ifName, fwInstanceName)
+    '''
     
-    
+    '''
     vrouter.delete_firewall_from_interface(ifName)
+    '''
     
 
     
