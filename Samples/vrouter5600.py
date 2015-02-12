@@ -86,39 +86,18 @@ class VRouter5600(NetconfDevice):
         return (status, response)
        
 #================================
-# TBD
+# KEEP
 #================================
-    def apply_firewall_instance_to_interface(self, ifName, fwInstanceName):        
-#        templateModelRef = ""     
-#        modelref = templateModelRef
+    def apply_firewall_to_dataplane_interface(self, dpIfFwObj):        
         ctrl = self.controller
         myname = self.node.devName
         url = ctrl.get_ext_mount_cfg_url(myname)
-        headers = {'content-type': 'application/yang.data+json'}
-        
-        print ("+++ name: " + ifName)
-        print ("+++ headers: " + str(headers))
-        print ("+++ url: " + url)
-        topmodel = "vyatta-interfaces:interfaces"
-        thismodel = "vyatta-interfaces-dataplane:dataplane"
-        fwmodel = "vyatta-security-firewall:firewall"
-        payload = {
-          thismodel:
-          {
-            "tagnode": ifName,
-            fwmodel: {
-                "in": [
-                    fwInstanceName
-                 ]
-            }
-          }
-        }
-        print ("+++ payload: " + str(payload))
-        print ("+++ json: " + json.dumps(payload, sort_keys=True, indent=4))
-        url1 = url + topmodel + "/" + thismodel + "/" + ifName
-        print ("+++url1: " + url1)
-        result = ctrl.ctrl_put_request(url1, json.dumps(payload), headers)
-        print result
+        headers = {'content-type': 'application/yang.data+json'}        
+        payload = dpIfFwObj.get_payload()
+        urlext = dpIfFwObj.get_url_extension()
+        url += urlext
+        result = ctrl.ctrl_put_request(url, payload, headers)
+        return result
         
 #================================
 # TBD
@@ -259,28 +238,49 @@ class Rule():
         self.source.address = srcAddr
 
 
-class InterfaceDataplane():
+class InterfaceDataplane(VRouter5600):
     mn1 = "vyatta-interfaces:interfaces"
     mn2 = "vyatta-interfaces-dataplane:dataplane"
     mn3 = "vyatta-security-firewall:firewall"
-    def __init__(self, name):
+    def __init__(self, vrouter, name):
+#        self.vrouter = vrouter
         self.tagnode = name
         self.firewall = None
 #        self.firewall = InterfaceDataplaneFirewall("in", "out")
-        
+    
+    '''
+    def jdefault(self, o):
+        print "xxx"
+        print type(o.__dict__)
+#        for item in o.__dict__.items():
+#            print item
+        r = dict(o.__dict__)        
+#        if r['vrouter']:
+#            print "@@@@@@@"
+#            del(r['vrouter'])
+        for item in r.items():
+            print item
+
+        return o.__dict__
+    '''
+    
     def to_string(self):
         return str(vars(self))
     
     def to_json(self):
+#        return json.dumps(self, default=self.jdefault, sort_keys=True, indent=4)
         return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
     
-    def to_payload(self):        
+    def get_payload(self):        
         s = self.to_json()
-        s = string.replace(s, 'firewall"', self.mn3)
+        s = string.replace(s, 'firewall', self.mn3)
         s = string.replace(s, 'inlist', "in")
         s = string.replace(s, 'outlist', "out")
-        print s
-        return s
+        
+        obj = json.loads(s)
+        payload = {self.mn2:obj}
+        return json.dumps(payload, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+#        return payload
     
     def add_firewall(self, firewall):
         self.firewall = firewall
@@ -289,21 +289,74 @@ class InterfaceDataplane():
 #        print payload
 #        print json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
 
-    def add_in_firewall(self, inFw):
+    def apply_in_firewall(self, inFw):
 #        self.inlist.append(inFw)
         obj = InterfaceDataplaneFirewall()
         obj.inlist.append(inFw)
 #        self.firewall.append(obj)
         self.firewall = obj
-        pass
+        payload = self.get_payload()
+        print payload
+#        ctrl = self.vrouter.controller
+        headers = {'content-type': 'application/yang.data+json'}
+#        url = ctrl.get_ext_mount_cfg_url(self.tagnode)
+#        print url
+#        result = ctrl.ctrl_put_request(url, payload, headers)
     
 
 class InterfaceDataplaneFirewall():
-     def __init__(self):
-        self.inlist = []
-        self.outlist = []
+     mn1 = "vyatta-interfaces:interfaces"
+     mn2 = "vyatta-interfaces-dataplane:dataplane"
+     mn3 = "vyatta-security-firewall:firewall"
+     def __init__(self, ifName):
+        self.tagnode = ifName
+        inlist = []
+        outlist = []
+        self.firewall = Object()
+        self.firewall.inlist = []
+        self.firewall.outlist = []
+        
      def add_in_item(self, name):
-        self.inlist.append(name)
+        self.firewall.inlist.append(name)
+
+     def add_out_item(self, name):
+        self.firewall.outlist.append(name)
+    
+     def to_json(self):
+#        s = json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+#        s = string.replace(s, 'inlist', "in")
+#        s = string.replace(s, 'outlist', "out")
+#        obj = json.loads(s)
+#        return json.dumps(obj, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+        return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+
+     def get_url_extension(self):
+        return (self.mn1 + "/" + self.mn2 + "/" +  self.tagnode)
+
+     def get_name(self):
+         return self.tagnode
+     
+     def get_payload(self):        
+        s = self.to_json()
+        s = string.replace(s, 'firewall', self.mn3)
+        s = string.replace(s, 'inlist', "in")
+        s = string.replace(s, 'outlist', "out")
+        
+        obj = json.loads(s)
+        payload = {self.mn2:obj}
+        return json.dumps(payload, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+
+    
+     '''
+     def get_payload(self):        
+        s = self.to_json()
+        s = string.replace(s, 'firewall', self.mn3)
+        s = string.replace(s, 'inlist', "in")
+        s = string.replace(s, 'outlist', "out")        
+        obj = json.loads(s)
+        payload = {self.mn2:obj}
+        return json.dumps(payload, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+    '''
    
 
 class Object():

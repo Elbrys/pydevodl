@@ -8,10 +8,43 @@ from vrouter5600 import *
 
 if __name__ == "__main__":
     
-    interface = InterfaceDataplane("dp0p1p7")
-    inFwName= "FW-889"
-    interface.add_in_firewall(inFwName);
+    ctrlIpAddr =  "172.22.18.186"
+#    bvcPortNum = "8181"     
+    ctrlPortNum = "8080"     
+    ctrlUname = 'admin' 
+    ctrlPswd = 'admin'
+#    nodeName = 'vRouter2'
+#    nodeName = 'controller-config'
+
+    devName = "vRouter"
+    devIpAddr = "172.22.17.107"
+    devPortNum = 830
+    devUname = "vyatta"
+    devPswd = "vyatta"
+    tcpOnly="false"
+  
+    ctrl = Controller(ctrlIpAddr, ctrlPortNum, ctrlUname, ctrlPswd)
+    node = NetconfDevice(devName, devIpAddr, devPortNum, tcpOnly, devUname, devPswd)
+    vrouter = VRouter5600(ctrl, node)
     
+    ifName = "dp0p1p7"
+    fwobj = InterfaceDataplaneFirewall(ifName)
+    inFw = "FW-888"
+    fwobj.add_in_item(inFw)
+    print fwobj.get_payload()
+    
+    result = vrouter.apply_firewall_to_dataplane_interface(fwobj)
+    status = result[0]
+    if (status == STATUS.CTRL_OK):
+        print("Firewall '%s' successfully applied to the dataplane interface '%s'" % (inFw, ifName))
+    else:
+        print ("Error: %s" % Status(status).string())
+
+    '''
+    interface = InterfaceDataplane(vrouter, "dp0p1p7")
+    inFwName= "FW-889"
+    interface.apply_in_firewall(inFwName);
+    '''
     '''
     
     fw = InterfaceDataplaneFirewall()
@@ -25,7 +58,8 @@ if __name__ == "__main__":
     
 
 #    print interface.to_json()
-    s = interface.to_payload()
+#    payload = interface.get_payload()
+#    print payload
     sys.exit(0)
     print ("222")
     
