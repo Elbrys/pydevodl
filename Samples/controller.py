@@ -1,14 +1,6 @@
-'''
-Created on Feb 3, 2015
-
-@author: sergei
-'''
-
 import requests
 from requests.auth import HTTPBasicAuth
 from requests.exceptions import ConnectionError, Timeout
-#from requests.exceptions import Timeout
-#import pprint
 import xmltodict
 import json
 
@@ -23,9 +15,9 @@ def enum(*args):
     return type('Enum', (), enums)
 
 STATUS = enum('CTRL_OK', 'CTRL_CONN_ERROR', 'CTRL_DATA_NOT_FOUND', 'CTRL_BAD_REQUEST',
-               'CTRL_UNAUTHORIZED_ACCESS', 'CTRL_INTERNAL_ERROR',
-               'NODE_CONNECTED', 'NODE_DISONNECTED', 'NODE_NOT_FOUND', 'NODE_CONFIGURED',                   
-               'N_A')
+              'CTRL_UNAUTHORIZED_ACCESS', 'CTRL_INTERNAL_ERROR',
+              'NODE_CONNECTED', 'NODE_DISONNECTED', 'NODE_NOT_FOUND', 'NODE_CONFIGURED',                   
+              'N_A')
 #NODE_STATUS = enum('CONNECTED', 'DISONNECTED', 'NOT_FOUND', 'CONFIGURED', 'N_A')
 
 #================================
@@ -77,7 +69,7 @@ class Status(object):
 #================================
 # KEEP
 #================================
-class Controller(object):
+class Controller():
     def __init__(self, ipAddr, portNum, adminName, adminPassword):
         self.ipAddr = ipAddr
         self.portNum = portNum
@@ -130,10 +122,6 @@ class Controller(object):
             status = STATUS.CTRL_CONN_ERROR
         
         return (status, resp)
-
-
-
-
     
     def ctrl_delete_request(self, url):
         resp = None
@@ -450,21 +438,7 @@ class Controller(object):
 #        print templateUrl
         url = templateUrl.format(self.ipAddr, self.portNum, node)
 #        print url
-        return url
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+        return url    
 
 def get_nodes_operational_datastore(ipAddr, portNum, uname, passwd, nodeId):
 #    url="http://" + ipAddr + ":" + portNum + "/restconf/operational/opendaylight-inventory:nodes"

@@ -1,9 +1,3 @@
-'''
-Created on Feb 3, 2015
-
-@author: sergei
-'''
-
 #import requests
 #from requests.auth import HTTPBasicAuth
 #from requests.exceptions import ConnectionError
@@ -14,7 +8,7 @@ Created on Feb 3, 2015
 #================================
 # KEEP
 #================================
-class NetconfDevice(object):
+class NetconfDevice():
     def __init__(self, devName, ipAddr, portNum, tcpOnly, adminName, adminPassword):
         self.devName = devName
         self.ipAddr = ipAddr

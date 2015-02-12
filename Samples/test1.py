@@ -1,7 +1,6 @@
 #!/usr/bin/python
 
 import time
-
 from controller import *
 from netconfdev import *
 '''

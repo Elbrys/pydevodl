@@ -1,12 +1,7 @@
-'''
-Created on Feb 3, 2015
-
-@author: sergei
-'''
-
 import requests
 from requests.auth import HTTPBasicAuth
 import json
+import string
 
 from controller import *
 from netconfdev import *
@@ -15,9 +10,9 @@ from netconfdev import *
 # KEEP
 #================================
 class VRouter5600(NetconfDevice):
-    def __init__(self, controller, netconfdev):
+    def __init__(self, controller, node):
         self.controller = controller
-        self.node = netconfdev
+        self.node = node
     
     def to_string(self):
 #        attrs = vars(self.common)
@@ -42,12 +37,7 @@ class VRouter5600(NetconfDevice):
         myname = self.node.devName
         result = ctrl.get_all_supported_schemas(myname)
         return result
-        '''
-        ctrl.get_url()
-        ns = "vyatta-security:security/vyatta-security-firewall:firewall"
-        
-        "curl -u admin:admin -v http://172.22.18.245:8080/restconf/operational/opendaylight-inventory:nodes/node/vRouter/yang-ext:mount/ietf-netconf-monitoring:netconf-state/schemas/ | python -mjson.tool"
-        '''
+
 #================================
 # KEEP
 #================================
@@ -94,89 +84,7 @@ class VRouter5600(NetconfDevice):
 #        print "+++++++++"
 #        print (status, response)
         return (status, response)
-
-        
-#================================
-# TBD
-#================================
-    def create_firewall_instance_cfg(self, name):        
-#        templateModelRef = ""     
-#        modelref = templateModelRef
-        ctrl = self.controller
-        myname = self.node.devName
-        url = ctrl.get_ext_mount_cfg_url(myname)
-        headers = {'content-type': 'application/yang.data+json'}
-        
-        topmodel = "vyatta-security:security"
-        thismodel = "vyatta-security-firewall:firewall"
-        address = "172.22.17.108"
-        groupName = name
-        ruleNumber = 77
-        payload = {
-          topmodel:
-          {
-             thismodel:
-             {
-                "name": [
-                    {
-                        "tagnode": groupName,
-                        "rule": [
-                            {
-                                "action": "accept",
-                                "source": {
-                                    "address": address
-                                },
-                                "tagnode": ruleNumber
-                            }
-                        ]
-                    }
-                ]
-             }
-           }
-        }
-#        payload = {topmodel:{thismodel:{"name": [{"rule": [{"tagnode": ruleNumber, "action": "accept","source": {"address": address}}],"tagnode": fwGroupName}]}}}
-#        print url
-#        print headers
-        result = ctrl.ctrl_post_request(url, json.dumps(payload), headers)
-#        print result
-        return result
-        
-#================================
-# KEEP
-#================================
-    def delete_firewall_instance_cfg(self, name):
-        templateModelRef = "vyatta-security:security/vyatta-security-firewall:firewall/name/{}"
-        modelref = templateModelRef.format(name)
-        ctrl = self.controller
-        myname = self.node.devName
-        url = ctrl.get_ext_mount_cfg_url(myname)
-#        print url + modelref
-        result = ctrl.ctrl_delete_request(url + modelref)
-        status = result[0]
-        if (status == STATUS.CTRL_CONN_ERROR):
-            return (status, None)
-        
-        response = result[1]
-        if (response.status_code == 401):
-            return (STATUS.CTRL_UNAUTHORIZED_ACCESS, None)
-        
-        if (response.status_code == 400):
-            return (STATUS.CTRL_BAD_REQUEST, None)
-    
-        if (response.status_code == 200 or response.status_code == 204):
-            status = STATUS.CTRL_OK
-        
-#        print (status, response)
-        return (status, response)
-
-
-
-
-
-
-
-
-
+       
 #================================
 # TBD
 #================================
@@ -243,17 +151,8 @@ class VRouter5600(NetconfDevice):
         print (status, response)
         return (status, response)
 
-
-#http://172.22.18.186:8080/restconf/config/opendaylight-inventory:nodes/node/vRouter/yang-ext:mount/vyatta-interfaces:interfaces/vyatta-interfaces-dataplane:dataplane/dp0p1p7/vyatta-security-firewall:firewall/
-
-#   def delete_firewall_from_interface(self, ifName, fwInstanceName):        
-#
-
-
-
-
 #================================
-# TBD
+# KEEP
 #================================
     def create_firewall_instance(self, fwInstance):        
         ctrl = self.controller
@@ -272,109 +171,141 @@ class VRouter5600(NetconfDevice):
 #        print result[1].content
         return result
 
+#================================
+# KEEP
+#================================
+    def delete_firewall_instance(self, fwInstance):
+        ctrl = self.controller
+        myname = self.node.devName
+        url = ctrl.get_ext_mount_cfg_url(myname)
+        headers = {'content-type': 'application/yang.data+json'}
+#        print headers
+        ext = fwInstance.get_url_extension()
+        url += ext
+#        print url
+        rules = fwInstance.get_rules()
+#        print rules
+        for item in rules:
+            name = item.get_name()
+#            print(url + "/name/" + name)
+            result = ctrl.ctrl_delete_request(url + "/name/" + name)
+            status = result[0]
+            if(status != STATUS.CTRL_OK):
+                break
+
+        return result
 
 class Firewall():
     mn1 = "vyatta-security:security"
     mn2 = "vyatta-security-firewall:firewall"
     def __init__(self):
         self.name = []
+    
     def to_string(self):
         return str(vars(self))
+    
     def to_json(self):
         return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4) 
+    
     def get_payload(self):
         obj = json.loads(self.to_json())
         payload = {self.mn1:{self.mn2:obj}}
         return json.dumps(payload, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+    
     def get_url_extension(self):
         return (self.mn1 + "/" +  self.mn2)
+    
     def add_rules(self, rules):
-        self.name.append(rules)    
+        self.name.append(rules)
+        
+    def get_rules(self):
+        rules = []
+        for item in self.name:
+            rules.append(item)
+        return rules
 
 class Rules():
     def __init__(self, name):
         self.tagnode = name
         self.rule = []
+        
     def to_string(self):
         return str(vars(self))
+    
     def to_json(self):
         return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+    
     def add_rule(self, rule):
         self.rule.append(rule)
+        
+    def get_name(self):
+        return self.tagnode 
 
 class Rule():
     def __init__(self, number):
         self.tagnode = number
         self.source = Object()
+    
     def to_string(self):
         return str(vars(self))
+    
     def to_json(self):
         return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+    
     def add_action(self, action):
         self.action = action
+    
     def add_source_address(self, srcAddr):
         self.source.address = srcAddr
 
-       
+
+class InterfaceDataplane():
+    mn1 = "vyatta-interfaces:interfaces"
+    mn2 = "vyatta-interfaces-dataplane:dataplane"
+    mn3 = "vyatta-security-firewall:firewall"
+    def __init__(self, name):
+        self.tagnode = name
+        self.firewall = None
+#        self.firewall = InterfaceDataplaneFirewall("in", "out")
+        
+    def to_string(self):
+        return str(vars(self))
+    
+    def to_json(self):
+        return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+    
+    def to_payload(self):        
+        s = self.to_json()
+        s = string.replace(s, 'firewall"', self.mn3)
+        s = string.replace(s, 'inlist', "in")
+        s = string.replace(s, 'outlist', "out")
+        print s
+        return s
+    
+    def add_firewall(self, firewall):
+        self.firewall = firewall
+#        payload = {self.mn2:{self.tagnode, self.mn3}}
+#        payload = {self.mn2}
+#        print payload
+#        print json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+
+    def add_in_firewall(self, inFw):
+#        self.inlist.append(inFw)
+        obj = InterfaceDataplaneFirewall()
+        obj.inlist.append(inFw)
+#        self.firewall.append(obj)
+        self.firewall = obj
+        pass
+    
+
+class InterfaceDataplaneFirewall():
+     def __init__(self):
+        self.inlist = []
+        self.outlist = []
+     def add_in_item(self, name):
+        self.inlist.append(name)
+   
+
 class Object():
     pass
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-        
-'''
-        payload = {
-          "vyatta-security:security":
-          {
-             "vyatta-security-firewall:firewall":
-             {
-                "name": [
-                    {
-                        "rule": [
-                            {
-                                "action": "accept",
-                                "source": {
-                                    "address": "172.22.17.108"
-                                },
-                                "tagnode": 1
-                            }
-                        ],
-                        "tagnode": fwName
-                    }
-                ]
-             }
-           }
-        }
-'''
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
         
