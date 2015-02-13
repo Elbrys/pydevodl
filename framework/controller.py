@@ -471,7 +471,7 @@ class Controller():
 #================================
 # KEEP
 #================================
-    def get_all_services(self):
+    def get_all_service_providers(self):
         templateUrl = "http://{}:{}/restconf/config/opendaylight-inventory:nodes/node/controller-config/yang-ext:mount/config:services"        
         url = templateUrl.format(self.ipAddr, self.portNum)
         slist = None
@@ -498,7 +498,7 @@ class Controller():
 #================================
 # KEEP
 #================================
-    def get_service(self, name):
+    def get_service_provider(self, name):
         templateUrl = "http://{}:{}/restconf/config/opendaylight-inventory:nodes/node/controller-config/yang-ext:mount/config:services/service/{}"
         url = templateUrl.format(self.ipAddr, self.portNum, name)         
         '''
@@ -596,9 +596,9 @@ class Controller():
 #================================
 # KEEP
 #================================
-    def delete_netconf_node_from_config(self, netconfdev):
+    def delete_netconf_node(self, netconfdev):
         templateUrl = "http://{}:{}/restconf/config/opendaylight-inventory:nodes/node/controller-config/yang-ext:mount/config:modules/module/odl-sal-netconf-connector-cfg:sal-netconf-connector/{}"
-        url = templateUrl.format(self.ipAddr, self.portNum, netconfdev.devName)
+        url = templateUrl.format(self.ipAddr, self.portNum, netconfdev.name)
 
 #        print url
         result = self.http_delete_request(url)
