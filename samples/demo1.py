@@ -1,19 +1,161 @@
 #!/usr/bin/python
 
 import time
-from controller import *
-from netconfdev import *
-'''
-from utils import Status
-from utils import CTRL_STATUS
-from utils import NODE_STATUS
-from utils import check_node_config_status
-from utils import check_node_conn_status
-from utils import get_all_nodes_in_config
-from utils import get_all_nodes_conn_status
-'''
+import sys
+import os
+import json
+
+from framework.controller import Controller,STATUS,Status
+from framework.netconfnode import *
 
 if __name__ == "__main__":
+
+    ctrlIpAddr =  "172.22.18.186"
+    ctrlPortNum = "8080"     
+    ctrlUname = 'admin' 
+    ctrlPswd = 'admin'
+    
+    rundelay = 2
+
+    print ("<<< Demo start")
+    
+    print ("\n")
+    print ("<<< Creating Controller instance")
+    ctrl = Controller(ctrlIpAddr, ctrlPortNum, ctrlUname, ctrlPswd)
+    print ("<<< Created Controller instance: " + ctrl.to_string())
+
+    
+    print "\n"
+    print ("<<< Show all nodes configured on the Controller")
+    result = ctrl.get_all_nodes_in_config()
+    status = result[0]
+    if (status == STATUS.CTRL_OK):
+        print "Nodes configured:"
+        nlist = result[1]
+        for item in nlist:
+            print "   '{}'".format(item)   
+    else:
+        print ("Error: %s" % Status(status).string())
+    
+    time.sleep(rundelay)
+
+    print "\n"
+    print ("<<< Show connection status for all nodes configured on the Controller")
+    result = ctrl.get_all_nodes_conn_status()
+    status = result[0]
+    if (status == STATUS.CTRL_OK):
+        print "Nodes connection status:"
+        nlist = result[1]    
+        for item in nlist:
+            status = ""
+            if (item['connected'] == True):
+                status = "connected"
+            else:
+                status = "disconnected"
+            print "   '{}' is {}".format(item['node'], status )
+    else:
+        print ("Error: %s" % Status(status).string())
+    
+    time.sleep(rundelay)
+
+    print "\n"
+    nodeName = "vRouter"
+    print ("<<< Find the '%s' NETCONF node on the Controller" % nodeName)
+    status = ctrl.check_node_config_status(nodeName)
+    if (status == STATUS.NODE_CONFIGURED):
+        print ("'%s' node is configured" % nodeName)
+    elif (status == STATUS.NODE_NOT_FOUND):
+        print ("'%s' node is not configured" % nodeName)        
+    else:
+        print ("Error: %s" % Status(status).string())
+    
+    time.sleep(rundelay)
+
+    print "\n"
+    nodeName = "vRouter"
+    print ("<<< Get connection status for the '%s' NETCONF node" % nodeName)
+    status = ctrl.check_node_conn_status(nodeName)
+    if (status == STATUS.NODE_CONNECTED):
+        print ("'%s' node is connected" % nodeName)
+    elif (status == STATUS.NODE_DISONNECTED):
+        print ("'%s' node is not connected" % nodeName)
+    elif (status == STATUS.NODE_NOT_FOUND):
+        print ("'%s' node is not found" % nodeName)
+    else:
+        print ("Error: %s" % Status(status).string())
+
+    time.sleep(rundelay)
+
+    print "\n"
+    print ("<<< Get list of all supported schemas by the Controller")
+    result = ctrl.get_all_supported_schemas("controller-config")
+    status = result[0]
+    if (status == STATUS.CTRL_OK):
+        print "Schemas:"
+        slist = result[1]
+        print json.dumps(slist, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+    else:
+        print ("Error: %s" % Status(status).string())
+
+    time.sleep(rundelay)
+
+    print "\n"
+    yangModelName = "flow-topology-discovery"
+    yangModelVerson = "2013-08-19"
+    print ("<<< Retrieve the '%s' YANG model from the Controller" % yangModelName)
+    result = ctrl.get_schema("controller-config", yangModelName, yangModelVerson)
+    status = result[0]
+    if (status == STATUS.CTRL_OK):
+        schema = result[1]
+        print schema
+    else:
+        print ("Error: %s" % Status(status).string())
+
+    time.sleep(rundelay)
+    
+    
+    print "\n"
+    print ("<<< Get list of services available on the Controller")
+    result = ctrl.get_all_services()
+    status = result[0]
+    if (status == STATUS.CTRL_OK):
+        services = result[1]
+        print "Services:"
+        print json.dumps(services, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+    else:
+        print ("Error: %s" % Status(status).string())
+
+    
+    print "\n"
+    name ="opendaylight-md-sal-binding:binding-data-broker"
+    print ("<<< Get '%s' service info" % name)
+    result = ctrl.get_service(name)
+    status = result[0]
+    if (status == STATUS.CTRL_OK):
+        service = result[1]
+        print json.dumps(service, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+    else:
+        print ("Error: %s" % Status(status).string())
+
+
+    
+    ''' List all operations supported by the Controller '''
+        
+    ''' List all configuration modules installed on the Controller '''
+    
+    ''' Show the content of a particular configuration module '''
+    
+    ''' Show all sessions running on the Controller '''
+    
+    ''' Show streams on the Controller '''
+    
+    
+    
+
+    print ("\n")
+    print (">>> Demo end")
+    
+    '''
     bvcIpAddr =  "172.22.18.186"
 #    bvcPortNum = "8181"     
     bvcPortNum = "8080"     
@@ -31,9 +173,11 @@ if __name__ == "__main__":
     
     ctrl = Controller(bvcIpAddr, bvcPortNum, bvcUname, bvcPswd)
     netconfdev = NetconfDevice(devName, devIpAddr, devPortNum, tcpOnly, devUname, devPswd)
+    '''
     
-    rundelay = 3
+#    rundelay = 3
     
+    '''
     print "\n"
     print ("1) <<< Show all nodes configured on the Controller>>>")
     result = ctrl.get_all_nodes_in_config()
@@ -45,11 +189,11 @@ if __name__ == "__main__":
             print "   '{}'".format(item)   
     else:
         print ("Error: %s" % Status(status).string())
-    
+    '''
 
-    time.sleep(rundelay)
+#    time.sleep(rundelay)
     
-    
+    '''
     print "\n"
     print ("2) <<< Show connection status for all nodes configured on the Controller>>>")
     result = ctrl.get_all_nodes_conn_status()
@@ -66,11 +210,11 @@ if __name__ == "__main__":
             print "   '{}' is {}".format(item['node'], status )
     else:
         print ("Error: %s" % Status(status).string())
+    '''
 
-
-    time.sleep(rundelay)
+#    time.sleep(rundelay)
         
-    
+    '''
     print "\n"
     print ("3) <<< Find the 'vRouter' NETCONF device in config <<<")
     status = ctrl.check_node_config_status(netconfdev.devName)
@@ -80,11 +224,11 @@ if __name__ == "__main__":
         print ("'%s' node is not configured" % netconfdev.devName)        
     else:
         print ("Error: %s" % Status(status).string())
+    '''
     
+#    time.sleep(rundelay)
     
-    time.sleep(rundelay)
-    
-    
+    '''
     print "\n"
     print ("4) >>> Get the connection status of the 'vRouter' NETCONF device>>>")
     status = ctrl.check_node_conn_status(netconfdev.devName)
@@ -96,11 +240,11 @@ if __name__ == "__main__":
         print ("'%s' node is not found" % netconfdev.devName)
     else:
         print ("Error: %s" % Status(status).string())
-    
+    '''
 
-    time.sleep(rundelay)
+#    time.sleep(rundelay)
 
-    
+    '''
     print "\n"
     print ("5) >>> Get all supported schemas on the 'controller-config' node>>>")
     result = ctrl.get_all_supported_schemas("controller-config")
@@ -111,11 +255,11 @@ if __name__ == "__main__":
         print json.dumps(slist, default=lambda o: o.__dict__, sort_keys=True, indent=4)
     else:
         print ("Error: %s" % Status(status).string())
+    '''
     
-    
-    time.sleep(rundelay)
+#    time.sleep(rundelay)
 
-        
+    '''
     print "\n"
     print ("6) >>> Get the 'opendaylight-inventory' schema from the Controller>>>")
     result = ctrl.get_schema("controller-config", "opendaylight-inventory", "2013-08-19")
@@ -125,10 +269,11 @@ if __name__ == "__main__":
         print schema
     else:
         print ("Error: %s" % Status(status).string())
-    
+    '''
 
-    time.sleep(rundelay)
+#    time.sleep(rundelay)
     
+    '''
     print "\n"
     print ("7) >>> Add new 'vRouter' NETCONF device to the Controller's configuration>>>")
     devName = "vRouter"
@@ -144,11 +289,11 @@ if __name__ == "__main__":
         print "NETCONF device '{}' was successfully mounted on the Controller".format(devName)
     else:
         print ("Error: %s" % Status(status).string())
+    '''
     
+#    time.sleep(rundelay)
     
-    time.sleep(rundelay)
-    
-    
+    '''
     print "\n"
     print ("8) >>> Get all supported schemas on the 'vRouter'>>>")
     result = ctrl.get_all_supported_schemas("vRouter")
@@ -159,11 +304,11 @@ if __name__ == "__main__":
         print json.dumps(slist, default=lambda o: o.__dict__, sort_keys=True, indent=4)
     else:
         print ("Error: %s" % Status(status).string())
-    
+    '''
 
-    time.sleep(rundelay)
+#    time.sleep(rundelay)
     
-    
+    '''
     print "\n"
     print ("9) >>> Get the 'vyatta-system-syslog' schema from the 'vRouter'>>>")
     result = ctrl.get_schema("vRouter", "vyatta-system-syslog", "2014-10-28")
@@ -173,11 +318,11 @@ if __name__ == "__main__":
         print schema
     else:
         print ("Error: %s" % Status(status).string())
-    
+    '''
         
-    time.sleep(rundelay)
+#    time.sleep(rundelay)
     
-    
+    '''
     print "\n"
     print ("10) >>> Modify configuration of the 'vRouter' on the Controller>>>")
     netconfdev.devName = "vRouter"
@@ -189,11 +334,11 @@ if __name__ == "__main__":
         print "Configuration of the '{}' was successfully updated on the Controller".format(devName)
     else:
         print ("Error: %s" % Status(status).string())
+    '''
     
+#    time.sleep(rundelay)
     
-    time.sleep(rundelay)
-    
-    
+    '''
     print "\n"
     print ("11) >>> Delete the 'vRouter' from the Controller's configuration>>>")
     result = ctrl.delete_netconf_node_from_config(netconfdev)
@@ -203,7 +348,7 @@ if __name__ == "__main__":
     else:
         print ("Error: %s" % Status(status).string())
     
-
+    '''
 
 
 

@@ -3,21 +3,42 @@ from requests.auth import HTTPBasicAuth
 import json
 import string
 
-from controller import *
-from netconfdev import *
+from framework.controller import *
+from framework.netconfnode import  *
 
 #================================
 # KEEP
 #================================
-class VRouter5600(NetconfDevice):
+class VRouter5600(NetconfNode):
+    '''
     def __init__(self, controller, node):
         self.controller = controller
         self.node = node
+    '''
+    def __init__(self, ctrl, name, ipAddr, portNum, adminName, adminPassword, tcpOnly=False):
+#        print "...."
+        super(VRouter5600, self).__init__(ctrl, name, ipAddr, portNum, adminName, adminPassword, tcpOnly)
+#        print self.name
+#        super(VRouter5600, self).__init__()
+#        super.__init__(self, ctrl, name, ipAddr, portNum, adminName, adminPassword)
+        '''
+        self.ctrl = controller
+        self.name = nodeName
+        self.ipAddr = ipAddr
+        self.tcpOnly = tcpOnly
+        self.portNum = portNum
+        self.adminName = adminName
+        self.adminPassword = adminPassword
+        self.controller = controller
+        self.node = node
+        '''
     
     def to_string(self):
+#        print vars(self)
+#        print vars(self.ctrl)
 #        attrs = vars(self.common)
-        ctrl = vars(self.controller)
-        node = vars(self.node)
+#        ctrl = vars(self.controller)
+#        node = vars(self.node)
 #        print attrs
 #        print ', '.join("%s: %s" % item for item in attrs.items())
 #        print ("devName %s" % self.common.devName)
@@ -27,23 +48,31 @@ class VRouter5600(NetconfDevice):
 #        print ("adminPassword %s" % self.common.adminPassword)
 #        return (ctrl, node)
 #        return str(vars(self.controller)) + str(vars(self.node))
-        return str(vars(self.node))
+#        return str(vars(self.node))
+        return str(vars(self))
 
 #================================
 # KEEP
 #================================
     def get_schemas(self):
-        ctrl = self.controller
-        myname = self.node.devName
+        ctrl = self.ctrl
+        myname = self.name
         result = ctrl.get_all_supported_schemas(myname)
         return result
+        
+        '''
+        ctrl = self.controller
+        myname = self.node.name
+        result = ctrl.get_all_supported_schemas(myname)
+        return result
+        '''
 
 #================================
 # KEEP
 #================================
     def get_schema(self, schemaId, schemaVersion):
         ctrl = self.controller
-        myname = self.node.devName
+        myname = self.node.name
         result = ctrl.get_schema(myname, schemaId, schemaVersion)
         return result
         
@@ -51,19 +80,19 @@ class VRouter5600(NetconfDevice):
         templateModelRef = "vyatta-security:security/vyatta-security-firewall:firewall"        
         modelref = templateModelRef       
         ctrl = self.controller
-        myname = self.node.devName
+        myname = self.node.name
         url = ctrl.get_ext_mount_cfg_url(myname)
-        result = ctrl.ctrl_get_request(url + modelref)
+        result = ctrl.http_get_request(url + modelref)
         return result
         
     def get_firewall_instance_cfg(self, instance):        
         templateModelRef = "vyatta-security:security/vyatta-security-firewall:firewall/name/{}"     
         modelref = templateModelRef.format(instance)
         ctrl = self.controller
-        myname = self.node.devName
+        myname = self.node.name
         url = ctrl.get_ext_mount_cfg_url(myname)
 #        print url + modelref
-        result = ctrl.ctrl_get_request(url + modelref)
+        result = ctrl.http_get_request(url + modelref)
         
         status = result[0]
         if (status == STATUS.CTRL_CONN_ERROR):
@@ -89,14 +118,14 @@ class VRouter5600(NetconfDevice):
 # KEEP
 #================================
     def apply_firewall_to_dataplane_interface(self, dpIfFwObj):        
-        ctrl = self.controller
-        myname = self.node.devName
+        ctrl = self.ctrl
+        myname = self.name
         url = ctrl.get_ext_mount_cfg_url(myname)
         headers = {'content-type': 'application/yang.data+json'}        
         payload = dpIfFwObj.get_payload()
         urlext = dpIfFwObj.get_url_extension()
         url += urlext
-        result = ctrl.ctrl_put_request(url, payload, headers)
+        result = ctrl.http_put_request(url, payload, headers)
         return result
         
 #================================
@@ -105,14 +134,14 @@ class VRouter5600(NetconfDevice):
     def delete_firewall_from_interface(self, ifName):        
         templateModelRef = "vyatta-interfaces:interfaces/vyatta-interfaces-dataplane:dataplane/{}/vyatta-security-firewall:firewall/"
         modelref = templateModelRef.format(ifName)
-        myname = self.node.devName
+        myname = self.node.name
         ctrl = self.controller
         url = ctrl.get_ext_mount_cfg_url(myname)
         print ("+++ url: " + url)
         print ("+++ modelref: " + modelref)
         print ("+++ both: " + url + modelref)
         
-        result = ctrl.ctrl_delete_request(url + modelref)
+        result = ctrl.http_delete_request(url + modelref)
         status = result[0]
         if (status == STATUS.CTRL_CONN_ERROR):
             return (status, None)
@@ -134,19 +163,19 @@ class VRouter5600(NetconfDevice):
 # KEEP
 #================================
     def create_firewall_instance(self, fwInstance):        
-        ctrl = self.controller
-        myname = self.node.devName
+        ctrl = self.ctrl
+        myname = self.name
         url = ctrl.get_ext_mount_cfg_url(myname)
-        print url
+#        print url
         headers = {'content-type': 'application/yang.data+json'}
-        print headers
+#        print headers
         payload = fwInstance.get_payload()
-        print payload
+#        print payload
 #        ext = fwInstance.get_url_extension()
 #        print ext
 #        url += ext
 #        print url
-        result = ctrl.ctrl_post_request(url, payload, headers)
+        result = ctrl.http_post_request(url, payload, headers)
 #        print result[1].content
         return result
 
@@ -154,8 +183,8 @@ class VRouter5600(NetconfDevice):
 # KEEP
 #================================
     def delete_firewall_instance(self, fwInstance):
-        ctrl = self.controller
-        myname = self.node.devName
+        ctrl = self.ctrl
+        myname = self.name
         url = ctrl.get_ext_mount_cfg_url(myname)
         headers = {'content-type': 'application/yang.data+json'}
 #        print headers
@@ -167,7 +196,7 @@ class VRouter5600(NetconfDevice):
         for item in rules:
             name = item.get_name()
 #            print(url + "/name/" + name)
-            result = ctrl.ctrl_delete_request(url + "/name/" + name)
+            result = ctrl.http_delete_request(url + "/name/" + name)
             status = result[0]
             if(status != STATUS.CTRL_OK):
                 break
@@ -301,7 +330,7 @@ class InterfaceDataplane(VRouter5600):
         headers = {'content-type': 'application/yang.data+json'}
 #        url = ctrl.get_ext_mount_cfg_url(self.tagnode)
 #        print url
-#        result = ctrl.ctrl_put_request(url, payload, headers)
+#        result = ctrl.http_put_request(url, payload, headers)
     
 
 class InterfaceDataplaneFirewall():

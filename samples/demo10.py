@@ -2,31 +2,103 @@
 
 import time
 import sys
-from controller import *
-from netconfdev import *
-from vrouter5600 import *
+
+from framework.controller import *
+from framework.netconfnode import *
+from framework.vrouter5600 import *
 
 if __name__ == "__main__":
-    
+
     ctrlIpAddr =  "172.22.18.186"
-#    bvcPortNum = "8181"     
     ctrlPortNum = "8080"     
     ctrlUname = 'admin' 
     ctrlPswd = 'admin'
-#    nodeName = 'vRouter2'
-#    nodeName = 'controller-config'
 
-    devName = "vRouter"
-    devIpAddr = "172.22.17.107"
-    devPortNum = 830
-    devUname = "vyatta"
-    devPswd = "vyatta"
-    tcpOnly="false"
+    nodeName = "vRouter"
+    nodeIpAddr = "172.22.17.107"
+    nodePortNum = 830
+    nodeUname = "vyatta"
+    nodePswd = "vyatta"
+#    nodeTcpOnly="false"
   
-    ctrl = Controller(ctrlIpAddr, ctrlPortNum, ctrlUname, ctrlPswd)
-    node = NetconfDevice(devName, devIpAddr, devPortNum, tcpOnly, devUname, devPswd)
-    vrouter = VRouter5600(ctrl, node)
+    rundelay = 2
+
+    print (">>> Demo started")
     
+    print ("\n")
+    print (">>> Creating Controller instance")
+    ctrl = Controller(ctrlIpAddr, ctrlPortNum, ctrlUname, ctrlPswd)
+    print (">>> Created Controller instance: " + ctrl.to_string())
+
+    print ("\n")
+    print (">>> Creating NETCONF node")
+    time.sleep(rundelay)    
+    vrouter = VRouter5600(ctrl, nodeName, nodeIpAddr, nodePortNum, nodeUname, nodePswd)
+    print (">>> Created NETCONF node : " + vrouter.to_string())    
+
+    print ("\n")
+    print (">>> Mounting NETCONF node '%s' on the Controller" % nodeName)
+    time.sleep(rundelay)    
+    result = ctrl.add_netconf_node(vrouter)
+    status = result[0]
+    if (status == STATUS.CTRL_OK):
+        print ">>> NETCONF node '{}' was successfully mounted on the Controller".format(nodeName)
+    else:
+        print ("Error: %s" % Status(status).string())
+
+    print ("\n")
+    print (">>> Getting list of schemas supported by '%s' " + nodeName)
+    time.sleep(rundelay)
+    result = vrouter.get_schemas()
+    status = result[0]
+    if (status == STATUS.CTRL_OK):
+        print "Schemas:"
+        slist = result[1]
+        print json.dumps(slist, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+    else:
+        print ("Error: %s" % Status(status).string())
+
+
+    '''
+    nodes = ctrl.get_all_nodes()
+    for node in nodes:
+#        print type(node)
+        if isinstance(node, NetconfNode):
+            print"ppppp"
+            print node
+            if(isinstance(node, VRouter5600)):
+               print"ppppp"
+               print type(node)
+               print node.to_string()
+
+    '''
+    
+    '''
+    node = NetconfNode(ctrl, nodeName, nodeIpAddr, nodePortNum, nodeUname, nodePswd)
+    
+    vrouter = VRouter5600(ctrl, nodeName, nodeIpAddr, nodePortNum, nodeUname, nodePswd)
+    node.add_device(vrouter)
+    
+    
+#    vrouter = VRouter5600(ctrl, node)
+#    node.add_device(vrouter)    
+    ctrl.add_node(node)
+    
+    nodes = ctrl.get_all_nodes()
+    for node in nodes:
+        print type(node)
+        if isinstance(node, NetconfNode):
+            print node.to_string()
+    
+    
+    node = ctrl.get_node(nodeName)
+    if (node != None):
+        print node.to_string()
+    
+    sys.exit(0)
+    '''
+    
+    '''
     ifName = "dp0p1p7"
     fwobj = InterfaceDataplaneFirewall(ifName)
     inFw = "FW-888"
@@ -39,56 +111,14 @@ if __name__ == "__main__":
         print("Firewall '%s' successfully applied to the dataplane interface '%s'" % (inFw, ifName))
     else:
         print ("Error: %s" % Status(status).string())
-
-    '''
-    interface = InterfaceDataplane(vrouter, "dp0p1p7")
-    inFwName= "FW-889"
-    interface.apply_in_firewall(inFwName);
-    '''
     '''
     
-    fw = InterfaceDataplaneFirewall()
-    
-    firewallgroup = "FW-889"
-    inputFwName = "FW-889"
-    fw.add_in_item(inputFwName)
-    
-    interface.add_firewall(fw)
     '''
-    
-
-#    print interface.to_json()
-#    payload = interface.get_payload()
-#    print payload
-    sys.exit(0)
-    print ("222")
-    
-    
-    ctrlIpAddr =  "172.22.18.186"
-#    bvcPortNum = "8181"     
-    ctrlPortNum = "8080"     
-    ctrlUname = 'admin' 
-    ctrlPswd = 'admin'
-#    nodeName = 'vRouter2'
-#    nodeName = 'controller-config'
-
-    devName = "vRouter"
-    devIpAddr = "172.22.17.107"
-    devPortNum = 830
-    devUname = "vyatta"
-    devPswd = "vyatta"
-    tcpOnly="false"
-    
-    rundelay = 2
-    
     print (">>> Demo started")
     ctrl = Controller(ctrlIpAddr, ctrlPortNum, ctrlUname, ctrlPswd)
     print (">>> Created Controller instance: " + ctrl.to_string())
 
     time.sleep(rundelay)
-
-    node = NetconfDevice(devName, devIpAddr, devPortNum, tcpOnly, devUname, devPswd)
-    print (">>> Created NETCONF node instance: " + node.to_string())    
 
     time.sleep(rundelay)
 
@@ -100,6 +130,7 @@ if __name__ == "__main__":
         print ("Error: %s" % Status(status).string())
 
     time.sleep(rundelay)
+    '''
     
     '''
     status = ctrl.check_node_config_status(netconfdev.devName)
@@ -117,10 +148,12 @@ if __name__ == "__main__":
     else:
         print ("Error: %s" % Status(status).string())
     '''
-    
+
+    '''
     vrouter = VRouter5600(ctrl, node)
     print vrouter.to_string()
     print (">>> Created vRouter: " + vrouter.to_string())
+    '''
     
     '''
     result = vrouter.get_schemas()
@@ -158,27 +191,28 @@ if __name__ == "__main__":
         print ("Error: %s" % Status(status).string())
     '''
     
-    
-    firewall = Firewall()
-    
+    print "\n"
     firewallgroup = "FW-889"
-    rules = Rules(firewallgroup)
-    
+    time.sleep(rundelay)    
+    firewall = Firewall()    
+    rules = Rules(firewallgroup)    
     rulenum = 33
     rule = Rule(rulenum)
     rule.add_action("accept")
-    rule.add_source_address("172.22.17.108")
-    
+    rule.add_source_address("172.22.17.108")    
     rules.add_rule(rule)
-
     firewall.add_rules(rules)
-        
+    print (">>> Creating new firewall instance '%s on '%s' " % (firewallgroup, nodeName))
     result = vrouter.create_firewall_instance(firewall)
     status = result[0]
     if (status == STATUS.CTRL_OK):
-        print ("Firewall instance '%s' was successfully created" % firewallgroup)
+#        print ("Firewall instance '%s' was successfully created" % firewallgroup)
+        print ("Firewall instance '%s' was successfully created:" % firewallgroup)
+        print ("%s " % firewall.get_payload())
     else:
         print ("Error: %s" % Status(status).string())
+
+
         
         
     '''
@@ -197,6 +231,8 @@ if __name__ == "__main__":
     
         
         
+    print "\n"
+    print (">>> Removing firewall instance '%s' from '%s' " % (firewallgroup, nodeName))
     result = vrouter.delete_firewall_instance(firewall)  
     status = result[0]
     if (status == STATUS.CTRL_OK):

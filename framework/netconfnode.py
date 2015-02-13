@@ -8,9 +8,11 @@
 #================================
 # KEEP
 #================================
-class NetconfDevice():
-    def __init__(self, devName, ipAddr, portNum, tcpOnly, adminName, adminPassword):
-        self.devName = devName
+class NetconfNode(object):
+    def __init__(self, controller=None, nodeName=None, ipAddr=None, portNum=None,
+                 adminName=None, adminPassword=None, tcpOnly=False):
+        self.ctrl = controller
+        self.name = nodeName
         self.ipAddr = ipAddr
         self.tcpOnly = tcpOnly
         self.portNum = portNum

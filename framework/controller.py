@@ -1,11 +1,10 @@
+import json
 import requests
 from requests.auth import HTTPBasicAuth
 from requests.exceptions import ConnectionError, Timeout
 import xmltodict
-import json
 
-#import logging
-#logging.basicConfig(level=logging.DEBUG)
+from framework.netconfnode import  *
 
 #================================
 # KEEP
@@ -18,7 +17,6 @@ STATUS = enum('CTRL_OK', 'CTRL_CONN_ERROR', 'CTRL_DATA_NOT_FOUND', 'CTRL_BAD_REQ
               'CTRL_UNAUTHORIZED_ACCESS', 'CTRL_INTERNAL_ERROR',
               'NODE_CONNECTED', 'NODE_DISONNECTED', 'NODE_NOT_FOUND', 'NODE_CONFIGURED',                   
               'N_A')
-#NODE_STATUS = enum('CONNECTED', 'DISONNECTED', 'NOT_FOUND', 'CONFIGURED', 'N_A')
 
 #================================
 # KEEP
@@ -70,23 +68,66 @@ class Status(object):
 # KEEP
 #================================
 class Controller():
-    def __init__(self, ipAddr, portNum, adminName, adminPassword):
+    def __init__(self, ipAddr, portNum, adminName, adminPassword, timeout=5):
         self.ipAddr = ipAddr
         self.portNum = portNum
         self.adminName = adminName
         self.adminPassword = adminPassword
+        self.timeout = timeout
+        self.nodes = []
 
+    def add_node(self,node):
+        self.nodes.append(node)
+
+    def get_all_nodes(self):
+        return self.nodes
+    
+    def get_node(self, nodeName):
+        for node in self.nodes:
+            if(isinstance(node, NetconfNode) and node.name == nodeName):
+                return node
+        
     def to_string(self):
         return str(vars(self))
 
-    def ctrl_get_request(self, url):
+    def http_get_request(self, url):
         resp = None
         status = None            
 
         try:
-#            print ("+++++[ctrl_get_request] name=%s, pswd=%s" % (self.adminName, self.adminPassword))
-            resp = requests.get(url, auth=HTTPBasicAuth(self.adminName, self.adminPassword), timeout=(5))
-#            print ("+++ got resp")
+            resp = requests.get(url,
+                                auth=HTTPBasicAuth(self.adminName, self.adminPassword), 
+                                timeout=self.timeout)
+            status = STATUS.CTRL_OK
+        except (ConnectionError, Timeout) as exp:
+            status = STATUS.CTRL_CONN_ERROR
+        
+        return (status, resp)
+    
+    def http_post_request(self, url, data, headers):
+        resp = None
+        status = None            
+
+        try:
+            resp = requests.post(url,
+                                 auth=HTTPBasicAuth(self.adminName, self.adminPassword),
+                                 data=data, headers=headers, timeout=self.timeout)
+            status = STATUS.CTRL_OK
+        except (ConnectionError, Timeout) as e:
+            print "Error: " + repr(e)
+            status = STATUS.CTRL_CONN_ERROR
+        
+        return (status, resp)
+
+
+    def http_put_request(self, url, data, headers):
+        resp = None
+        status = None            
+
+        try:
+            resp = requests.put(url,
+                                auth=HTTPBasicAuth(self.adminName, self.adminPassword),
+                                data=data, headers=headers, timeout=self.timeout)
             status = STATUS.CTRL_OK
         except (ConnectionError, Timeout) as e:
             print "Error: " + repr(e)
@@ -94,42 +135,14 @@ class Controller():
         
         return (status, resp)
     
-    def ctrl_post_request(self, url, data, headers):
+    def http_delete_request(self, url):
         resp = None
         status = None            
 
         try:
-            resp = requests.post(url, auth=HTTPBasicAuth(self.adminName, self.adminPassword),
-                                 data=data, headers=headers, timeout=(5))
-            status = STATUS.CTRL_OK
-        except (ConnectionError, Timeout) as e:
-            print "Error: " + repr(e)
-            status = STATUS.CTRL_CONN_ERROR
-        
-        return (status, resp)
-
-
-    def ctrl_put_request(self, url, data, headers):
-        resp = None
-        status = None            
-
-        try:
-            resp = requests.put(url, auth=HTTPBasicAuth(self.adminName, self.adminPassword),
-                                data=data, headers=headers, timeout=(5))
-            status = STATUS.CTRL_OK
-        except (ConnectionError, Timeout) as e:
-            print "Error: " + repr(e)
-            status = STATUS.CTRL_CONN_ERROR
-        
-        return (status, resp)
-    
-    def ctrl_delete_request(self, url):
-        resp = None
-        status = None            
-
-        try:
-            resp = requests.delete(url, auth=HTTPBasicAuth(self.adminName, self.adminPassword),
-                                   timeout=(5))
+            resp = requests.delete(url,
+                                   auth=HTTPBasicAuth(self.adminName, self.adminPassword),
+                                   timeout=self.timeout)
             status = STATUS.CTRL_OK
         except (ConnectionError, Timeout) as e:
             print "Error: " + repr(e)
@@ -141,7 +154,7 @@ class Controller():
         templateUrl = "http://{}:{}/restconf/config/opendaylight-inventory:nodes"
         url = templateUrl.format(self.ipAddr, self.portNum)
         
-        result = self.ctrl_get_request(url)
+        result = self.http_get_request(url)
         status = result[0]
         if (status == STATUS.CTRL_CONN_ERROR):
             return status
@@ -166,7 +179,7 @@ class Controller():
         templateUrl = "http://{}:{}/restconf/operational/opendaylight-inventory:nodes"
         url = templateUrl.format(self.ipAddr, self.portNum)
            
-        result = self.ctrl_get_request(url)
+        result = self.http_get_request(url)
         status = result[0]
         if (status == STATUS.CTRL_CONN_ERROR):
             return status
@@ -196,7 +209,7 @@ class Controller():
         url = templateUrl.format(self.ipAddr, self.portNum)        
         nlist = [] 
         
-        result = self.ctrl_get_request(url)
+        result = self.http_get_request(url)
         status = result[0]
         if (status == STATUS.CTRL_CONN_ERROR):
             return (status, None)
@@ -221,7 +234,7 @@ class Controller():
         url = templateUrl.format(self.ipAddr, self.portNum)
         nlist = [] 
 
-        result = self.ctrl_get_request(url)
+        result = self.http_get_request(url)
         status = result[0]
         if (status == STATUS.CTRL_CONN_ERROR):
             return (status, None)
@@ -256,8 +269,7 @@ class Controller():
         url = templateUrl.format(self.ipAddr, self.portNum, nodeName)
         slist = None
         
-        print "+++ url:" + url
-        result = self.ctrl_get_request(url)
+        result = self.http_get_request(url)
         status = result[0]
         if (status == STATUS.CTRL_CONN_ERROR):
             return (status, None)
@@ -270,10 +282,10 @@ class Controller():
             return (STATUS.CTRL_BAD_REQUEST, None)
     
         if (response.status_code == 200):
-            print ("+++[get_all_supported_schemas] OK")
+#            print ("+++[get_all_supported_schemas] OK")
 #            data = json.loads(response.content)
             data = json.loads(response.content).get('schemas').get('schema')
-            print data
+#            print data
 #            slist = data.get('schemas').get('schema')
             slist = data
         
@@ -289,7 +301,7 @@ class Controller():
         payload = {'input': {'identifier' : schemaId, 'version' : schemaVersion, 'format' : 'yang'}}
         schema = None
 
-        result = self.ctrl_post_request(url, json.dumps(payload), headers)
+        result = self.http_post_request(url, json.dumps(payload), headers)
         status = result[0]
         if (status != STATUS.CTRL_CONN_ERROR):
             response = result[1]
@@ -314,10 +326,83 @@ class Controller():
         
         return (status, schema)
 
+
+
+
 #================================
 # KEEP
 #================================
-    def add_netconf_node_to_config(self, node):
+    def get_all_services(self):
+        templateUrl = "http://{}:{}/restconf/config/opendaylight-inventory:nodes/node/controller-config/yang-ext:mount/config:services"        
+        url = templateUrl.format(self.ipAddr, self.portNum)
+        slist = None
+        
+        result = self.http_get_request(url)
+        status = result[0]
+        if (status == STATUS.CTRL_CONN_ERROR):
+            return (status, None)
+       
+        response = result[1]
+        if (response.status_code == 401):
+            return (STATUS.CTRL_UNAUTHORIZED_ACCESS , None)
+        
+        if (response.status_code == 400):
+            return (STATUS.CTRL_BAD_REQUEST, None)
+    
+        if (response.status_code == 200):
+            data = json.loads(response.content)
+            slist = data.get('services').get('service')
+        
+        return (status, slist)
+
+
+#================================
+# KEEP
+#================================
+    def get_service(self, name):
+        templateUrl = "http://{}:{}/restconf/config/opendaylight-inventory:nodes/node/controller-config/yang-ext:mount/config:services/service/{}"
+        url = templateUrl.format(self.ipAddr, self.portNum, name)         
+        '''
+        headers = {'content-type': 'application/yang.data+json', 'accept': 'text/json, text/html, application/xml, */*'}
+        '''
+        service = None
+
+#        print url
+        result = self.http_get_request(url)
+        status = result[0]
+        
+        status = result[0]
+        if (status == STATUS.CTRL_CONN_ERROR):
+            return (status, None)
+       
+        response = result[1]
+        if (response.status_code == 401):
+            return (STATUS.CTRL_UNAUTHORIZED_ACCESS , None)
+        
+        if (response.status_code == 400):
+            return (STATUS.CTRL_BAD_REQUEST, None)
+    
+        if (response.status_code == 200):
+            service = json.loads(response.content)
+
+        return (status, service)
+
+
+
+
+
+
+
+
+
+
+
+
+#================================
+# KEEP
+#================================
+    def add_netconf_node(self, node):
+#    def add_netconf_node_to_config(self, node):
         templateUrl = "http://{}:{}/restconf/config/opendaylight-inventory:nodes/node/controller-config/yang-ext:mount/config:modules"        
         xmlPayloadTemplate = '''
         <module xmlns="urn:opendaylight:params:xml:ns:yang:controller:config">
@@ -350,12 +435,12 @@ class Controller():
           </processing-executor>
         </module>
         '''
-        payload = xmlPayloadTemplate.format(node.devName, node.ipAddr, node.portNum, node.adminName, node.adminPassword, node.tcpOnly)
+        payload = xmlPayloadTemplate.format(node.name, node.ipAddr, node.portNum, node.adminName, node.adminPassword, node.tcpOnly)
 #        print payload
         url = templateUrl.format(self.ipAddr, self.portNum)
 #        print url
         headers = {'content-type': 'application/xml', 'accept': 'application/xml'}
-        result = self.ctrl_post_request(url, payload, headers)
+        result = self.http_post_request(url, payload, headers)
         status = result[0]
 #        print status
         if (status != STATUS.CTRL_CONN_ERROR):
@@ -379,7 +464,7 @@ class Controller():
         url = templateUrl.format(self.ipAddr, self.portNum, netconfdev.devName)
 
 #        print url
-        result = self.ctrl_delete_request(url)
+        result = self.http_delete_request(url)
         status = result[0]
 #        print status
         if (status != STATUS.CTRL_CONN_ERROR):
@@ -416,7 +501,7 @@ class Controller():
         '''
         payload = xmlPayloadTemplate.format(netconfdev.devName, netconfdev.adminName, netconfdev.adminPassword)
         headers = {'content-type': 'application/xml', 'accept': 'application/xml'}
-        result = self.ctrl_post_request(url, payload, headers)                
+        result = self.http_post_request(url, payload, headers)                
         status = result[0]
         if (status != STATUS.CTRL_CONN_ERROR):
             response = result[1]
@@ -433,12 +518,18 @@ class Controller():
         
         return (status, None)
         
-    def get_ext_mount_cfg_url(self, node):
+    def get_ext_mount_config_url(self, node):
         templateUrl = "http://{}:{}/restconf/config/opendaylight-inventory:nodes/node/{}/yang-ext:mount/"
-#        print templateUrl
         url = templateUrl.format(self.ipAddr, self.portNum, node)
-#        print url
         return url    
+
+    def get_ext_mount_operational_url(self, node):
+        templateUrl = "http://{}:{}/restconf/operational/opendaylight-inventory:nodes/node/{}/yang-ext:mount/"
+        url = templateUrl.format(self.ipAddr, self.portNum, node)
+        return url    
+
+
+
 
 def get_nodes_operational_datastore(ipAddr, portNum, uname, passwd, nodeId):
 #    url="http://" + ipAddr + ":" + portNum + "/restconf/operational/opendaylight-inventory:nodes"
