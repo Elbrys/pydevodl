@@ -17,7 +17,9 @@ if __name__ == "__main__":
     
     rundelay = 2
 
-    print ("<<< Demo start")
+    print ("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
+    print ("<<< Demo Start")
+    print ("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
     
     print ("\n")
     print ("<<< Creating Controller instance")
@@ -132,28 +134,90 @@ if __name__ == "__main__":
     result = ctrl.get_service(name)
     status = result[0]
     if (status == STATUS.CTRL_OK):
+        print "Service:"
         service = result[1]
         print json.dumps(service, default=lambda o: o.__dict__, sort_keys=True, indent=4)
     else:
         print ("Error: %s" % Status(status).string())
 
+    print "\n"
+    print ("<<< Get list of all NETCONF operations supported by the Controller")
+    result = ctrl.get_all_supported_operations("controller-config")
+    status = result[0]
+    if (status == STATUS.CTRL_OK):
+        print "Operations:"
+        slist = result[1]
+        print json.dumps(slist, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+    else:
+        print ("Error: %s" % Status(status).string())
 
-    
-    ''' List all operations supported by the Controller '''
+    time.sleep(rundelay)
         
-    ''' List all configuration modules installed on the Controller '''
+    print "\n"
+    print ("<<< Show operational state of all configuration modules on the Controller")
+    result = ctrl.get_all_modules_operational_state()
+    status = result[0]
+    if (status == STATUS.CTRL_OK):
+        print "Modules:"
+        slist = result[1]
+        print json.dumps(slist, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+    else:
+        print ("Error: %s" % Status(status).string())
+
+    time.sleep(rundelay)
     
-    ''' Show the content of a particular configuration module '''
+    print "\n"
+    print ("<<< Show operational state of a particular configuration module on the Controller")
+    moduleType = "opendaylight-rest-connector:rest-connector-impl"
+    moduleName = "rest-connector-default-impl"
+    print ("    (module type: %s,\n     module name: %s)"  % (moduleType, moduleName))
+    result = ctrl.get_module_operational_state(moduleType, moduleName)
+    status = result[0]
+    if (status == STATUS.CTRL_OK):
+        print "Module:"
+        slist = result[1]
+        print json.dumps(slist, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+    else:
+        print ("Error: %s" % Status(status).string())
+
+    time.sleep(rundelay)
     
-    ''' Show all sessions running on the Controller '''
+    print "\n"
+    print ("<<< Show all sessions running on the Controller ")
+    nodeName = "controller-config"
+    result = ctrl.get_all_sessions(nodeName)
+    status = result[0]
+    if (status == STATUS.CTRL_OK):
+        print "Sessions:"
+        slist = result[1]
+        print json.dumps(slist, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+    else:
+        print ("Error: %s" % Status(status).string())
+
+    time.sleep(rundelay)
     
-    ''' Show streams on the Controller '''
+    print "\n"
+    print ("<<< List of all notification event streams on the Controller")
+    result = ctrl.get_streams_info()
+    status = result[0]
+    if (status == STATUS.CTRL_OK):
+        print "Streams:"
+        slist = result[1]
+        print json.dumps(slist, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+    else:
+        print ("Error: %s" % Status(status).string())
+
+    time.sleep(rundelay)
     
+    ''' RPC call - Toaster as an example ??? '''
     
+    ''' Obtain all YANG models installed on the Controller and store them in /tmp/schemas dir '''
     
 
     print ("\n")
-    print (">>> Demo end")
+    print (">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+    print (">>> Demo End")
+    print (">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
     
     '''
     bvcIpAddr =  "172.22.18.186"

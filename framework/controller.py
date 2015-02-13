@@ -326,8 +326,147 @@ class Controller():
         
         return (status, schema)
 
+#================================
+# KEEP
+#================================
+    def get_all_supported_operations(self, nodeName):
+        templateUrl = "http://{}:{}/restconf/operations/opendaylight-inventory:nodes/node/{}/yang-ext:mount/"
+        url = templateUrl.format(self.ipAddr, self.portNum, nodeName) 
+        olist = None
+
+        result = self.http_get_request(url)
+        status = result[0]
+        if (status == STATUS.CTRL_CONN_ERROR):
+            return (status, None)
+       
+        response = result[1]
+        if (response.status_code == 401):
+            return (STATUS.CTRL_UNAUTHORIZED_ACCESS , None)
+        
+        if (response.status_code == 400):
+            return (STATUS.CTRL_BAD_REQUEST, None)
+    
+        if (response.status_code == 200):
+            data = json.loads(response.content).get('operations')
+#            print data.get('operations')
+#            data = json.loads(response.content).get('schemas').get('schema')
+            olist = data
+        
+        return (status, olist)
+
+#================================
+# KEEP
+#================================
+    def get_all_modules_operational_state(self):
+        templateUrl = "http://{}:{}/restconf/operational/opendaylight-inventory:nodes/node/controller-config/yang-ext:mount/config:modules"
+        url = templateUrl.format(self.ipAddr, self.portNum)
+        mlist = None
+
+        result = self.http_get_request(url)
+        status = result[0]
+        if (status == STATUS.CTRL_CONN_ERROR):
+            return (status, None)
+       
+        response = result[1]
+        if (response.status_code == 401):
+            return (STATUS.CTRL_UNAUTHORIZED_ACCESS , None)
+        
+        if (response.status_code == 400):
+            return (STATUS.CTRL_BAD_REQUEST, None)
+    
+        if (response.status_code == 200):
+            data = json.loads(response.content).get('modules').get('module')
+            print data
+            mlist = data
+
+        return (status, mlist)
 
 
+
+#================================
+# KEEP
+#================================
+    def get_module_operational_state(self, type, name):
+        templateUrl = "http://{}:{}/restconf/operational/opendaylight-inventory:nodes/node/controller-config/yang-ext:mount/config:modules/module/{}/{}"              
+        url = templateUrl.format(self.ipAddr, self.portNum, type, name)         
+        '''
+        headers = {'content-type': 'application/yang.data+json', 'accept': 'text/json, text/html, application/xml, */*'}
+        '''
+        module = None
+
+#        print url
+        result = self.http_get_request(url)
+        status = result[0]
+        if (status == STATUS.CTRL_CONN_ERROR):
+            return (status, None)
+       
+        response = result[1]
+        if (response.status_code == 401):
+            return (STATUS.CTRL_UNAUTHORIZED_ACCESS , None)
+        
+        if (response.status_code == 400):
+            return (STATUS.CTRL_BAD_REQUEST, None)
+    
+        if (response.status_code == 200):
+            module = json.loads(response.content).get('module')
+
+        return (status, module)
+
+#================================
+# KEEP
+#================================
+    def get_all_sessions(self, nodeName):
+        templateUrl = "http://{}:{}/restconf/operational/opendaylight-inventory:nodes/node/{}/yang-ext:mount/ietf-netconf-monitoring:netconf-state/sessions"
+        url = templateUrl.format(self.ipAddr, self.portNum, nodeName)
+        slist = None
+        
+        result = self.http_get_request(url)
+        status = result[0]
+        if (status == STATUS.CTRL_CONN_ERROR):
+            return (status, None)
+       
+        response = result[1]
+        if (response.status_code == 401):
+            return (STATUS.CTRL_UNAUTHORIZED_ACCESS , None)
+        
+        if (response.status_code == 400):
+            return (STATUS.CTRL_BAD_REQUEST, None)
+    
+        if (response.status_code == 200):
+            data = json.loads(response.content).get('sessions')
+            slist = data
+        
+        return (status, slist)
+
+
+
+
+
+#================================
+# KEEP
+#================================
+    def get_streams_info(self):
+        templateUrl = "http://172.22.18.186:8080/restconf/streams"        
+        url = templateUrl.format(self.ipAddr, self.portNum)
+        slist = None
+        
+        result = self.http_get_request(url)
+        status = result[0]
+        if (status == STATUS.CTRL_CONN_ERROR):
+            return (status, None)
+       
+        response = result[1]
+        if (response.status_code == 401):
+            return (STATUS.CTRL_UNAUTHORIZED_ACCESS , None)
+        
+        if (response.status_code == 400):
+            return (STATUS.CTRL_BAD_REQUEST, None)
+    
+        if (response.status_code == 200):
+            data = json.loads(response.content).get('streams')
+            slist = data
+        
+        return (status, slist)
 
 #================================
 # KEEP
@@ -370,8 +509,6 @@ class Controller():
 #        print url
         result = self.http_get_request(url)
         status = result[0]
-        
-        status = result[0]
         if (status == STATUS.CTRL_CONN_ERROR):
             return (status, None)
        
@@ -383,7 +520,7 @@ class Controller():
             return (STATUS.CTRL_BAD_REQUEST, None)
     
         if (response.status_code == 200):
-            service = json.loads(response.content)
+            service = json.loads(response.content).get('service')
 
         return (status, service)
 
