@@ -38,15 +38,16 @@ if __name__ == "__main__":
 
 
     print ("\n")
-    print (">>> Creating new NETCONF node")
     time.sleep(rundelay)    
     nodeName = "fake-device"
     nodeIpAddr = "1.2.3.4"
     nodePortNum = 830
     nodeUname = "fake-device-uname"
     nodePswd = "fake-device-pswd"
+    print (">>> Creating new '%s' NETCONF node" % nodeName)
     node = NetconfNode(ctrl, nodeName, nodeIpAddr, nodePortNum, nodeUname, nodePswd)
     print (">>> Created NETCONF node : " + node.to_string())    
+
 
     print ("\n")
     print (">>> Mount NETCONF node '%s' on the Controller" % nodeName)
@@ -105,7 +106,7 @@ if __name__ == "__main__":
 
 
     print "\n"
-    print ("<<< Get connection status for the '%s' NETCONF node" % nodeName)
+    print ("<<< Show connection status for the '%s' NETCONF node" % nodeName)
     time.sleep(rundelay)
     status = ctrl.check_node_conn_status(nodeName)
     if (status == STATUS.NODE_CONNECTED):

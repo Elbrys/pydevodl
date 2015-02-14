@@ -99,7 +99,8 @@ class Controller():
                                 auth=HTTPBasicAuth(self.adminName, self.adminPassword), 
                                 timeout=self.timeout)
             status = STATUS.CTRL_OK
-        except (ConnectionError, Timeout) as exp:
+        except (ConnectionError, Timeout) as e:
+            print "Error: " + repr(e)
             status = STATUS.CTRL_CONN_ERROR
         
         return (status, resp)
