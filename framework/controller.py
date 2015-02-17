@@ -334,8 +334,8 @@ class Controller():
                 except (KeyError) as e:
                     print "Error: " + repr(e)
                     status = STATUS.CTRL_DATA_NOT_FOUND
-                else:
-                    print "TBD: not implemented content type parser"
+            else:
+                print "TBD: not implemented content type parser"
         else:
             print ("!!!Error, reason: %s" % response.reason)
             status = STATUS.HTTP_ERROR
