@@ -80,7 +80,7 @@ if __name__ == "__main__":
 
 
     print("\n")
-    print (">>> Show content of the Firewall instance '%s on '%s' " % (firewallgroup, nodeName))
+    print ("<<< Show content of the Firewall instance '%s on '%s' " % (firewallgroup, nodeName))
     time.sleep(rundelay)
     result = vrouter.get_firewall_instance_cfg(firewallgroup)
     status = result[0]
@@ -112,7 +112,7 @@ if __name__ == "__main__":
     
 
     print "\n"
-    print (">>> Remove Firewall instance '%s' from '%s' " % (firewallgroup, nodeName))
+    print ("<<< Remove Firewall instance '%s' from '%s' " % (firewallgroup, nodeName))
     time.sleep(rundelay)
     result = vrouter.delete_firewall_instance(firewall)  
     status = result[0]
