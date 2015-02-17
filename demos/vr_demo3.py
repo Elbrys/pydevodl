@@ -2,10 +2,13 @@
 
 import time
 import sys
+import json
 
-from framework.controller import *
-from framework.netconfnode import *
-from framework.vrouter5600 import *
+#from framework.controller import *
+#from framework.netconfnode import *
+#from framework.vrouter5600 import *
+from framework.controller import Controller, Status, STATUS
+from framework.vrouter5600 import VRouter5600
 
 if __name__ == "__main__":
 

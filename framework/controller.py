@@ -4,10 +4,8 @@ from requests.auth import HTTPBasicAuth
 from requests.exceptions import ConnectionError, Timeout
 import xmltodict
 
-from framework.netconfnode import  *
-
 #===============================================================================
-# KEEP
+# 
 #===============================================================================
 def enum(*args):
     enums = dict(zip(args, range(len(args))))
@@ -19,9 +17,12 @@ STATUS = enum('CTRL_OK', 'CTRL_CONN_ERROR', 'CTRL_DATA_NOT_FOUND', 'CTRL_BAD_REQ
               'HTTP_ERROR', 'N_A')
 
 #===============================================================================
-# KEEP
+# Class 'Status'
 #===============================================================================
 class Status(object):
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def __init__(self, status):
         if status not in (STATUS.CTRL_OK,
                           STATUS.CTRL_CONN_ERROR,
@@ -39,6 +40,9 @@ class Status(object):
             raise ValueError('undefined status value')
         self.status = status
     
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def string(self):
         if (self.status == STATUS.CTRL_OK):
             return "success"
@@ -69,9 +73,12 @@ class Status(object):
             raise ValueError('!!!undefined status value')
 
 #===============================================================================
-# KEEP
+# Class 'Controller'
 #===============================================================================
 class Controller():
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def __init__(self, ipAddr, portNum, adminName, adminPassword, timeout=5):
         self.ipAddr = ipAddr
         self.portNum = portNum
@@ -95,12 +102,21 @@ class Controller():
         return node
     '''
     
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def to_string(self):
         return str(vars(self))
 
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def to_json(self):
         return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
 
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def http_get_request(self, url, data, headers):
         resp = None
         status = None
@@ -115,6 +131,9 @@ class Controller():
         
         return (status, resp)
     
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def http_post_request(self, url, data, headers):
         resp = None
         status = None
@@ -129,6 +148,9 @@ class Controller():
         
         return (status, resp)
 
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def http_put_request(self, url, data, headers):
         resp = None
         status = None
@@ -143,6 +165,9 @@ class Controller():
         
         return (status, resp)
     
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def http_delete_request(self, url, data, headers):
         resp = None
         status = None
@@ -157,6 +182,9 @@ class Controller():
         
         return (status, resp)
     
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def check_node_config_status(self, nodeId):
         templateUrl = "http://{}:{}/restconf/config/opendaylight-inventory:nodes"
         url = templateUrl.format(self.ipAddr, self.portNum)
@@ -185,6 +213,9 @@ class Controller():
         
         return status
     
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def check_node_conn_status(self, nodeId):
         templateUrl = "http://{}:{}/restconf/operational/opendaylight-inventory:nodes"
         url = templateUrl.format(self.ipAddr, self.portNum)
@@ -216,6 +247,9 @@ class Controller():
 
         return status
 
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def get_all_nodes_in_config(self):
         templateUrl = "http://{}:{}/restconf/config/opendaylight-inventory:nodes"
         url = templateUrl.format(self.ipAddr, self.portNum)        
@@ -245,6 +279,9 @@ class Controller():
 
         return (status, nlist)
 
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def get_all_nodes_conn_status(self):
         templateUrl = "http://{}:{}/restconf/operational/opendaylight-inventory:nodes"
         url = templateUrl.format(self.ipAddr, self.portNum)
@@ -281,6 +318,9 @@ class Controller():
 
         return (status, nlist)
 
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def get_schemas(self, nodeName):
         templateUrl = "http://{}:{}/restconf/operational/opendaylight-inventory:nodes/node/{}/yang-ext:mount/ietf-netconf-monitoring:netconf-state/schemas"
         url = templateUrl.format(self.ipAddr, self.portNum, nodeName)
@@ -308,6 +348,9 @@ class Controller():
         
         return (status, slist)
 
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def get_schema(self, nodeName, schemaId, schemaVersion):
         templateUrl = "http://{}:{}/restconf/operations/opendaylight-inventory:nodes/node/{}/yang-ext:mount/ietf-netconf-monitoring:get-schema"
         url = templateUrl.format(self.ipAddr, self.portNum, nodeName) 
@@ -342,6 +385,9 @@ class Controller():
 
         return (status, schema)
 
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def get_netconf_operations(self, nodeName):
         templateUrl = "http://{}:{}/restconf/operations/opendaylight-inventory:nodes/node/{}/yang-ext:mount/"
         url = templateUrl.format(self.ipAddr, self.portNum, nodeName) 
@@ -368,6 +414,9 @@ class Controller():
         
         return (status, olist)
 
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def get_all_modules_operational_state(self):
         templateUrl = "http://{}:{}/restconf/operational/opendaylight-inventory:nodes/node/controller-config/yang-ext:mount/config:modules"
         url = templateUrl.format(self.ipAddr, self.portNum)
@@ -395,7 +444,7 @@ class Controller():
         return (status, mlist)
 
     #---------------------------------------------------------------------------
-    # KEEP
+    # 
     #---------------------------------------------------------------------------
     def get_module_operational_state(self, moduleType, moduleName):
         templateUrl = "http://{}:{}/restconf/operational/opendaylight-inventory:nodes/node/controller-config/yang-ext:mount/config:modules/module/{}/{}"              
@@ -424,7 +473,7 @@ class Controller():
         return (status, module)
 
     #---------------------------------------------------------------------------
-    # KEEP
+    # 
     #---------------------------------------------------------------------------
     def get_sessions_info(self, nodeName):
         templateUrl = "http://{}:{}/restconf/operational/opendaylight-inventory:nodes/node/{}/yang-ext:mount/ietf-netconf-monitoring:netconf-state/sessions"
@@ -453,7 +502,7 @@ class Controller():
         return (status, slist)
 
     #---------------------------------------------------------------------------
-    # KEEP
+    # 
     #---------------------------------------------------------------------------
     def get_streams_info(self):
         templateUrl = "http://{}:{}/restconf/streams"        
@@ -482,7 +531,7 @@ class Controller():
         return (status, slist)
 
     #---------------------------------------------------------------------------
-    # KEEP
+    # 
     #---------------------------------------------------------------------------
     def get_service_providers_info(self):
         templateUrl = "http://{}:{}/restconf/config/opendaylight-inventory:nodes/node/controller-config/yang-ext:mount/config:services"        
@@ -511,7 +560,7 @@ class Controller():
         return (status, slist)
     
     #---------------------------------------------------------------------------
-    # KEEP
+    # 
     #---------------------------------------------------------------------------
     def get_service_provider_info(self, name):
         templateUrl = "http://{}:{}/restconf/config/opendaylight-inventory:nodes/node/controller-config/yang-ext:mount/config:services/service/{}"
@@ -540,7 +589,7 @@ class Controller():
         return (status, service)
 
     #---------------------------------------------------------------------------
-    # KEEP
+    # 
     #---------------------------------------------------------------------------
     def add_netconf_node(self, node):
         templateUrl = "http://{}:{}/restconf/config/opendaylight-inventory:nodes/node/controller-config/yang-ext:mount/config:modules"        
@@ -598,7 +647,7 @@ class Controller():
         return (status, None)
 
     #---------------------------------------------------------------------------
-    # KEEP
+    # 
     #---------------------------------------------------------------------------
     def delete_netconf_node(self, netconfdev):
         templateUrl = "http://{}:{}/restconf/config/opendaylight-inventory:nodes/node/controller-config/yang-ext:mount/config:modules/module/odl-sal-netconf-connector-cfg:sal-netconf-connector/{}"
@@ -660,45 +709,18 @@ class Controller():
         
         return (status, None)
         
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def get_ext_mount_config_url(self, node):
         templateUrl = "http://{}:{}/restconf/config/opendaylight-inventory:nodes/node/{}/yang-ext:mount/"
         url = templateUrl.format(self.ipAddr, self.portNum, node)
         return url    
 
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def get_ext_mount_operational_url(self, node):
         templateUrl = "http://{}:{}/restconf/operational/opendaylight-inventory:nodes/node/{}/yang-ext:mount/"
         url = templateUrl.format(self.ipAddr, self.portNum, node)
         return url    
-
-
-'''
-#================================
-# TBD
-#================================
-def get_recursively(search_dict, field):
-    """
-    Takes a dict with nested lists and dicts,
-    and searches all dicts for a key of the field
-    provided.
-    """
-    fields_found = []
-
-    for key, value in search_dict.iteritems():
-
-        if key == field:
-            fields_found.append(value)
-
-        elif isinstance(value, dict):
-            results = get_recursively(value, field)
-            for result in results:
-                fields_found.append(result)
-
-        elif isinstance(value, list):
-            for item in value:
-                if isinstance(item, dict):
-                    more_results = get_recursively(item, field)
-                    for another_result in more_results:
-                        fields_found.append(another_result)
-
-    return fields_found
-'''

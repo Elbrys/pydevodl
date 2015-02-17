@@ -2,7 +2,6 @@
 
 import sys
 import time
-import json
 
 from framework.controller import Controller, Status, STATUS
 from framework.vrouter5600 import VRouter5600

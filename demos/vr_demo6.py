@@ -2,10 +2,10 @@
 
 import time
 import sys
+import json
 
-from framework.controller import *
-from framework.netconfnode import *
-from framework.vrouter5600 import *
+from framework.controller import Controller, Status, STATUS
+from framework.vrouter5600 import VRouter5600, Firewall, Rules, Rule
 
 if __name__ == "__main__":
 
@@ -123,21 +123,18 @@ if __name__ == "__main__":
     status = result[0]
     if (status == STATUS.CTRL_OK):
         print ("Firewall instance '%s' was successfully created" % firewallgroup)
-#        print ("%s " % firewall.get_payload())
     else:
         print ("Demo terminated, reason: %s" % Status(status).string())
         sys.exit(0)
 
 
     print("\n")
-#    ifName = "dp0p1p7"
     print ("<<< Apply '%s' firewall instance to inbound traffic on the '%s' dataplane interface" % (firewallgroup, ifName))
     time.sleep(rundelay)    
     result = vrouter.set_dataplane_interface_inbound_firewall(ifName, firewallgroup)
     status = result[0]
     if (status == STATUS.CTRL_OK):
         print ("Firewall instance '%s' was successfully applied to inbound traffic on the '%s' dataplane interface" % (firewallgroup, ifName))
-#        print ("%s " % firewall.get_payload())
     else:
         print ("Demo terminated, reason: %s" % Status(status).string())
         sys.exit(0)
