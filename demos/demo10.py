@@ -31,7 +31,7 @@ if __name__ == "__main__":
     nodePortNum = 830
     nodeUname = "vyatta"
     nodePswd = "vyatta"      
-    print (">>> Creating new '%s' NETCONF node" % nodeName)
+    print (">>> Creating new NETCONF node '%s'" % nodeName)
     vrouter = VRouter5600(ctrl, nodeName, nodeIpAddr, nodePortNum, nodeUname, nodePswd)
     print (">>> Created NETCONF node : " + vrouter.to_string())    
 
@@ -88,7 +88,7 @@ if __name__ == "__main__":
     print "\n"
     yangModelName = "vyatta-security-firewall"
     yangModelVerson = "2014-11-07"
-    print ("<<< Retrieve the '%s' YANG model definition out of the '%s'" % (yangModelName, nodeName))
+    print ("<<< Retrieve the '%s' YANG model definition from the '%s'" % (yangModelName, nodeName))
     time.sleep(rundelay)
     result = ctrl.get_schema(nodeName, yangModelName, yangModelVerson)
     status = result[0]
@@ -103,7 +103,7 @@ if __name__ == "__main__":
     print("\n")
     print ("<<< Show Firewall configuration on the '%s'" % nodeName)
     time.sleep(rundelay)
-    result = vrouter.get_firewall_cfg()
+    result = vrouter.get_firewalls_cfg()
     status = result[0]
     if (status == STATUS.CTRL_OK):
         print "Firewall config:"
@@ -139,7 +139,7 @@ if __name__ == "__main__":
     print("\n")
     print ("<<< Show Firewalls configuration on the '%s'" % nodeName)
     time.sleep(rundelay)
-    result = vrouter.get_firewall_cfg()
+    result = vrouter.get_firewalls_cfg()
     status = result[0]
     if (status == STATUS.CTRL_OK):
         print "Firewall config:"
@@ -149,47 +149,6 @@ if __name__ == "__main__":
         print json.dumps(data, indent=4)
     else:
         print ("Error: %s" % Status(status).string())
-
-    print("\n")
-    print (">>> Show content of the Firewall instance '%s on '%s' " % (firewallgroup, nodeName))
-    time.sleep(rundelay)
-    result = vrouter.get_firewall_instance_cfg(firewallgroup)
-    status = result[0]
-    if (status == STATUS.CTRL_OK):
-        print ("Firewall instance '%s: " % firewallgroup)
-        response = result[1]
-        content = response.content
-        data = json.loads(content)
-        print json.dumps(data, indent=4)
-    else:
-        print ("Error: %s" % Status(status).string())
-
-
-    print "\n"
-    print (">>> Remove Firewall instance '%s' from '%s' " % (firewallgroup, nodeName))
-    time.sleep(rundelay)
-    result = vrouter.delete_firewall_instance(firewall)  
-    status = result[0]
-    if (status == STATUS.CTRL_OK):
-        print ("Firewall instance '%s' was successfully deleted" % firewallgroup)
-    else:
-        print ("Error: %s" % Status(status).string())
-    
-
-    print("\n")
-    print ("<<< Show Firewalls configuration on the '%s'" % nodeName)
-    time.sleep(rundelay)
-    result = vrouter.get_firewall_cfg()
-    status = result[0]
-    if (status == STATUS.CTRL_OK):
-        print "Firewalls config:"
-        response = result[1]
-        content = response.content
-        data = json.loads(content)
-        print json.dumps(data, indent=4)
-    else:
-        print ("Error: %s" % Status(status).string())
-
 
     print("\n")
     print (">>> Show content of the Firewall instance '%s on '%s' " % (firewallgroup, nodeName))
@@ -235,6 +194,140 @@ if __name__ == "__main__":
         print json.dumps(data, indent=4)
     else:
         print ("Error: %s" % Status(status).string())
+
+
+    print("\n")
+    ifName = "dp0p1p7"
+    print ("<<< Apply Firewall instance '%s' to the dataplane interface '%s' configuration on the '%s'" % (firewallgroup, ifName, nodeName))
+    vrouter.set_dataplane_interface_inbound_firewall(ifName, firewallgroup)
+
+
+    print("\n")
+    ifName = "dp0p1p7"
+    print ("<<< Apply '%s' Firewall instance to inbound traffic on the '%s' dataplane interface" % (firewallgroup, ifName))
+    time.sleep(rundelay)    
+    result = vrouter.set_dataplane_interface_inbound_firewall(ifName, firewallgroup)
+    status = result[0]
+    if (status == STATUS.CTRL_OK):
+        print ("Firewall instance '%s' was successfully applied to inbound traffic on the '%s' dataplane interface" % (firewallgroup, ifName))
+#        print ("%s " % firewall.get_payload())
+    else:
+        print ("Error: %s" % Status(status).string())
+
+
+    print("\n")
+#    ifName = "dp0p1p6"
+    print ("<<< Show '%s' dataplane interface configuration on the '%s'" % (ifName,nodeName))
+    time.sleep(rundelay)
+    result = vrouter.get_dataplane_interface_cfg(ifName)
+    status = result[0]
+    if (status == STATUS.CTRL_OK):
+        print ("Interface '%s' config:" % ifName)
+        response = result[1]
+        content = response.content
+        data = json.loads(content)
+        print json.dumps(data, indent=4)
+    else:
+        print ("Error: %s" % Status(status).string())
+        
+
+    print("\n")
+    ifName = "dp0p1p7"
+    print ("<<< Remove Firewall settings from the '%s' dataplane interface" % (ifName))
+    time.sleep(rundelay)    
+    result = vrouter.delete_dataplane_interface_firewall(ifName)
+    status = result[0]
+    if (status == STATUS.CTRL_OK):
+        print ("Success")
+    else:
+        print ("Error: %s" % Status(status).string())
+        
+    print("\n")
+    
+#    ifName = "dp0p1p6"
+    print ("<<< Show '%s' dataplane interface configuration on the '%s'" % (ifName,nodeName))
+    time.sleep(rundelay)
+    result = vrouter.get_dataplane_interface_cfg(ifName)
+    status = result[0]
+    if (status == STATUS.CTRL_OK):
+        print ("Interfaces '%s' config:" % ifName)
+        response = result[1]
+        content = response.content
+#        print content
+        data = json.loads(content)
+        print json.dumps(data, indent=4)
+    else:
+        print ("Error: %s" % Status(status).string())
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    print "\n"
+    print (">>> Remove Firewall instance '%s' from '%s' " % (firewallgroup, nodeName))
+    time.sleep(rundelay)
+    result = vrouter.delete_firewall_instance(firewall)  
+    status = result[0]
+    if (status == STATUS.CTRL_OK):
+        print ("Firewall instance '%s' was successfully deleted" % firewallgroup)
+    else:
+        print ("Error: %s" % Status(status).string())
+    
+
+    print("\n")
+    print ("<<< Show Firewalls configuration on the '%s'" % nodeName)
+    time.sleep(rundelay)
+    result = vrouter.get_firewalls_cfg()
+    status = result[0]
+    if (status == STATUS.CTRL_OK):
+        print "Firewalls config:"
+        response = result[1]
+        content = response.content
+        data = json.loads(content)
+        print json.dumps(data, indent=4)
+    else:
+        print ("Error: %s" % Status(status).string())
+
+
+    print("\n")
+    print (">>> Show content of the Firewall instance '%s on '%s' " % (firewallgroup, nodeName))
+    time.sleep(rundelay)
+    result = vrouter.get_firewall_instance_cfg(firewallgroup)
+    status = result[0]
+    if (status == STATUS.CTRL_OK):
+        print ("Firewall instance '%s: " % firewallgroup)
+        response = result[1]
+        content = response.content
+        data = json.loads(content)
+        print json.dumps(data, indent=4)
+    else:
+        print ("Error: %s" % Status(status).string())
+
+
+
 
 
     
@@ -301,7 +394,7 @@ if __name__ == "__main__":
     '''
     
     '''
-    vrouter.delete_firewall_from_interface(ifName)
+    vrouter.delete_dataplane_interface_firewall(ifName)
     '''
     
     print ("\n")

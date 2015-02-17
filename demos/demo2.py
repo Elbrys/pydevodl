@@ -1,9 +1,10 @@
 #!/usr/bin/python
 
+import sys
 import time
 
 from framework.controller import Controller,STATUS,Status
-from framework.netconfnode import *
+from framework.netconfnode import NetconfNode
 
 if __name__ == "__main__":
 
@@ -20,21 +21,23 @@ if __name__ == "__main__":
     ctrlUname = 'admin' 
     ctrlPswd = 'admin'    
     ctrl = Controller(ctrlIpAddr, ctrlPortNum, ctrlUname, ctrlPswd)
-    print ("<<< Created Controller instance: " + ctrl.to_string())
+    print ("'Controller':")
+    print ctrl.to_json()
 
     
     print "\n"
-    print ("<<< Show all NETCONF nodes mounted on the Controller")
+    print ("<<< Show NETCONF nodes configured on the Controller")
     time.sleep(rundelay)
     result = ctrl.get_all_nodes_in_config()
     status = result[0]
     if (status == STATUS.CTRL_OK):
-        print "Nodes mounted:"
+        print "Nodes configured:"
         nlist = result[1]
         for item in nlist:
             print "   '{}'".format(item)   
     else:
-        print ("Error: %s" % Status(status).string())
+        print ("Demo terminated, reason: %s" % Status(status).string())
+        sys.exit(0)
 
 
     print ("\n")
@@ -46,32 +49,35 @@ if __name__ == "__main__":
     nodePswd = "fake-device-pswd"
     print (">>> Creating new '%s' NETCONF node" % nodeName)
     node = NetconfNode(ctrl, nodeName, nodeIpAddr, nodePortNum, nodeUname, nodePswd)
-    print (">>> Created NETCONF node : " + node.to_string())    
+    print ("'%s':" % nodeName)
+    print node.to_json()
 
 
     print ("\n")
-    print (">>> Mount NETCONF node '%s' on the Controller" % nodeName)
+    print (">>> Add '%s' NETCONF node to the Controller" % nodeName)
     time.sleep(rundelay)    
     result = ctrl.add_netconf_node(node)
     status = result[0]
     if (status == STATUS.CTRL_OK):
-        print ">>> NETCONF node '{}' was successfully mounted on the Controller".format(nodeName)
+        print (">>> '%s' NETCONF node was successfully added to the Controller" % nodeName)
     else:
-        print ("Error: %s" % Status(status).string())
+        print ("Demo terminated, reason: %s" % Status(status).string())
+        sys.exit(0)
 
 
     print "\n"
-    print ("<<< Show all NETCONF nodes mounted on the Controller")
+    print ("<<< Show NETCONF nodes configured on the Controller")
     time.sleep(rundelay)
     result = ctrl.get_all_nodes_in_config()
     status = result[0]
     if (status == STATUS.CTRL_OK):
-        print "Nodes mounted:"
+        print "Nodes configured:"
         nlist = result[1]
         for item in nlist:
             print "   '{}'".format(item)   
     else:
-        print ("Error: %s" % Status(status).string())
+        print ("Demo terminated, reason: %s" % Status(status).string())
+        sys.exit(0)
 
 
     print "\n"
@@ -79,15 +85,14 @@ if __name__ == "__main__":
     time.sleep(rundelay)
     status = ctrl.check_node_config_status(nodeName)
     if (status == STATUS.NODE_CONFIGURED):
-        print ("'%s' node is mounted" % nodeName)
-    elif (status == STATUS.NODE_NOT_FOUND):
-        print ("'%s' node is not found" % nodeName)        
+        print ("'%s' node is configured" % nodeName)
     else:
-        print ("Error: %s" % Status(status).string())
+        print ("Demo terminated, reason: %s" % Status(status).string())
+        sys.exit(0)
 
 
     print "\n"
-    print ("<<< Show connection status for all NETCONF nodes mounted on the Controller")
+    print ("<<< Show connection status for all NETCONF nodes configured on the Controller")
     time.sleep(rundelay)
     result = ctrl.get_all_nodes_conn_status()
     status = result[0]
@@ -102,7 +107,8 @@ if __name__ == "__main__":
                 status = "not connected"
             print "   '{}' is {}".format(item['node'], status )
     else:
-        print ("Error: %s" % Status(status).string())
+        print ("Demo terminated, reason: %s" % Status(status).string())
+        sys.exit(0)
 
 
     print "\n"
@@ -116,22 +122,24 @@ if __name__ == "__main__":
     elif (status == STATUS.NODE_NOT_FOUND):
         print ("'%s' node is not found" % nodeName)
     else:
-        print ("Error: %s" % Status(status).string())
+        print ("Demo terminated, reason: %s" % Status(status).string())
+        sys.exit(0)
 
 
     print "\n"
-    print (">>> Unmount NETCONF node '%s' from the Controller" % nodeName)
+    print (">>> Remove '%s'  NETCONF node from the Controller" % nodeName)
     time.sleep(rundelay)    
     result = ctrl.delete_netconf_node(node)
     status = result[0]
     if (status == STATUS.CTRL_OK):
         print ">>> NETCONF node '{}' was successfully unmounted from the Controller".format(nodeName)
     else:
-        print ("Error: %s" % Status(status).string())
+        print ("Demo terminated, reason: %s" % Status(status).string())
+        sys.exit(0)
 
 
     print "\n"
-    print ("<<< Show all NETCONF nodes mounted on the Controller")
+    print ("<<< Show NETCONF nodes configured on the Controller")
     time.sleep(rundelay)
     result = ctrl.get_all_nodes_in_config()
     status = result[0]
@@ -141,7 +149,8 @@ if __name__ == "__main__":
         for item in nlist:
             print "   '{}'".format(item)   
     else:
-        print ("Error: %s" % Status(status).string())
+        print ("Demo terminated, reason: %s" % Status(status).string())
+        sys.exit(0)
 
 
     print "\n"
@@ -155,9 +164,11 @@ if __name__ == "__main__":
     elif (status == STATUS.NODE_NOT_FOUND):
         print ("'%s' node is not found" % nodeName)
     else:
-        print ("Error: %s" % Status(status).string())
+        print ("Demo terminated, reason: %s" % Status(status).string())
+        sys.exit(0)
 
     print ("\n")
     print (">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
     print (">>> Demo End")
     print (">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+    

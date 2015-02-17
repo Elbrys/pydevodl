@@ -16,7 +16,7 @@ def enum(*args):
 STATUS = enum('CTRL_OK', 'CTRL_CONN_ERROR', 'CTRL_DATA_NOT_FOUND', 'CTRL_BAD_REQUEST',
               'CTRL_UNAUTHORIZED_ACCESS', 'CTRL_INTERNAL_ERROR',
               'NODE_CONNECTED', 'NODE_DISONNECTED', 'NODE_NOT_FOUND', 'NODE_CONFIGURED',                   
-              'N_A')
+              'HTTP_ERROR', 'N_A')
 
 #================================
 # KEEP
@@ -33,6 +33,7 @@ class Status(object):
                           STATUS.NODE_DISONNECTED,
                           STATUS.NODE_NOT_FOUND,
                           STATUS.NODE_CONFIGURED,
+                          STATUS.HTTP_ERROR,
                           STATUS.N_A
                           ):
             raise ValueError('undefined status value')
@@ -44,7 +45,7 @@ class Status(object):
         elif( self.status == STATUS.CTRL_CONN_ERROR):
             return "server connection error"
         elif( self.status == STATUS.CTRL_DATA_NOT_FOUND):
-            return "requested data is not found"
+            return "requested data not found"
         elif( self.status == STATUS.CTRL_BAD_REQUEST):
             return "bad or invalid data in request"
         elif( self.status == STATUS.CTRL_UNAUTHORIZED_ACCESS):
@@ -56,13 +57,16 @@ class Status(object):
         elif( self.status == STATUS.NODE_DISONNECTED):
             return "node is disconnected"
         elif( self.status == STATUS.NODE_NOT_FOUND):
-            return "unknown error"
+            return "node not found"
         elif( self.status == STATUS.NODE_CONFIGURED):
             return "node is configured"
+        elif( self.status == STATUS.HTTP_ERROR):
+            return "HTTP error"
         elif( self.status == STATUS.N_A):
             return "unknown error"
         else:
-            raise ValueError('undefined status value')
+            print ("Error: undefined status value %s" % self.status)
+            raise ValueError('!!!undefined status value')
 
 #================================
 # KEEP
@@ -74,30 +78,36 @@ class Controller():
         self.adminName = adminName
         self.adminPassword = adminPassword
         self.timeout = timeout
-        self.nodes = []
-
+#        self.nodes = []
+    '''
     def add_node(self,node):
         self.nodes.append(node)
 
-    def get_all_nodes(self):
+    def get_nodes(self):
         return self.nodes
     
     def get_node(self, nodeName):
-        for node in self.nodes:
-            if(isinstance(node, NetconfNode) and node.name == nodeName):
-                return node
-        
+        node = None
+        for item in self.nodes:
+            if(isinstance(item, NetconfNode) and item.name == nodeName):
+                node = item
+                break
+        return node
+    '''
+    
     def to_string(self):
         return str(vars(self))
 
-    def http_get_request(self, url):
-        resp = None
-        status = None            
+    def to_json(self):
+        return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
 
+    def http_get_request(self, url, data, headers):
+        resp = None
+        status = None
         try:
             resp = requests.get(url,
                                 auth=HTTPBasicAuth(self.adminName, self.adminPassword), 
-                                timeout=self.timeout)
+                                data=data, headers=headers, timeout=self.timeout)
             status = STATUS.CTRL_OK
         except (ConnectionError, Timeout) as e:
             print "Error: " + repr(e)
@@ -107,8 +117,7 @@ class Controller():
     
     def http_post_request(self, url, data, headers):
         resp = None
-        status = None            
-
+        status = None
         try:
             resp = requests.post(url,
                                  auth=HTTPBasicAuth(self.adminName, self.adminPassword),
@@ -123,8 +132,7 @@ class Controller():
 
     def http_put_request(self, url, data, headers):
         resp = None
-        status = None            
-
+        status = None
         try:
             resp = requests.put(url,
                                 auth=HTTPBasicAuth(self.adminName, self.adminPassword),
@@ -136,14 +144,13 @@ class Controller():
         
         return (status, resp)
     
-    def http_delete_request(self, url):
+    def http_delete_request(self, url, data, headers):
         resp = None
-        status = None            
-
+        status = None
         try:
             resp = requests.delete(url,
                                    auth=HTTPBasicAuth(self.adminName, self.adminPassword),
-                                   timeout=self.timeout)
+                                   data=data, headers=headers, timeout=self.timeout)
             status = STATUS.CTRL_OK
         except (ConnectionError, Timeout) as e:
             print "Error: " + repr(e)
@@ -155,24 +162,27 @@ class Controller():
         templateUrl = "http://{}:{}/restconf/config/opendaylight-inventory:nodes"
         url = templateUrl.format(self.ipAddr, self.portNum)
         
-        result = self.http_get_request(url)
+        result = self.http_get_request(url, data=None, headers=None)
         status = result[0]
         if (status == STATUS.CTRL_CONN_ERROR):
             return status
         
         response = result[1]
-        if (response.status_code == 401):
-            return STATUS.CTRL_UNAUTHORIZED_ACCESS    
+        if (response == None):
+            status = STATUS.CTRL_INTERNAL_ERROR
+            return status
         
-        if (response.status_code == 400):
-            return STATUS.CTRL_BAD_REQUEST
-    
         if (response.status_code == 200):
-            elemlist = json.loads(response.content).get('nodes').get('node')
             status = STATUS.NODE_NOT_FOUND
-            for elem in elemlist:
-                if(elem['id'] == nodeId):
-                    status = STATUS.NODE_CONFIGURED
+            if("nodes" in response.content and "node" in response.content):
+                itemlist = json.loads(response.content).get('nodes').get('node')
+                for item in itemlist:
+                    if(item['id'] == nodeId):
+                        status = STATUS.NODE_CONFIGURED
+                        break
+        else:
+            print ("!!!Error, reason: %s" % response.reason)
+            status = STATUS.HTTP_ERROR
         
         return status
     
@@ -180,29 +190,31 @@ class Controller():
         templateUrl = "http://{}:{}/restconf/operational/opendaylight-inventory:nodes"
         url = templateUrl.format(self.ipAddr, self.portNum)
            
-        result = self.http_get_request(url)
+        result = self.http_get_request(url, data=None, headers=None)
         status = result[0]
         if (status == STATUS.CTRL_CONN_ERROR):
             return status
         
         response = result[1]
-        if (response.status_code == 401):
-            return STATUS.CTRL_UNAUTHORIZED_ACCESS    
-        
-        if (response.status_code == 400):
-            return STATUS.CTRL_BAD_REQUEST
+        if (response == None):
+            status = STATUS.CTRL_INTERNAL_ERROR
+            return status
         
         if (response.status_code == 200):
-            elemlist = json.loads(response.content).get('nodes').get('node')
-            status = STATUS.NODE_NOT_FOUND
-            for elem in elemlist:
-                if(elem['id'] == nodeId):
-                    status = STATUS.NODE_DISONNECTED
-                    if (('netconf-node-inventory:connected' in elem) and
-                        (elem['netconf-node-inventory:connected'] == True)):
-                        status = STATUS.NODE_CONNECTED                        
-                    break
-        
+            status = STATUS.NODE_NOT_FOUND            
+            if("nodes" in response.content and "node" in response.content):            
+                itemlist = json.loads(response.content).get('nodes').get('node')            
+                for item in itemlist:
+                    if('id' in item and item['id'] == nodeId):
+                        status = STATUS.NODE_DISONNECTED
+                        if (('netconf-node-inventory:connected' in item) and
+                            (item['netconf-node-inventory:connected'] == True)):
+                            status = STATUS.NODE_CONNECTED                        
+                            break
+        else:
+            print ("!!!Error, reason: %s" % response.reason)
+            status = STATUS.HTTP_ERROR
+
         return status
 
     def get_all_nodes_in_config(self):
@@ -210,24 +222,26 @@ class Controller():
         url = templateUrl.format(self.ipAddr, self.portNum)        
         nlist = [] 
         
-        result = self.http_get_request(url)
+        result = self.http_get_request(url, data=None, headers=None)
         status = result[0]
         if (status == STATUS.CTRL_CONN_ERROR):
             return (status, None)
        
         response = result[1]
-        if (response.status_code == 401):
-            return (STATUS.CTRL_UNAUTHORIZED_ACCESS, None)    
+        if (response == None):
+            status = STATUS.CTRL_INTERNAL_ERROR
+            return status
         
-        if (response.status_code == 400):
-            return (STATUS.CTRL_BAD_REQUEST, None)
-    
         if (response.status_code == 200):
-            elemlist = json.loads(response.content).get('nodes').get('node')
-            for elem in elemlist:
-                if('id' in elem):
-                    nlist.append(str(elem['id']))
-        
+            if("nodes" in response.content and "node" in response.content):
+                elemlist = json.loads(response.content).get('nodes').get('node')
+                for elem in elemlist:
+                    if('id' in elem):
+                        nlist.append(str(elem['id']))
+        else:
+            print ("!!!Error, reason: %s" % response.reason)
+            status = STATUS.HTTP_ERROR
+
         return (status, nlist)
 
     def get_all_nodes_conn_status(self):
@@ -235,66 +249,64 @@ class Controller():
         url = templateUrl.format(self.ipAddr, self.portNum)
         nlist = [] 
 
-        result = self.http_get_request(url)
+        result = self.http_get_request(url, data=None, headers=None)
         status = result[0]
         if (status == STATUS.CTRL_CONN_ERROR):
             return (status, None)
        
         response = result[1]
-        if (response.status_code == 401):
-            return (STATUS.CTRL_UNAUTHORIZED_ACCESS, None)  
+        if (response == None):
+            status = STATUS.CTRL_INTERNAL_ERROR
+            return status
         
-        if (response.status_code == 400):
-            return (STATUS.CTRL_BAD_REQUEST, None)
-    
         if (response.status_code == 200):
-            elemlist = json.loads(response.content).get('nodes').get('node')            
-            for elem in elemlist:
-                if ('id' in elem):
-                    nd = dict()
-                    nd.update({'node' : elem['id']})
-                    if (('netconf-node-inventory:connected' in elem) and
-                        (elem['netconf-node-inventory:connected'] == True)):
-                        nd.update({'connected' : True})
-                    else:
-                        nd.update({'connected' : False})
-                    nlist.append(nd)
-            
+            status = STATUS.CTRL_DATA_NOT_FOUND           
+            if("nodes" in response.content and "node" in response.content):            
+                itemlist = json.loads(response.content).get('nodes').get('node')
+                status = STATUS.CTRL_OK
+                for item in itemlist:
+                    if ('id' in item):
+                        nd = dict()
+                        nd.update({'node' : item['id']})
+                        if (('netconf-node-inventory:connected' in item) and
+                            (item['netconf-node-inventory:connected'] == True)):
+                            nd.update({'connected' : True})
+                        else:
+                            nd.update({'connected' : False})
+                        nlist.append(nd)
+        else:
+            print ("!!!Error, reason: %s" % response.reason)
+            status = STATUS.HTTP_ERROR
+
         return (status, nlist)
 
-#================================
-# KEEP
-#================================
-    def get_all_supported_schemas(self, nodeName):
+    def get_schemas(self, nodeName):
         templateUrl = "http://{}:{}/restconf/operational/opendaylight-inventory:nodes/node/{}/yang-ext:mount/ietf-netconf-monitoring:netconf-state/schemas"
         url = templateUrl.format(self.ipAddr, self.portNum, nodeName)
         slist = None
         
-        result = self.http_get_request(url)
+        result = self.http_get_request(url, data=None, headers=None)
         status = result[0]
         if (status == STATUS.CTRL_CONN_ERROR):
             return (status, None)
        
         response = result[1]
-        if (response.status_code == 401):
-            return (STATUS.CTRL_UNAUTHORIZED_ACCESS , None)
+        if (response == None):
+            status = STATUS.CTRL_INTERNAL_ERROR
+            return status
         
-        if (response.status_code == 400):
-            return (STATUS.CTRL_BAD_REQUEST, None)
-    
         if (response.status_code == 200):
-#            print ("+++[get_all_supported_schemas] OK")
-#            data = json.loads(response.content)
-            data = json.loads(response.content).get('schemas').get('schema')
-#            print data
-#            slist = data.get('schemas').get('schema')
-            slist = data
+            status = STATUS.CTRL_DATA_NOT_FOUND
+            if("schemas" in response.content and "chema" in response.content):            
+                status = STATUS.CTRL_OK
+                data = json.loads(response.content).get('schemas').get('schema')
+                slist = data
+        else:
+            print ("!!!Error, reason: %s" % response.reason)
+            status = STATUS.HTTP_ERROR
         
         return (status, slist)
 
-#================================
-# KEEP
-#================================
     def get_schema(self, nodeName, schemaId, schemaVersion):
         templateUrl = "http://{}:{}/restconf/operations/opendaylight-inventory:nodes/node/{}/yang-ext:mount/ietf-netconf-monitoring:get-schema"
         url = templateUrl.format(self.ipAddr, self.portNum, nodeName) 
@@ -304,55 +316,68 @@ class Controller():
 
         result = self.http_post_request(url, json.dumps(payload), headers)
         status = result[0]
-        if (status != STATUS.CTRL_CONN_ERROR):
-            response = result[1]
-            if (response.status_code == 401):
-                status = STATUS.CTRL_UNAUTHORIZED_ACCESS        
-            elif (response.status_code == 400):
-                status = STATUS.CTRL_BAD_REQUEST      
-            elif (response.status_code == 200):
-#                print response.headers.get('content-type')
-                if(response.headers.get('content-type') == "application/xml"):
-                    doc = xmltodict.parse(response.content)
-                    try:
-                        tmp = doc['get-schema']['output']['data']
-                        if(tmp):
-                            schema = tmp
-                            status = STATUS.CTRL_OK
-                    except KeyError:
-#                        print "error"
-                        status = STATUS.CTRL_DATA_NOT_FOUND
-                else:
-                    print "TBD content type"
+        if (status == STATUS.CTRL_CONN_ERROR):
+            return (status, None)
+       
+        response = result[1]
+        if (response == None):
+            status = STATUS.CTRL_INTERNAL_ERROR
+            return status
         
+        if (response.status_code == 200):
+            if(response.headers.get('content-type') == "application/xml"):
+                doc = xmltodict.parse(response.content)
+                try:
+                    tmp = doc['get-schema']['output']['data']
+                    schema = tmp
+                    status = STATUS.CTRL_OK
+                except (KeyError) as e:
+                    print "Error: " + repr(e)
+                    status = STATUS.CTRL_DATA_NOT_FOUND
+                else:
+                    print "TBD: not implemented content type parser"
+        else:
+            print ("!!!Error, reason: %s" % response.reason)
+            status = STATUS.HTTP_ERROR
+
         return (status, schema)
 
 #================================
 # KEEP
 #================================
-    def get_all_supported_operations(self, nodeName):
+    def get_netconf_operations(self, nodeName):
         templateUrl = "http://{}:{}/restconf/operations/opendaylight-inventory:nodes/node/{}/yang-ext:mount/"
         url = templateUrl.format(self.ipAddr, self.portNum, nodeName) 
         olist = None
 
-        result = self.http_get_request(url)
+        result = self.http_get_request(url, data=None, headers=None)
         status = result[0]
         if (status == STATUS.CTRL_CONN_ERROR):
             return (status, None)
        
         response = result[1]
+        if (response == None):
+            status = STATUS.CTRL_INTERNAL_ERROR
+            return (status, None)
+        
+        if (response.status_code == 200):
+            if("operations" in response.content):
+                data = json.loads(response.content).get('operations')
+#               print data.get('operations')
+#               data = json.loads(response.content).get('schemas').get('schema')
+                olist = data
+        else:
+            print ("!!!Error, reason: %s" % response.reason)
+            status = STATUS.HTTP_ERROR
+                
+        '''
         if (response.status_code == 401):
             return (STATUS.CTRL_UNAUTHORIZED_ACCESS , None)
         
         if (response.status_code == 400):
             return (STATUS.CTRL_BAD_REQUEST, None)
-    
-        if (response.status_code == 200):
-            data = json.loads(response.content).get('operations')
-#            print data.get('operations')
-#            data = json.loads(response.content).get('schemas').get('schema')
-            olist = data
-        
+        '''
+            
         return (status, olist)
 
 #================================
@@ -363,7 +388,7 @@ class Controller():
         url = templateUrl.format(self.ipAddr, self.portNum)
         mlist = None
 
-        result = self.http_get_request(url)
+        result = self.http_get_request(url, data=None, headers=None)
         status = result[0]
         if (status == STATUS.CTRL_CONN_ERROR):
             return (status, None)
@@ -396,7 +421,7 @@ class Controller():
         module = None
 
 #        print url
-        result = self.http_get_request(url)
+        result = self.http_get_request(url, data=None, headers=None)
         status = result[0]
         if (status == STATUS.CTRL_CONN_ERROR):
             return (status, None)
@@ -416,12 +441,12 @@ class Controller():
 #================================
 # KEEP
 #================================
-    def get_all_sessions(self, nodeName):
+    def get_sessions_info(self, nodeName):
         templateUrl = "http://{}:{}/restconf/operational/opendaylight-inventory:nodes/node/{}/yang-ext:mount/ietf-netconf-monitoring:netconf-state/sessions"
         url = templateUrl.format(self.ipAddr, self.portNum, nodeName)
         slist = None
         
-        result = self.http_get_request(url)
+        result = self.http_get_request(url, data=None, headers=None)
         status = result[0]
         if (status == STATUS.CTRL_CONN_ERROR):
             return (status, None)
@@ -439,10 +464,6 @@ class Controller():
         
         return (status, slist)
 
-
-
-
-
 #================================
 # KEEP
 #================================
@@ -451,7 +472,7 @@ class Controller():
         url = templateUrl.format(self.ipAddr, self.portNum)
         slist = None
         
-        result = self.http_get_request(url)
+        result = self.http_get_request(url, data=None, headers=None)
         status = result[0]
         if (status == STATUS.CTRL_CONN_ERROR):
             return (status, None)
@@ -472,12 +493,12 @@ class Controller():
 #================================
 # KEEP
 #================================
-    def get_all_service_providers(self):
+    def get_service_providers_info(self):
         templateUrl = "http://{}:{}/restconf/config/opendaylight-inventory:nodes/node/controller-config/yang-ext:mount/config:services"        
         url = templateUrl.format(self.ipAddr, self.portNum)
         slist = None
         
-        result = self.http_get_request(url)
+        result = self.http_get_request(url, data=None, headers=None)
         status = result[0]
         if (status == STATUS.CTRL_CONN_ERROR):
             return (status, None)
@@ -499,7 +520,7 @@ class Controller():
 #================================
 # KEEP
 #================================
-    def get_service_provider(self, name):
+    def get_service_provider_info(self, name):
         templateUrl = "http://{}:{}/restconf/config/opendaylight-inventory:nodes/node/controller-config/yang-ext:mount/config:services/service/{}"
         url = templateUrl.format(self.ipAddr, self.portNum, name)         
         '''
@@ -508,7 +529,7 @@ class Controller():
         service = None
 
 #        print url
-        result = self.http_get_request(url)
+        result = self.http_get_request(url, data=None, headers=None)
         status = result[0]
         if (status == STATUS.CTRL_CONN_ERROR):
             return (status, None)
@@ -524,17 +545,6 @@ class Controller():
             service = json.loads(response.content).get('service')
 
         return (status, service)
-
-
-
-
-
-
-
-
-
-
-
 
 #================================
 # KEEP
@@ -602,7 +612,7 @@ class Controller():
         url = templateUrl.format(self.ipAddr, self.portNum, netconfdev.name)
 
 #        print url
-        result = self.http_delete_request(url)
+        result = self.http_delete_request(url, data=None, headers=None)
         status = result[0]
 #        print status
         if (status != STATUS.CTRL_CONN_ERROR):

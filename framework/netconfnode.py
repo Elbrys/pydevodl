@@ -1,9 +1,4 @@
-#import requests
-#from requests.auth import HTTPBasicAuth
-#from requests.exceptions import ConnectionError
-#import pprint
-#import xmltodict
-#import json
+import json
 
 #================================
 # KEEP
@@ -22,4 +17,6 @@ class NetconfNode(object):
     def to_string(self):
         return str(vars(self))
 
+    def to_json(self):
+        return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4) 
  

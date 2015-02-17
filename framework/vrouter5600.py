@@ -14,13 +14,16 @@ class VRouter5600(NetconfNode):
     def to_string(self):
         return str(vars(self))
 
+    def to_json(self):
+        return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4) 
+
 #================================
 # KEEP
 #================================
     def get_schemas(self):
         ctrl = self.ctrl
         myname = self.name
-        result = ctrl.get_all_supported_schemas(myname)
+        result = ctrl.get_schemas(myname)
         return result
 
 #================================
@@ -31,25 +34,53 @@ class VRouter5600(NetconfNode):
         myname = self.name
         result = ctrl.get_schema(myname, schemaId, schemaVersion)
         return result
+
+    def get_cfg(self):        
+        ctrl = self.ctrl
+        myname = self.name
+        url = ctrl.get_ext_mount_config_url(myname)
+        result = ctrl.http_get_request(url, data=None, headers=None)
+        return result
         
-    def get_firewall_cfg(self):        
+#================================
+# KEEP
+#================================
+    def get_firewalls_cfg(self):        
         templateModelRef = "vyatta-security:security/vyatta-security-firewall:firewall"        
         modelref = templateModelRef       
         ctrl = self.ctrl
         myname = self.name
         url = ctrl.get_ext_mount_config_url(myname)
-        result = ctrl.http_get_request(url + modelref)
+        url += modelref
+        result = ctrl.http_get_request(url, data=None, headers=None)
         return result
         
+#================================
+# KEEP
+#================================
     def get_firewall_instance_cfg(self, instance):        
         templateModelRef = "vyatta-security:security/vyatta-security-firewall:firewall/name/{}"     
         modelref = templateModelRef.format(instance)
         ctrl = self.ctrl
         myname = self.name
         url = ctrl.get_ext_mount_config_url(myname)
-#        print url + modelref
-        result = ctrl.http_get_request(url + modelref)
+        url += modelref
+        result = ctrl.http_get_request(url, data=None, headers=None)
+        status = result[0]
+        if (status == STATUS.CTRL_CONN_ERROR):
+            return (status, None)
+       
+        response = result[1]
+        if (response == None):
+            status = STATUS.CTRL_INTERNAL_ERROR
+            return (status, None)
         
+        if (response.status_code == 200 or response.status_code == 204):
+            status = STATUS.CTRL_OK
+        else:
+            print ("!!!Error, reason: %s" % response.reason)
+            return (STATUS.HTTP_ERROR, None)
+        '''
         status = result[0]
         if (status == STATUS.CTRL_CONN_ERROR):
             return (status, None)
@@ -65,54 +96,11 @@ class VRouter5600(NetconfNode):
             return (STATUS.CTRL_DATA_NOT_FOUND, None)
     
         if (response.status_code == 200 or response.status_code == 204):
-            status = STATUS.CTRL_OK        
+            status = STATUS.CTRL_OK       
+        '''
+         
         return (status, response)
        
-#================================
-# KEEP
-#================================
-    def apply_firewall_to_dataplane_interface(self, dpIfFwObj):        
-        ctrl = self.ctrl
-        myname = self.name
-        url = ctrl.get_ext_mount_config_url(myname)
-        headers = {'content-type': 'application/yang.data+json'}        
-        payload = dpIfFwObj.get_payload()
-        urlext = dpIfFwObj.get_url_extension()
-        url += urlext
-        result = ctrl.http_put_request(url, payload, headers)
-        return result
-        
-#================================
-# TBD
-#================================
-    def delete_firewall_from_interface(self, ifName):        
-        templateModelRef = "vyatta-interfaces:interfaces/vyatta-interfaces-dataplane:dataplane/{}/vyatta-security-firewall:firewall/"
-        modelref = templateModelRef.format(ifName)
-        myname = self.name
-        ctrl = self.ctrl
-        url = ctrl.get_ext_mount_config_url(myname)
-#        print ("+++ url: " + url)
-#        print ("+++ modelref: " + modelref)
-#        print ("+++ both: " + url + modelref)
-        
-        result = ctrl.http_delete_request(url + modelref)
-        status = result[0]
-        if (status == STATUS.CTRL_CONN_ERROR):
-            return (status, None)
-        
-        response = result[1]
-        if (response.status_code == 401):
-            return (STATUS.CTRL_UNAUTHORIZED_ACCESS, None)
-        
-        if (response.status_code == 400):
-            return (STATUS.CTRL_BAD_REQUEST, None)
-    
-        if (response.status_code == 200 or response.status_code == 204):
-            status = STATUS.CTRL_OK
-        
-        print (status, response)
-        return (status, response)
-
 #================================
 # KEEP
 #================================
@@ -150,12 +138,43 @@ class VRouter5600(NetconfNode):
         for item in rules:
             name = item.get_name()
 #            print(url + "/name/" + name)
-            result = ctrl.http_delete_request(url + "/name/" + name)
+            result = ctrl.http_delete_request(url + "/name/" + name, data=None, headers=None)
             status = result[0]
             if(status != STATUS.CTRL_OK):
                 break
 
         return result
+
+#================================
+# TBD
+#================================
+    def delete_dataplane_interface_firewall(self, ifName):        
+        templateModelRef = "vyatta-interfaces:interfaces/vyatta-interfaces-dataplane:dataplane/{}/vyatta-security-firewall:firewall/"
+        modelref = templateModelRef.format(ifName)
+        myname = self.name
+        ctrl = self.ctrl
+        url = ctrl.get_ext_mount_config_url(myname)
+#        print ("+++ url: " + url)
+#        print ("+++ modelref: " + modelref)
+#        print ("+++ both: " + url + modelref)
+        
+        result = ctrl.http_delete_request(url + modelref, data=None, headers=None)
+        status = result[0]
+        if (status == STATUS.CTRL_CONN_ERROR):
+            return (status, None)
+        
+        response = result[1]
+        if (response.status_code == 401):
+            return (STATUS.CTRL_UNAUTHORIZED_ACCESS, None)
+        
+        if (response.status_code == 400):
+            return (STATUS.CTRL_BAD_REQUEST, None)
+    
+        if (response.status_code == 200 or response.status_code == 204):
+            status = STATUS.CTRL_OK
+        
+        print (status, response)
+        return (status, response)
 
 #================================
 # KEEP
@@ -165,9 +184,9 @@ class VRouter5600(NetconfNode):
         modelref = templateModelRef       
         ctrl = self.ctrl
         url = ctrl.get_ext_mount_config_url(self.name)
-        print url + modelref
-        result = ctrl.http_get_request(url + modelref)
-        print result
+        url += modelref
+        result = ctrl.http_get_request(url, data=None, headers=None)
+#        print result
         return result
 
 #================================
@@ -178,26 +197,49 @@ class VRouter5600(NetconfNode):
         modelref = templateModelRef.format(ifName)
         ctrl = self.ctrl
         url = ctrl.get_ext_mount_config_url(self.name)
-        print url + modelref
-        result = ctrl.http_get_request(url + modelref)
-        print result
+        url += modelref
+        result = ctrl.http_get_request(url, data=None, headers=None)
+#        print result
         return result
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+#================================
+# TBD
+#================================
+    def set_dataplane_interface_inbound_firewall(self, ifName, fwName):
+        ctrl = self.ctrl
+        headers = {'content-type': 'application/yang.data+json'}
+        url = ctrl.get_ext_mount_config_url(self.name)        
+#        print ("+++ ifName=%s" % ifName)
+#        print ("+++ fwName=%s" % fwName)
+        obj = DataplaneInterfaceFirewall(ifName)
+        obj.add_in_item(fwName)
+        payload = obj.get_payload()
+#        print payload
+        urlext = obj.get_url_extension()
+#        print url + urlext
+#        print urlext
+        result = ctrl.http_put_request(url + urlext, payload, headers)
+#        print result
+        return result
+    
+    '''
+#================================
+# TBD
+#================================
+    def delete_dataplane_interface_firewall(self, ifName):
+        mn1 = "vyatta-interfaces:interfaces"
+        mn2 = "vyatta-interfaces-dataplane:dataplane"
+        mn3 = "vyatta-security-firewall:firewall"
+        ctrl = self.ctrl
+#        headers = {'content-type': 'application/yang.data+json'}
+        url = ctrl.get_ext_mount_config_url(self.name)
+        
+        url += mn1 + "/" + mn2 + "/" + ifName + "/" + mn3
+        print url
+        result = ctrl.http_delete_request(url, data=None, headers=None)
+        print result
+        return result
+    '''
 
 class Firewall():
     mn1 = "vyatta-security:security"
@@ -262,55 +304,14 @@ class Rule():
     def add_source_address(self, srcAddr):
         self.source.address = srcAddr
 
-
-class InterfaceDataplane(VRouter5600):
-    mn1 = "vyatta-interfaces:interfaces"
-    mn2 = "vyatta-interfaces-dataplane:dataplane"
-    mn3 = "vyatta-security-firewall:firewall"
-    def __init__(self, vrouter, name):
-        self.tagnode = name
-        self.firewall = None
-       
-    def to_string(self):
-        return str(vars(self))
-    
-    def to_json(self):
-#        return json.dumps(self, default=self.jdefault, sort_keys=True, indent=4)
-        return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
-    
-    def get_payload(self):        
-        s = self.to_json()
-        s = string.replace(s, 'firewall', self.mn3)
-        s = string.replace(s, 'inlist', "in")
-        s = string.replace(s, 'outlist', "out")
-        
-        obj = json.loads(s)
-        payload = {self.mn2:obj}
-        return json.dumps(payload, default=lambda o: o.__dict__, sort_keys=True, indent=4)
-    
-    def add_firewall(self, firewall):
-        self.firewall = firewall
-
-    def apply_in_firewall(self, inFw):
-        obj = InterfaceDataplaneFirewall()
-        obj.inlist.append(inFw)
-        self.firewall = obj
-        payload = self.get_payload()
-        print payload
-        headers = {'content-type': 'application/yang.data+json'}
-#        url = ctrl.get_ext_mount_cfg_url(self.tagnode)
-#        print url
-#        result = ctrl.http_put_request(url, payload, headers)
-    
-
-class InterfaceDataplaneFirewall():
+class DataplaneInterfaceFirewall():
     mn1 = "vyatta-interfaces:interfaces"
     mn2 = "vyatta-interfaces-dataplane:dataplane"
     mn3 = "vyatta-security-firewall:firewall"
     def __init__(self, ifName):
         self.tagnode = ifName
-        inlist = []
-        outlist = []
+#        inlist = []
+#        outlist = []
         self.firewall = Object()
         self.firewall.inlist = []
         self.firewall.outlist = []
@@ -322,11 +323,6 @@ class InterfaceDataplaneFirewall():
         self.firewall.outlist.append(name)
     
     def to_json(self):
-#        s = json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
-#        s = string.replace(s, 'inlist', "in")
-#        s = string.replace(s, 'outlist', "out")
-#        obj = json.loads(s)
-#        return json.dumps(obj, default=lambda o: o.__dict__, sort_keys=True, indent=4)
         return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
 
     def get_url_extension(self):

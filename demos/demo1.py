@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+import sys
 import time
 import json
 from framework.controller import Controller,STATUS,Status
@@ -20,27 +21,29 @@ if __name__ == "__main__":
     ctrlPswd = 'admin'    
     time.sleep(rundelay)
     ctrl = Controller(ctrlIpAddr, ctrlPortNum, ctrlUname, ctrlPswd)
-    print ("<<< Created Controller instance: " + ctrl.to_string())
+    print ("'Controller':")
+    print ctrl.to_json()
 
-    
+   
     print "\n"
     print ("<<< Get list of all YANG models supported by the Controller")
     time.sleep(rundelay)
     nodeName = "controller-config"
-    result = ctrl.get_all_supported_schemas(nodeName)
+    result = ctrl.get_schemas(nodeName)
     status = result[0]
     if (status == STATUS.CTRL_OK):
         print "YANG models list:"
         slist = result[1]
         print json.dumps(slist, default=lambda o: o.__dict__, sort_keys=True, indent=4)
     else:
-        print ("Error: %s" % Status(status).string())
+        print ("Demo terminated, reason: %s" % Status(status).string())
+        sys.exit(0)
 
 
     print "\n"
     yangModelName = "flow-topology-discovery"
     yangModelVerson = "2013-08-19"
-    print ("<<< Retrieve the '%s' YANG model definition out of the Controller" % yangModelName)
+    print ("<<< Retrieve the '%s' YANG model definition from the Controller" % yangModelName)
     time.sleep(rundelay)
     nodeName = "controller-config"
     result = ctrl.get_schema(nodeName, yangModelName, yangModelVerson)
@@ -50,46 +53,50 @@ if __name__ == "__main__":
         schema = result[1]
         print schema
     else:
-        print ("Error: %s" % Status(status).string())
+        print ("Demo terminated, reason: %s" % Status(status).string())
+        sys.exit(0)
     
     
     print "\n"
     print ("<<< Get list of all service providers available on the Controller")
     time.sleep(rundelay)
-    result = ctrl.get_all_service_providers()
+    result = ctrl.get_service_providers_info()
     status = result[0]
     if (status == STATUS.CTRL_OK):
         services = result[1]
         print "Services:"
         print json.dumps(services, default=lambda o: o.__dict__, sort_keys=True, indent=4)
     else:
-        print ("Error: %s" % Status(status).string())
+        print ("Demo terminated, reason: %s" % Status(status).string())
+        sys.exit(0)
 
     
     print "\n"
     name ="opendaylight-md-sal-binding:binding-data-broker"
     print ("<<< Get '%s' service provider info" % name)
     time.sleep(rundelay)
-    result = ctrl.get_service_provider(name)
+    result = ctrl.get_service_provider_info(name)
     status = result[0]
     if (status == STATUS.CTRL_OK):
         print "Service:"
         service = result[1]
         print json.dumps(service, default=lambda o: o.__dict__, sort_keys=True, indent=4)
     else:
-        print ("Error: %s" % Status(status).string())
+        print ("Demo terminated, reason: %s" % Status(status).string())
+        sys.exit(0)
 
     print "\n"
-    print ("<<< Get list of all NETCONF operations supported by the Controller")
+    print ("<<< Show list of all NETCONF operations supported by the Controller")
     time.sleep(rundelay)
-    result = ctrl.get_all_supported_operations("controller-config")
+    result = ctrl.get_netconf_operations("controller-config")
     status = result[0]
     if (status == STATUS.CTRL_OK):
         print "Operations:"
         slist = result[1]
         print json.dumps(slist, default=lambda o: o.__dict__, sort_keys=True, indent=4)
     else:
-        print ("Error: %s" % Status(status).string())
+        print ("Demo terminated, reason: %s" % Status(status).string())
+        sys.exit(0)
 
         
     print "\n"
@@ -102,7 +109,8 @@ if __name__ == "__main__":
         slist = result[1]
         print json.dumps(slist, default=lambda o: o.__dict__, sort_keys=True, indent=4)
     else:
-        print ("Error: %s" % Status(status).string())
+        print ("Demo terminated, reason: %s" % Status(status).string())
+        sys.exit(0)
 
     
     print "\n"
@@ -118,21 +126,23 @@ if __name__ == "__main__":
         slist = result[1]
         print json.dumps(slist, default=lambda o: o.__dict__, sort_keys=True, indent=4)
     else:
-        print ("Error: %s" % Status(status).string())
+        print ("Demo terminated, reason: %s" % Status(status).string())
+        sys.exit(0)
 
     
     print "\n"
     print ("<<< Show all sessions running on the Controller ")
     nodeName = "controller-config"
     time.sleep(rundelay)
-    result = ctrl.get_all_sessions(nodeName)
+    result = ctrl.get_sessions_info(nodeName)
     status = result[0]
     if (status == STATUS.CTRL_OK):
         print "Sessions:"
         slist = result[1]
         print json.dumps(slist, default=lambda o: o.__dict__, sort_keys=True, indent=4)
     else:
-        print ("Error: %s" % Status(status).string())
+        print ("Demo terminated, reason: %s" % Status(status).string())
+        sys.exit(0)
 
     
     print "\n"
@@ -145,13 +155,8 @@ if __name__ == "__main__":
         slist = result[1]
         print json.dumps(slist, default=lambda o: o.__dict__, sort_keys=True, indent=4)
     else:
-        print ("Error: %s" % Status(status).string())
-
-    
-    ''' RPC call - Toaster as an example ??? '''
-    
-    ''' Obtain all YANG models installed on the Controller and store them in /tmp/schemas dir '''
-    
+        print ("Demo terminated, reason: %s" % Status(status).string())
+        sys.exit(0)
 
     print ("\n")
     print (">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")

@@ -1,0 +1,6 @@
+*.pyc
+cscope.out
+*.*~
+*.log
+dump.txt
+tmp*
