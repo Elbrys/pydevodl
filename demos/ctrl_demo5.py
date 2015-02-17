@@ -31,7 +31,7 @@ if __name__ == "__main__":
     result = ctrl.get_netconf_operations("controller-config")
     status = result[0]
     if (status == STATUS.CTRL_OK):
-        print "Operations:"
+        print "NETCONF operations:"
         slist = result[1]
         print json.dumps(slist, default=lambda o: o.__dict__, sort_keys=True, indent=4)
     else:

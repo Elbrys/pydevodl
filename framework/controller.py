@@ -6,9 +6,9 @@ import xmltodict
 
 from framework.netconfnode import  *
 
-#================================
+#===============================================================================
 # KEEP
-#================================
+#===============================================================================
 def enum(*args):
     enums = dict(zip(args, range(len(args))))
     return type('Enum', (), enums)
@@ -18,9 +18,9 @@ STATUS = enum('CTRL_OK', 'CTRL_CONN_ERROR', 'CTRL_DATA_NOT_FOUND', 'CTRL_BAD_REQ
               'NODE_CONNECTED', 'NODE_DISONNECTED', 'NODE_NOT_FOUND', 'NODE_CONFIGURED',                   
               'HTTP_ERROR', 'N_A')
 
-#================================
+#===============================================================================
 # KEEP
-#================================
+#===============================================================================
 class Status(object):
     def __init__(self, status):
         if status not in (STATUS.CTRL_OK,
@@ -68,9 +68,9 @@ class Status(object):
             print ("Error: undefined status value %s" % self.status)
             raise ValueError('!!!undefined status value')
 
-#================================
+#===============================================================================
 # KEEP
-#================================
+#===============================================================================
 class Controller():
     def __init__(self, ipAddr, portNum, adminName, adminPassword, timeout=5):
         self.ipAddr = ipAddr
@@ -128,7 +128,6 @@ class Controller():
             status = STATUS.CTRL_CONN_ERROR
         
         return (status, resp)
-
 
     def http_put_request(self, url, data, headers):
         resp = None
@@ -230,14 +229,16 @@ class Controller():
         response = result[1]
         if (response == None):
             status = STATUS.CTRL_INTERNAL_ERROR
-            return status
+            return (status, None)
         
         if (response.status_code == 200):
+            status = STATUS.CTRL_DATA_NOT_FOUND
             if("nodes" in response.content and "node" in response.content):
                 elemlist = json.loads(response.content).get('nodes').get('node')
                 for elem in elemlist:
                     if('id' in elem):
                         nlist.append(str(elem['id']))
+                status = STATUS.CTRL_OK
         else:
             print ("!!!Error, reason: %s" % response.reason)
             status = STATUS.HTTP_ERROR
@@ -257,7 +258,7 @@ class Controller():
         response = result[1]
         if (response == None):
             status = STATUS.CTRL_INTERNAL_ERROR
-            return status
+            return (status, None)
         
         if (response.status_code == 200):
             status = STATUS.CTRL_DATA_NOT_FOUND           
@@ -293,7 +294,7 @@ class Controller():
         response = result[1]
         if (response == None):
             status = STATUS.CTRL_INTERNAL_ERROR
-            return status
+            return (status, None)
         
         if (response.status_code == 200):
             status = STATUS.CTRL_DATA_NOT_FOUND
@@ -322,18 +323,17 @@ class Controller():
         response = result[1]
         if (response == None):
             status = STATUS.CTRL_INTERNAL_ERROR
-            return status
+            return (status, None)
         
         if (response.status_code == 200):
+            status = STATUS.CTRL_DATA_NOT_FOUND
             if(response.headers.get('content-type') == "application/xml"):
                 doc = xmltodict.parse(response.content)
                 try:
-                    tmp = doc['get-schema']['output']['data']
-                    schema = tmp
+                    schema = doc['get-schema']['output']['data']
                     status = STATUS.CTRL_OK
                 except (KeyError) as e:
                     print "Error: " + repr(e)
-                    status = STATUS.CTRL_DATA_NOT_FOUND
             else:
                 print "TBD: not implemented content type parser"
         else:
@@ -342,9 +342,6 @@ class Controller():
 
         return (status, schema)
 
-#================================
-# KEEP
-#================================
     def get_netconf_operations(self, nodeName):
         templateUrl = "http://{}:{}/restconf/operations/opendaylight-inventory:nodes/node/{}/yang-ext:mount/"
         url = templateUrl.format(self.ipAddr, self.portNum, nodeName) 
@@ -361,28 +358,16 @@ class Controller():
             return (status, None)
         
         if (response.status_code == 200):
+            status = STATUS.CTRL_DATA_NOT_FOUND
             if("operations" in response.content):
-                data = json.loads(response.content).get('operations')
-#               print data.get('operations')
-#               data = json.loads(response.content).get('schemas').get('schema')
-                olist = data
+                olist = json.loads(response.content).get('operations')
+                status = STATUS.CTRL_OK
         else:
             print ("!!!Error, reason: %s" % response.reason)
             status = STATUS.HTTP_ERROR
-                
-        '''
-        if (response.status_code == 401):
-            return (STATUS.CTRL_UNAUTHORIZED_ACCESS , None)
         
-        if (response.status_code == 400):
-            return (STATUS.CTRL_BAD_REQUEST, None)
-        '''
-            
         return (status, olist)
 
-#================================
-# KEEP
-#================================
     def get_all_modules_operational_state(self):
         templateUrl = "http://{}:{}/restconf/operational/opendaylight-inventory:nodes/node/controller-config/yang-ext:mount/config:modules"
         url = templateUrl.format(self.ipAddr, self.portNum)
@@ -392,55 +377,55 @@ class Controller():
         status = result[0]
         if (status == STATUS.CTRL_CONN_ERROR):
             return (status, None)
-       
-        response = result[1]
-        if (response.status_code == 401):
-            return (STATUS.CTRL_UNAUTHORIZED_ACCESS , None)
         
-        if (response.status_code == 400):
-            return (STATUS.CTRL_BAD_REQUEST, None)
-    
-        if (response.status_code == 200):
-            data = json.loads(response.content).get('modules').get('module')
-            print data
-            mlist = data
+        response = result[1]
+        if (response == None):
+            status = STATUS.CTRL_INTERNAL_ERROR
+            return (status, None)
 
+        if (response.status_code == 200):
+            status = STATUS.CTRL_DATA_NOT_FOUND
+            if("modules" in response.content and "module" in response.content):             
+                mlist = json.loads(response.content).get('modules').get('module')
+                status = STATUS.CTRL_OK
+        else:
+            print ("!!!Error, reason: %s" % response.reason)
+            status = STATUS.HTTP_ERROR    
+        
         return (status, mlist)
 
-
-
-#================================
-# KEEP
-#================================
-    def get_module_operational_state(self, type, name):
+    #---------------------------------------------------------------------------
+    # KEEP
+    #---------------------------------------------------------------------------
+    def get_module_operational_state(self, moduleType, moduleName):
         templateUrl = "http://{}:{}/restconf/operational/opendaylight-inventory:nodes/node/controller-config/yang-ext:mount/config:modules/module/{}/{}"              
-        url = templateUrl.format(self.ipAddr, self.portNum, type, name)         
-        '''
-        headers = {'content-type': 'application/yang.data+json', 'accept': 'text/json, text/html, application/xml, */*'}
-        '''
+        url = templateUrl.format(self.ipAddr, self.portNum, moduleType, moduleName)         
         module = None
 
-#        print url
         result = self.http_get_request(url, data=None, headers=None)
         status = result[0]
         if (status == STATUS.CTRL_CONN_ERROR):
             return (status, None)
-       
-        response = result[1]
-        if (response.status_code == 401):
-            return (STATUS.CTRL_UNAUTHORIZED_ACCESS , None)
-        
-        if (response.status_code == 400):
-            return (STATUS.CTRL_BAD_REQUEST, None)
-    
-        if (response.status_code == 200):
-            module = json.loads(response.content).get('module')
 
+        response = result[1]
+        if (response == None):
+            status = STATUS.CTRL_INTERNAL_ERROR
+            return (status, None)
+       
+        if (response.status_code == 200):
+            status = STATUS.CTRL_DATA_NOT_FOUND
+            if("module" in response.content):
+                module = json.loads(response.content).get('module')
+                status = STATUS.CTRL_OK
+        else:
+            print ("!!!Error, reason: %s" % response.reason)
+            status = STATUS.HTTP_ERROR
+        
         return (status, module)
 
-#================================
-# KEEP
-#================================
+    #---------------------------------------------------------------------------
+    # KEEP
+    #---------------------------------------------------------------------------
     def get_sessions_info(self, nodeName):
         templateUrl = "http://{}:{}/restconf/operational/opendaylight-inventory:nodes/node/{}/yang-ext:mount/ietf-netconf-monitoring:netconf-state/sessions"
         url = templateUrl.format(self.ipAddr, self.portNum, nodeName)
@@ -452,23 +437,26 @@ class Controller():
             return (status, None)
        
         response = result[1]
-        if (response.status_code == 401):
-            return (STATUS.CTRL_UNAUTHORIZED_ACCESS , None)
-        
-        if (response.status_code == 400):
-            return (STATUS.CTRL_BAD_REQUEST, None)
-    
+        if (response == None):
+            status = STATUS.CTRL_INTERNAL_ERROR
+            return (status, None)
+ 
         if (response.status_code == 200):
-            data = json.loads(response.content).get('sessions')
-            slist = data
+            status = STATUS.CTRL_DATA_NOT_FOUND
+            if("sessions" in response.content):
+                slist = json.loads(response.content).get('sessions')
+                status = STATUS.CTRL_OK
+        else:
+            print ("!!!Error, reason: %s" % response.reason)
+            status = STATUS.HTTP_ERROR
         
         return (status, slist)
 
-#================================
-# KEEP
-#================================
+    #---------------------------------------------------------------------------
+    # KEEP
+    #---------------------------------------------------------------------------
     def get_streams_info(self):
-        templateUrl = "http://172.22.18.186:8080/restconf/streams"        
+        templateUrl = "http://{}:{}/restconf/streams"        
         url = templateUrl.format(self.ipAddr, self.portNum)
         slist = None
         
@@ -478,21 +466,24 @@ class Controller():
             return (status, None)
        
         response = result[1]
-        if (response.status_code == 401):
-            return (STATUS.CTRL_UNAUTHORIZED_ACCESS , None)
-        
-        if (response.status_code == 400):
-            return (STATUS.CTRL_BAD_REQUEST, None)
-    
+        if (response == None):
+            status = STATUS.CTRL_INTERNAL_ERROR
+            return (status, None)
+
         if (response.status_code == 200):
-            data = json.loads(response.content).get('streams')
-            slist = data
+            status = STATUS.CTRL_DATA_NOT_FOUND
+            if("streams" in response.content):
+                slist = json.loads(response.content).get('streams')
+                status = STATUS.CTRL_OK
+        else:
+            print ("!!!Error, reason: %s" % response.reason)
+            status = STATUS.HTTP_ERROR
         
         return (status, slist)
 
-#================================
-# KEEP
-#================================
+    #---------------------------------------------------------------------------
+    # KEEP
+    #---------------------------------------------------------------------------
     def get_service_providers_info(self):
         templateUrl = "http://{}:{}/restconf/config/opendaylight-inventory:nodes/node/controller-config/yang-ext:mount/config:services"        
         url = templateUrl.format(self.ipAddr, self.portNum)
@@ -504,53 +495,54 @@ class Controller():
             return (status, None)
        
         response = result[1]
-        if (response.status_code == 401):
-            return (STATUS.CTRL_UNAUTHORIZED_ACCESS , None)
-        
-        if (response.status_code == 400):
-            return (STATUS.CTRL_BAD_REQUEST, None)
-    
+        if (response == None):
+            status = STATUS.CTRL_INTERNAL_ERROR
+            return (status, None)
+
         if (response.status_code == 200):
-            data = json.loads(response.content)
-            slist = data.get('services').get('service')
+            status = STATUS.CTRL_DATA_NOT_FOUND
+            if("services" in response.content and "service" in response.content):
+                slist = json.loads(response.content).get('services').get('service')
+                status = STATUS.CTRL_OK
+        else:
+            print ("!!!Error, reason: %s" % response.reason)
+            status = STATUS.HTTP_ERROR    
         
         return (status, slist)
-
-
-#================================
-# KEEP
-#================================
+    
+    #---------------------------------------------------------------------------
+    # KEEP
+    #---------------------------------------------------------------------------
     def get_service_provider_info(self, name):
         templateUrl = "http://{}:{}/restconf/config/opendaylight-inventory:nodes/node/controller-config/yang-ext:mount/config:services/service/{}"
         url = templateUrl.format(self.ipAddr, self.portNum, name)         
-        '''
-        headers = {'content-type': 'application/yang.data+json', 'accept': 'text/json, text/html, application/xml, */*'}
-        '''
         service = None
-
-#        print url
+        
         result = self.http_get_request(url, data=None, headers=None)
         status = result[0]
         if (status == STATUS.CTRL_CONN_ERROR):
             return (status, None)
        
         response = result[1]
-        if (response.status_code == 401):
-            return (STATUS.CTRL_UNAUTHORIZED_ACCESS , None)
-        
-        if (response.status_code == 400):
-            return (STATUS.CTRL_BAD_REQUEST, None)
-    
-        if (response.status_code == 200):
-            service = json.loads(response.content).get('service')
+        if (response == None):
+            status = STATUS.CTRL_INTERNAL_ERROR
+            return (status, None)
 
+        if (response.status_code == 200):
+            status = STATUS.CTRL_DATA_NOT_FOUND
+            if("service" in response.content):
+                service = json.loads(response.content).get('service')
+                status = STATUS.CTRL_OK
+        else:
+            print ("!!!Error, reason: %s" % response.reason)
+            status = STATUS.HTTP_ERROR    
+        
         return (status, service)
 
-#================================
-# KEEP
-#================================
+    #---------------------------------------------------------------------------
+    # KEEP
+    #---------------------------------------------------------------------------
     def add_netconf_node(self, node):
-#    def add_netconf_node_to_config(self, node):
         templateUrl = "http://{}:{}/restconf/config/opendaylight-inventory:nodes/node/controller-config/yang-ext:mount/config:modules"        
         xmlPayloadTemplate = '''
         <module xmlns="urn:opendaylight:params:xml:ns:yang:controller:config">
@@ -584,58 +576,59 @@ class Controller():
         </module>
         '''
         payload = xmlPayloadTemplate.format(node.name, node.ipAddr, node.portNum, node.adminName, node.adminPassword, node.tcpOnly)
-#        print payload
         url = templateUrl.format(self.ipAddr, self.portNum)
-#        print url
         headers = {'content-type': 'application/xml', 'accept': 'application/xml'}
         result = self.http_post_request(url, payload, headers)
         status = result[0]
-#        print status
-        if (status != STATUS.CTRL_CONN_ERROR):
-            response = result[1]
-#            print response
-            if (response.status_code == 401):
-                status = STATUS.CTRL_UNAUTHORIZED_ACCESS        
-            elif (response.status_code == 400):
-                status = STATUS.CTRL_BAD_REQUEST      
-            elif (response.status_code == 200 or
-                  response.status_code == 204):
-                status = STATUS.CTRL_OK
+        if (status == STATUS.CTRL_CONN_ERROR):
+            return (status, None)
+
+        response = result[1]
+        if (response == None):
+            status = STATUS.CTRL_INTERNAL_ERROR
+            return (status, None)
+        
+        response = result[1]
+        if (response.status_code == 200 or response.status_code == 204):
+            status = STATUS.CTRL_OK
+        else:
+            print ("!!!Error, reason: %s" % response.reason)
+            status = STATUS.HTTP_ERROR
         
         return (status, None)
 
-#================================
-# KEEP
-#================================
+    #---------------------------------------------------------------------------
+    # KEEP
+    #---------------------------------------------------------------------------
     def delete_netconf_node(self, netconfdev):
         templateUrl = "http://{}:{}/restconf/config/opendaylight-inventory:nodes/node/controller-config/yang-ext:mount/config:modules/module/odl-sal-netconf-connector-cfg:sal-netconf-connector/{}"
         url = templateUrl.format(self.ipAddr, self.portNum, netconfdev.name)
 
-#        print url
         result = self.http_delete_request(url, data=None, headers=None)
         status = result[0]
-#        print status
-        if (status != STATUS.CTRL_CONN_ERROR):
-            response = result[1]
-#            print response.status_code
-            if (response.status_code == 200 or response.status_code == 204):
-                status = STATUS.CTRL_OK                        
-            elif (response.status_code == 401):
-                status = STATUS.CTRL_UNAUTHORIZED_ACCESS        
-            elif (response.status_code == 400):
-                status = STATUS.CTRL_BAD_REQUEST      
-            elif (response.status_code == 500):
-                status = STATUS.CTRL_INTERNAL_ERROR
+        if (status == STATUS.CTRL_CONN_ERROR):
+            return (status, None)
+        
+        response = result[1]
+        if (response == None):
+            status = STATUS.CTRL_INTERNAL_ERROR
+            return (status, None)
+        
+        if (response.status_code == 200 or response.status_code == 204):
+            status = STATUS.CTRL_OK                        
+        else:
+            print ("!!!Error, reason: %s" % response.reason)
+            status = STATUS.HTTP_ERROR
         
         return (status, None)
         
-#==============================================================================
-# TBD: 
-# NOTE: It is unclear what NETCONF node attributes are allowed for dynamic
-#       configuration changes. For now I am just follow the example that is
-#       published on ODL wiki:
-#       https://wiki.opendaylight.org/view/OpenDaylight_Controller:Config:Examples:Netconf
-#==============================================================================
+    #---------------------------------------------------------------------------
+    # TBD: 
+    # NOTE: It is unclear what NETCONF node attributes are allowed for dynamic
+    #       configuration changes. For now we just follow example published
+    #       on ODL wiki:
+    #       https://wiki.opendaylight.org/view/OpenDaylight_Controller:Config:Examples:Netconf
+    #---------------------------------------------------------------------------
     def modify_netconf_node_in_config(self, netconfdev):
         templateUrl = "http://{}:{}/restconf/config/opendaylight-inventory:nodes/node/controller-config/yang-ext:mount/config:modules"      
         url = templateUrl.format(self.ipAddr, self.portNum)
@@ -651,18 +644,19 @@ class Controller():
         headers = {'content-type': 'application/xml', 'accept': 'application/xml'}
         result = self.http_post_request(url, payload, headers)                
         status = result[0]
-        if (status != STATUS.CTRL_CONN_ERROR):
-            response = result[1]
-            if (response.status_code == 200 or response.status_code == 204):
-                status = STATUS.CTRL_OK                        
-            elif (response.status_code == 401):
-                status = STATUS.CTRL_UNAUTHORIZED_ACCESS        
-            elif (response.status_code == 400):
-                status = STATUS.CTRL_BAD_REQUEST      
-            elif (response.status_code == 500):
-                status = STATUS.CTRL_INTERNAL_ERROR
-            else:
-                status = STATUS.N_A
+        if (status == STATUS.CTRL_CONN_ERROR):
+            return (status, None)
+
+        response = result[1]
+        if (response == None):
+            status = STATUS.CTRL_INTERNAL_ERROR
+            return (status, None)
+        
+        if (response.status_code == 200 or response.status_code == 204):
+            status = STATUS.CTRL_OK                        
+        else:
+            print ("!!!Error, reason: %s" % response.reason)
+            status = STATUS.HTTP_ERROR
         
         return (status, None)
         
@@ -677,38 +671,7 @@ class Controller():
         return url    
 
 
-
-
-def get_nodes_operational_datastore(ipAddr, portNum, uname, passwd, nodeId):
-#    url="http://" + ipAddr + ":" + portNum + "/restconf/operational/opendaylight-inventory:nodes"
-    url="http://{}:{}/restconf/operational/opendaylight-inventory:nodes".format(ipAddr, portNum)
-    status = "Node is not connected"
-    matchFound = False
-    
-    try:
-        resp = requests.get(url, auth=HTTPBasicAuth(uname, passwd))    
-    except ConnectionError:
-        status = "HTTP server connection error"
-        return status
-    
-    if (resp.status_code != 200):
-        status = "HTTP request error %d" % resp.status_code
-        return status
-    
-    data = json.loads(resp.content)
-    nodes = data.get('nodes')
-    nodes_list = nodes.get('node')
-    for elem in nodes_list:
-        print elem
-        print type(elem)
-        if ('id' in elem):
-            print elem['id']
-        if ('netconf-node-inventory:connected' in elem):
-            print elem['netconf-node-inventory:connected']
-
-    return status
-
-
+'''
 #================================
 # TBD
 #================================
@@ -738,9 +701,4 @@ def get_recursively(search_dict, field):
                         fields_found.append(another_result)
 
     return fields_found
-
-
-
-
-
-
+'''

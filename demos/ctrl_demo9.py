@@ -26,7 +26,7 @@ if __name__ == "__main__":
 
         
     print "\n"
-    print ("<<< Show notification event streams on the Controller")
+    print ("<<< Show notification event streams registered on the Controller")
     time.sleep(rundelay)
     result = ctrl.get_streams_info()
     status = result[0]

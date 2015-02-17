@@ -32,7 +32,7 @@ if __name__ == "__main__":
     status = result[0]
     if (status == STATUS.CTRL_OK):
         services = result[1]
-        print "Services:"
+        print "Service providers:"
         print json.dumps(services, default=lambda o: o.__dict__, sort_keys=True, indent=4)
     else:
         print ("Demo terminated, reason: %s" % Status(status).string())

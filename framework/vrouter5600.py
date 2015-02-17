@@ -80,25 +80,7 @@ class VRouter5600(NetconfNode):
         else:
             print ("!!!Error, reason: %s" % response.reason)
             return (STATUS.HTTP_ERROR, None)
-        '''
-        status = result[0]
-        if (status == STATUS.CTRL_CONN_ERROR):
-            return (status, None)
         
-        response = result[1]
-        if (response.status_code == 401):
-            return (STATUS.CTRL_UNAUTHORIZED_ACCESS, None)
-        
-        if (response.status_code == 400):
-            return (STATUS.CTRL_BAD_REQUEST, None)
-
-        if (response.status_code == 404):
-            return (STATUS.CTRL_DATA_NOT_FOUND, None)
-    
-        if (response.status_code == 200 or response.status_code == 204):
-            status = STATUS.CTRL_OK       
-        '''
-         
         return (status, response)
        
 #================================

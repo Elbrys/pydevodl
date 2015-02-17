@@ -32,7 +32,7 @@ if __name__ == "__main__":
     result = ctrl.get_service_provider_info(name)
     status = result[0]
     if (status == STATUS.CTRL_OK):
-        print "Service:"
+        print "Service provider:"
         service = result[1]
         print json.dumps(service, default=lambda o: o.__dict__, sort_keys=True, indent=4)
     else:
