@@ -1,8 +1,7 @@
 import string
 import json
-
-from framework.controller import STATUS
 from framework.netconfnode import NetconfNode
+from framework.status import OperStatus, STATUS
 
 #===============================================================================
 # Class 'VRouter5600'
@@ -32,8 +31,7 @@ class VRouter5600(NetconfNode):
     def get_schemas(self):
         ctrl = self.ctrl
         myname = self.name
-        result = ctrl.get_schemas(myname)
-        return result
+        return ctrl.get_schemas(myname)
 
     #---------------------------------------------------------------------------
     # 
@@ -41,118 +39,105 @@ class VRouter5600(NetconfNode):
     def get_schema(self, schemaId, schemaVersion):
         ctrl = self.ctrl
         myname = self.name
-        result = ctrl.get_schema(myname, schemaId, schemaVersion)
-        return result
+        return ctrl.get_schema(myname, schemaId, schemaVersion)
 
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def get_cfg(self):        
+        status = OperStatus()
+        cfg = None
         ctrl = self.ctrl
         myname = self.name
         url = ctrl.get_ext_mount_config_url(myname)
 
-        result = ctrl.http_get_request(url, data=None, headers=None)
-        status = result[0]
-        if (status == STATUS.CTRL_CONN_ERROR):
-            return (status, None)
-
-        response = result[1]
-        if (response == None):
-            status = STATUS.CTRL_INTERNAL_ERROR
-            return (status, None)
-       
-        if (response.status_code == 200):
-                status = STATUS.CTRL_OK
+        resp = ctrl.http_get_request(url, data=None, headers=None)
+        if(resp == None):
+            status.set_status(STATUS.CONN_ERROR)
+        elif(resp.content == None):
+            status.set_status(STATUS.CTRL_INTERNAL_ERROR)
+        elif (resp.status_code == 200):
+            cfg = resp.content
+            status.set_status(STATUS.OK)
         else:
-            print ("!!!Error, reason: %s" % response.reason)
-            status = STATUS.HTTP_ERROR
-         
-        return (status, response)
+            status.set_status(STATUS.HTTP_ERROR, resp)
         
+        return (status, cfg)
+    
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def get_firewalls_cfg(self):        
+        status = OperStatus()
+        cfg = None
         templateModelRef = "vyatta-security:security/vyatta-security-firewall:firewall"        
         modelref = templateModelRef       
         ctrl = self.ctrl
         myname = self.name
         url = ctrl.get_ext_mount_config_url(myname)
         url += modelref
-        result = ctrl.http_get_request(url, data=None, headers=None)
-        status = result[0]
-        if (status == STATUS.CTRL_CONN_ERROR):
-            return (status, None)
         
-        response = result[1]
-        if (response == None):
-            status = STATUS.CTRL_INTERNAL_ERROR
-            return (status, None)
-
-        if (response.status_code == 200):
-                status = STATUS.CTRL_OK
+        resp = ctrl.http_get_request(url, data=None, headers=None)
+        if(resp == None):
+            status.set_status(STATUS.CONN_ERROR)
+        elif(resp.content == None):
+            status.set_status(STATUS.CTRL_INTERNAL_ERROR)
+        elif (resp.status_code == 200):
+            cfg = resp.content
+            status.set_status(STATUS.OK)
         else:
-            print ("!!!Error, reason: %s" % response.reason)
-            status = STATUS.HTTP_ERROR
+            status.set_status(STATUS.HTTP_ERROR, resp)
         
-        return (status, response)
-        
+        return (status, cfg)
+    
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def get_firewall_instance_cfg(self, instance):        
+        status = OperStatus()
+        cfg = None
         templateModelRef = "vyatta-security:security/vyatta-security-firewall:firewall/name/{}"     
         modelref = templateModelRef.format(instance)
         ctrl = self.ctrl
         myname = self.name
         url = ctrl.get_ext_mount_config_url(myname)
         url += modelref
-        result = ctrl.http_get_request(url, data=None, headers=None)
-        status = result[0]
-        if (status == STATUS.CTRL_CONN_ERROR):
-            return (status, None)
-       
-        response = result[1]
-        if (response == None):
-            status = STATUS.CTRL_INTERNAL_ERROR
-            return (status, None)
         
-        if (response.status_code == 200 or response.status_code == 204):
-            status = STATUS.CTRL_OK
+        resp = ctrl.http_get_request(url, data=None, headers=None)
+        if(resp == None):
+            status.set_status(STATUS.CONN_ERROR)
+        elif(resp.content == None):
+            status.set_status(STATUS.CTRL_INTERNAL_ERROR)
+        elif (resp.status_code == 200):
+            cfg = resp.content
+            status.set_status(STATUS.OK)
         else:
-            print ("!!!Error, reason: %s" % response.reason)
-            return (STATUS.HTTP_ERROR, None)
-        
-        return (status, response)
-       
+            status.set_status(STATUS.HTTP_ERROR, resp)
+
+        return (status, cfg)
+    
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def create_firewall_instance(self, fwInstance):        
+        status = OperStatus()
         ctrl = self.ctrl
         myname = self.name
-
         url = ctrl.get_ext_mount_config_url(myname)
         headers = {'content-type': 'application/yang.data+json'}
         payload = fwInstance.get_payload()
-        result = ctrl.http_post_request(url, payload, headers)
-        status = result[0]
-        if (status == STATUS.CTRL_CONN_ERROR):
-            return (status, None)
         
-        response = result[1]
-        if (response == None):
-            status = STATUS.CTRL_INTERNAL_ERROR
-            return (status, None)
-        
-        if (response.status_code == 200 or response.status_code == 204):
-                status = STATUS.CTRL_OK
+        resp = ctrl.http_post_request(url, payload, headers)
+        if(resp == None):
+            status.set_status(STATUS.CONN_ERROR)
+        elif(resp.content == None):
+            status.set_status(STATUS.CTRL_INTERNAL_ERROR)
+        elif (resp.status_code == 200 or resp.status_code == 204):
+            status.set_status(STATUS.OK)
         else:
-            print ("!!!Error, reason: %s" % response.reason)
-            status = STATUS.HTTP_ERROR
-         
-        return (status, response)
+            status.set_status(STATUS.HTTP_ERROR, resp)
+        
+        return (status, None)
     
     #---------------------------------------------------------------------------
     # TBD
@@ -170,36 +155,37 @@ class VRouter5600(NetconfNode):
     # 
     #---------------------------------------------------------------------------
     def delete_firewall_instance(self, fwInstance):
+        status = OperStatus()
         ctrl = self.ctrl
         myname = self.name
-
         url = ctrl.get_ext_mount_config_url(myname)
         ext = fwInstance.get_url_extension()
         url += ext
         rules = fwInstance.get_rules()
+        p1 = "/name/"
+        url += p1
         for item in rules:
             name = item.get_name()
-            result = ctrl.http_delete_request(url + "/name/" + name, data=None, headers=None)
-            status = result[0]
-            if (status == STATUS.CTRL_CONN_ERROR):
+            resp = ctrl.http_delete_request(url + name, data=None, headers=None)
+            if(resp == None):
+                status.set_status(STATUS.CONN_ERROR)
                 break
-            response = result[1]
-            if (response == None):
-                status = STATUS.CTRL_INTERNAL_ERROR
+            elif(resp.content == None):
+                status.set_status(STATUS.CTRL_INTERNAL_ERROR)
                 break
-            if (response.status_code == 200):
-                status = STATUS.CTRL_OK
+            elif (resp.status_code == 200):
+                status.set_status(STATUS.OK)
             else:
-                print ("!!!Error, reason: %s" % response.reason)
-                status = STATUS.HTTP_ERROR
+                status.set_status(STATUS.HTTP_ERROR, resp)
                 break
             
-            return (status, None)
-
+        return (status, None)
+    
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def set_dataplane_interface_inbound_firewall(self, ifName, fwName):
+        status = OperStatus()
         ctrl = self.ctrl
         headers = {'content-type': 'application/yang.data+json'}
         url = ctrl.get_ext_mount_config_url(self.name)        
@@ -207,214 +193,191 @@ class VRouter5600(NetconfNode):
         obj.add_in_item(fwName)
         payload = obj.get_payload()
         urlext = obj.get_url_extension()
-        result = ctrl.http_put_request(url + urlext, payload, headers)
-        status = result[0]
-        if (status == STATUS.CTRL_CONN_ERROR):
-            return (status, None)
-
-        response = result[1]
-        if (response == None):
-            status = STATUS.CTRL_INTERNAL_ERROR
-            return (status, None)
         
-        if (response.status_code == 200):
-                status = STATUS.CTRL_OK
+        resp = ctrl.http_put_request(url + urlext, payload, headers)
+        if(resp == None):
+            status.set_status(STATUS.CONN_ERROR)
+        elif(resp.content == None):
+            status.set_status(STATUS.CTRL_INTERNAL_ERROR)
+        elif (resp.status_code == 200):
+            status.set_status(STATUS.OK)
         else:
-            print ("!!!Error, reason: %s" % response.reason)
-            status = STATUS.HTTP_ERROR
+            status.set_status(STATUS.HTTP_ERROR, resp)
         
-        return (status, response)
+        return (status, None)
     
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def delete_dataplane_interface_firewall(self, ifName):        
+        status = OperStatus()
         templateModelRef = "vyatta-interfaces:interfaces/vyatta-interfaces-dataplane:dataplane/{}/vyatta-security-firewall:firewall/"
         modelref = templateModelRef.format(ifName)
         myname = self.name
         ctrl = self.ctrl
-
-        url = ctrl.get_ext_mount_config_url(myname)        
-        result = ctrl.http_delete_request(url + modelref, data=None, headers=None)
-        status = result[0]
-        if (status == STATUS.CTRL_CONN_ERROR):
-            return (status, None)
+        url = ctrl.get_ext_mount_config_url(myname)  
         
-        response = result[1]
-        if (response == None):
-            status = STATUS.CTRL_INTERNAL_ERROR
-            return (status, None)
-
-        if (response.status_code == 200 or response.status_code == 204):
-            status = STATUS.CTRL_OK
+        resp = ctrl.http_delete_request(url + modelref, data=None, headers=None)
+        if(resp == None):
+            status.set_status(STATUS.CONN_ERROR)
+        elif(resp.content == None):
+            status.set_status(STATUS.CTRL_INTERNAL_ERROR)
+        elif (resp.status_code == 200):
+            status.set_status(STATUS.OK)
         else:
-            print ("!!!Error, reason: %s" % response.reason)
-            status = STATUS.HTTP_ERROR
-        
-        return (status, response)
+            status.set_status(STATUS.HTTP_ERROR, resp)
 
+        return (status, None)
+    
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def get_interfaces_cfg(self):        
+        status = OperStatus()
+        cfg = None
         templateModelRef = "vyatta-interfaces:interfaces"        
         modelref = templateModelRef       
         ctrl = self.ctrl
-
         url = ctrl.get_ext_mount_config_url(self.name)
-        url += modelref
-        result = ctrl.http_get_request(url, data=None, headers=None)
-        status = result[0]
-        if (status == STATUS.CTRL_CONN_ERROR):
-            return (status, None)
+        url += modelref        
         
-        response = result[1]
-        if (response == None):
-            status = STATUS.CTRL_INTERNAL_ERROR
-            return (status, None)
-        
-        if (response.status_code == 200):
-                status = STATUS.CTRL_OK
+        resp = ctrl.http_get_request(url, data=None, headers=None)
+        if(resp == None):
+            status.set_status(STATUS.CONN_ERROR)
+        elif(resp.content == None):
+            status.set_status(STATUS.CTRL_INTERNAL_ERROR)
+        elif (resp.status_code == 200):
+            cfg = resp.content
+            status.set_status(STATUS.OK)
         else:
-            print ("!!!Error, reason: %s" % response.reason)
-            status = STATUS.HTTP_ERROR
+            status.set_status(STATUS.HTTP_ERROR, resp)
         
-        return (status, response)
+        return (status, cfg)
     
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def get_dataplane_interfaces_list(self):        
+        dpIfList = []
+
         result = self.get_interfaces_cfg()
         status = result[0]
-        dpIfList = []
-        if (status == STATUS.CTRL_OK):
-            response = result[1]
+        if(status.eq(STATUS.OK)):
+            cfg = result[1]
             p1 = 'interfaces'
             p2 = 'vyatta-interfaces-dataplane:dataplane'
-            if(p1 in response.content and p2 in response.content):
-                items = json.loads(response.content).get(p1).get(p2)
+            if(p1 in cfg and p2 in cfg):
+                items = json.loads(cfg).get(p1).get(p2)
+                p3 = 'tagnode'
                 for item in items:
-                    if 'tagnode' in item:
-                        dpIfList.append(item['tagnode'])
-        else:
-            print ("!!!Error, reason: %s" % response.reason)
+                    if p3 in item:
+                        dpIfList.append(item[p3])
         
         return (status, dpIfList)
-
+    
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def get_dataplane_interfaces_cfg(self):
+        dpIfCfg = None
+        
         result = self.get_interfaces_cfg()
         status = result[0]
-        dpIfCfg = None
-        if (status == STATUS.CTRL_OK):
-            response = result[1]
+        if(status.eq(STATUS.OK)):
+            cfg = result[1]
             p1 = 'interfaces'
             p2 = 'vyatta-interfaces-dataplane:dataplane'
-            if(p1 in response.content and p2 in response.content):
-                dpIfCfg = json.loads(response.content).get(p1).get(p2)
-        else:
-            print ("!!!Error, reason: %s" % response.reason)
-        
+            if(p1 in cfg and p2 in cfg):
+                dpIfCfg = json.loads(cfg).get(p1).get(p2)
+
         return (status, dpIfCfg)
     
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def get_dataplane_interface_cfg(self, ifName):        
+        status = OperStatus()
+        cfg = None
         templateModelRef = "vyatta-interfaces:interfaces/vyatta-interfaces-dataplane:dataplane/{}"
         modelref = templateModelRef.format(ifName)
         ctrl = self.ctrl
         url = ctrl.get_ext_mount_config_url(self.name)
         url += modelref
 
-        result = ctrl.http_get_request(url, data=None, headers=None)
-        status = result[0]
-        if (status == STATUS.CTRL_CONN_ERROR):
-            return (status, None)
-        
-        response = result[1]
-        if (response == None):
-            status = STATUS.CTRL_INTERNAL_ERROR
-            return (status, None)
-
-        if (response.status_code == 200):
-                status = STATUS.CTRL_OK
+        resp = ctrl.http_get_request(url, data=None, headers=None)
+        if(resp == None):
+            status.set_status(STATUS.CONN_ERROR)
+        elif(resp.content == None):
+            status.set_status(STATUS.CTRL_INTERNAL_ERROR)
+        elif (resp.status_code == 200):
+            cfg = resp.content
+            status.set_status(STATUS.OK)
         else:
-            print ("!!!Error, reason: %s" % response.reason)
-            status = STATUS.HTTP_ERROR
+            status.set_status(STATUS.HTTP_ERROR, resp)
         
-        return (status, response)
-
+        return (status, cfg)
+    
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def get_loopback_interfaces_list(self):        
+    def get_loopback_interfaces_list(self):
+        lbInterfaces = []
+        
         result = self.get_interfaces_cfg()
         status = result[0]
-        lbInterfaces = []
-        if (status == STATUS.CTRL_OK):
-            response = result[1]
+        if(status.eq(STATUS.OK)):
+            cfg = result[1]
             p1 = 'interfaces'
             p2 = 'vyatta-interfaces-loopback:loopback'
-            if(p1 in response.content and p2 in response.content):
-                items = json.loads(response.content).get(p1).get(p2)
+            if(p1 in cfg and p2 in cfg):
+                items = json.loads(cfg).get(p1).get(p2)
+                p3 = 'tagnode'
                 for item in items:
-                    if 'tagnode' in item:
-                        lbInterfaces.append(item['tagnode'])
-        else:
-            print ("!!!Error, reason: %s" % response.reason)
-        
-        return (status, lbInterfaces)
-
+                    if p3 in item:
+                        lbInterfaces.append(item[p3])
+      
+        return (status, lbInterfaces)        
+    
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def get_loopback_interfaces_cfg(self):
+        lbIfCfg = None
+
         result = self.get_interfaces_cfg()
         status = result[0]
-        lpIfCfg = None
-        if (status == STATUS.CTRL_OK):
-            response = result[1]
+        if(status.eq(STATUS.OK)):
+            cfg = result[1]
             p1 = 'interfaces'
             p2 = 'vyatta-interfaces-loopback:loopback'
-            if(p1 in response.content and p2 in response.content):
-                lpIfCfg = json.loads(response.content).get(p1).get(p2)
-        else:
-            print ("!!!Error, reason: %s" % response.reason)
+            if(p1 in cfg and p2 in cfg):
+                lbIfCfg = json.loads(cfg).get(p1).get(p2)
         
-        return (status, lpIfCfg)
+        return (status, lbIfCfg)
     
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def get_loopback_interface_cfg(self, ifName):        
+        status = OperStatus()
         templateModelRef = "vyatta-interfaces:interfaces/vyatta-interfaces-loopback:loopback/{}"
         modelref = templateModelRef.format(ifName)
         ctrl = self.ctrl
         url = ctrl.get_ext_mount_config_url(self.name)
         url += modelref
 
-        result = ctrl.http_get_request(url, data=None, headers=None)
-        status = result[0]
-        if (status == STATUS.CTRL_CONN_ERROR):
-            return (status, None)
-        
-        response = result[1]
-        if (response == None):
-            status = STATUS.CTRL_INTERNAL_ERROR
-            return (status, None)
-
-        if (response.status_code == 200):
-                status = STATUS.CTRL_OK
+        resp = ctrl.http_get_request(url, data=None, headers=None)
+        if(resp == None):
+            status.set_status(STATUS.CONN_ERROR)
+        elif(resp.content == None):
+            status.set_status(STATUS.CTRL_INTERNAL_ERROR)
+        elif (resp.status_code == 200):
+            status.set_status(STATUS.OK)
         else:
-            print ("!!!Error, reason: %s" % response.reason)
-            status = STATUS.HTTP_ERROR
+            status.set_status(STATUS.HTTP_ERROR)
         
-        return (status, response)
-    
+        return (status, resp)
+
 #===============================================================================
 # 
 #===============================================================================
@@ -449,6 +412,11 @@ class Firewall():
     #---------------------------------------------------------------------------
     def get_name(self):
         return 
+
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def get_url_extension(self):
         return (self.mn1 + "/" +  self.mn2)
     

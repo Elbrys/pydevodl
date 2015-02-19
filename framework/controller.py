@@ -558,9 +558,9 @@ class Controller():
     
     #---------------------------------------------------------------------------
     # TBD: 
-    # NOTE: It is unclear what NETCONF node attributes are allowed for dynamic
-    #       configuration changes. For now we just follow example published
-    #       on ODL wiki:
+    # NOTE: It is unclear which NETCONF node attributes are allowed for dynamic
+    #       configuration changes. For now just follow an example that is
+    #       published on ODL wiki:
     #       https://wiki.opendaylight.org/view/OpenDaylight_Controller:Config:Examples:Netconf
     #---------------------------------------------------------------------------
     def modify_netconf_node_in_config(self, netconfdev):
