@@ -3,7 +3,8 @@
 import sys
 import time
 import json
-from framework.controller import Controller,STATUS,Status
+from framework.controller import Controller
+from framework.status import STATUS
 
 if __name__ == "__main__":
 
@@ -31,12 +32,12 @@ if __name__ == "__main__":
     time.sleep(rundelay)
     result = ctrl.get_sessions_info(nodeName)
     status = result[0]
-    if (status == STATUS.CTRL_OK):
+    if(status.eq(STATUS.OK)):
         print "Sessions:"
         slist = result[1]
         print json.dumps(slist, default=lambda o: o.__dict__, sort_keys=True, indent=4)
     else:
-        print ("Demo terminated, reason: %s" % Status(status).string())
+        print ("Demo terminated, reason: %s" % status.brief().lower())        
         sys.exit(0)
 
     

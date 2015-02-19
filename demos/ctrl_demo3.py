@@ -3,7 +3,8 @@
 import sys
 import time
 import json
-from framework.controller import Controller,STATUS,Status
+from framework.controller import Controller
+from framework.status import STATUS
 
 if __name__ == "__main__":
 
@@ -30,12 +31,12 @@ if __name__ == "__main__":
     time.sleep(rundelay)
     result = ctrl.get_service_providers_info()
     status = result[0]
-    if (status == STATUS.CTRL_OK):
+    if(status.eq(STATUS.OK)):
         services = result[1]
         print "Service providers:"
         print json.dumps(services, default=lambda o: o.__dict__, sort_keys=True, indent=4)
     else:
-        print ("Demo terminated, reason: %s" % Status(status).string())
+        print ("Demo terminated, reason: %s" % status.brief().lower())        
         sys.exit(0)
 
     

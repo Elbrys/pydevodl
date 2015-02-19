@@ -4,7 +4,8 @@ import sys
 import time
 import os
 
-from framework.controller import Controller,STATUS,Status
+from framework.controller import Controller
+from framework.status import STATUS
 from framework.netconfnode import NetconfNode
 
 if __name__ == "__main__":
@@ -31,13 +32,13 @@ if __name__ == "__main__":
     time.sleep(rundelay)
     result = ctrl.get_all_nodes_in_config()
     status = result[0]
-    if (status == STATUS.CTRL_OK):
+    if(status.eq(STATUS.OK)):
         print "Nodes configured:"
         nlist = result[1]
         for item in nlist:
             print "   '{}'".format(item)   
     else:
-        print ("Demo terminated, reason: %s" % Status(status).string())
+        print ("Demo terminated, reason: %s" % status.brief().lower())        
         sys.exit(0)
 
 
@@ -56,6 +57,7 @@ if __name__ == "__main__":
 
     print ("\n")
     print ("<<< Check '%s' NETCONF node availability on the network" % nodeName)
+    time.sleep(rundelay)
     response = os.system("ping -c 1 " + nodeIpAddr)
 
     if response == 0:
@@ -70,45 +72,46 @@ if __name__ == "__main__":
     time.sleep(rundelay)    
     result = ctrl.add_netconf_node(node)
     status = result[0]
-    if (status == STATUS.CTRL_OK):
+    if(status.eq(STATUS.OK)):
         print ("'%s' NETCONF node was successfully added to the Controller" % nodeName)
     else:
-        print ("Demo terminated, reason: %s" % Status(status).string())
+        print ("Demo terminated, reason: %s" % status.brief().lower())        
         sys.exit(0)
-
+    
 
     print "\n"
     print ("<<< Show NETCONF nodes configured on the Controller")
     time.sleep(rundelay)
     result = ctrl.get_all_nodes_in_config()
     status = result[0]
-    if (status == STATUS.CTRL_OK):
+    if(status.eq(STATUS.OK)):
         print "Nodes configured:"
         nlist = result[1]
         for item in nlist:
             print "   '{}'".format(item)   
     else:
-        print ("Demo terminated, reason: %s" % Status(status).string())
+        print ("Demo terminated, reason: %s" % status.brief().lower())        
         sys.exit(0)
 
 
     print "\n"
     print ("<<< Find the '%s' NETCONF node on the Controller" % nodeName)
     time.sleep(rundelay)
-    status = ctrl.check_node_config_status(nodeName)
-    if (status == STATUS.NODE_CONFIGURED):
+    result = ctrl.check_node_config_status(nodeName)
+    status = result[0]
+    if(status.eq(STATUS.NODE_CONFIGURED)):
         print ("'%s' node is configured" % nodeName)
     else:
-        print ("Demo terminated, reason: %s" % Status(status).string())
+        print ("Demo terminated, reason: %s" % status.brief().lower())        
         sys.exit(0)
-
-
+    
+    
     print "\n"
     print ("<<< Show connection status for all NETCONF nodes configured on the Controller")
     time.sleep(rundelay)
     result = ctrl.get_all_nodes_conn_status()
     status = result[0]
-    if (status == STATUS.CTRL_OK):
+    if(status.eq(STATUS.OK)):
         print "Nodes connection status:"
         nlist = result[1]    
         for item in nlist:
@@ -119,66 +122,68 @@ if __name__ == "__main__":
                 status = "not connected"
             print "   '{}' is {}".format(item['node'], status )
     else:
-        print ("Demo terminated, reason: %s" % Status(status).string())
+        print ("Demo terminated, reason: %s" % status.brief().lower())        
         sys.exit(0)
 
 
     print "\n"
     print ("<<< Show connection status for the '%s' NETCONF node" % nodeName)
     time.sleep(rundelay)
-    status = ctrl.check_node_conn_status(nodeName)
-    if (status == STATUS.NODE_CONNECTED):
+    result = ctrl.check_node_conn_status(nodeName)
+    status = result[0]
+    if(status.eq(STATUS.NODE_CONNECTED)):
         print ("'%s' node is connected" % nodeName)
-    elif (status == STATUS.NODE_DISONNECTED):
+    elif (status.eq(STATUS.NODE_DISONNECTED)):
         print ("'%s' node is not connected" % nodeName)
-    elif (status == STATUS.NODE_NOT_FOUND):
+    elif (status.eq(STATUS.NODE_NOT_FOUND)):
         print ("'%s' node is not found" % nodeName)
     else:
-        print ("Demo terminated, reason: %s" % Status(status).string())
+        print ("Demo terminated, reason: %s" % status.brief().lower())        
         sys.exit(0)
-
-
+    
+    
     print "\n"
     print (">>> Remove '%s' NETCONF node from the Controller" % nodeName)
     time.sleep(rundelay)    
     result = ctrl.delete_netconf_node(node)
     status = result[0]
-    if (status == STATUS.CTRL_OK):
+    if(status.eq(STATUS.OK)):
         print ("'%s' NETCONF node was successfully removed from the Controller" % nodeName)
     else:
-        print ("Demo terminated, reason: %s" % Status(status).string())
+        print ("Demo terminated, reason: %s" % status.brief().lower())        
         sys.exit(0)
-
+    
 
     print "\n"
     print ("<<< Show NETCONF nodes configured on the Controller")
     time.sleep(rundelay)
     result = ctrl.get_all_nodes_in_config()
     status = result[0]
-    if (status == STATUS.CTRL_OK):
+    if(status.eq(STATUS.OK)):
         print "Nodes configured:"
         nlist = result[1]
         for item in nlist:
             print "   '{}'".format(item)   
     else:
-        print ("Demo terminated, reason: %s" % Status(status).string())
+        print ("Demo terminated, reason: %s" % status.brief().lower())        
         sys.exit(0)
-
+    
 
     print "\n"
     print ("<<< Show connection status for the '%s' NETCONF node" % nodeName)
     time.sleep(rundelay)
-    status = ctrl.check_node_conn_status(nodeName)
-    if (status == STATUS.NODE_CONNECTED):
+    result = ctrl.check_node_conn_status(nodeName)
+    status = result[0]
+    if(status.eq(STATUS.NODE_CONNECTED)):
         print ("'%s' node is connected" % nodeName)
-    elif (status == STATUS.NODE_DISONNECTED):
+    elif (status.eq(STATUS.NODE_DISONNECTED)):
         print ("'%s' node is not connected" % nodeName)
-    elif (status == STATUS.NODE_NOT_FOUND):
+    elif (status.eq(STATUS.NODE_NOT_FOUND)):
         print ("'%s' node is not found" % nodeName)
     else:
-        print ("Demo terminated, reason: %s" % Status(status).string())
+        print ("Demo terminated, reason: %s" % status.brief().lower())        
         sys.exit(0)
-
+    
 
     print ("\n")
     print (">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")

@@ -2,7 +2,8 @@
 
 import sys
 import time
-from framework.controller import Controller,STATUS,Status
+from framework.controller import Controller
+from framework.status import STATUS
 
 if __name__ == "__main__":
 
@@ -31,16 +32,16 @@ if __name__ == "__main__":
     time.sleep(rundelay)
     nodeName = "controller-config"
     result = ctrl.get_schema(nodeName, yangModelName, yangModelVerson)
-    status = result[0]
-    if (status == STATUS.CTRL_OK):
+    status = result[0]    
+    if(status.eq(STATUS.OK)):
         print ("YANG model:")
         schema = result[1]
         print schema
     else:
-        print ("Demo terminated, reason: %s" % Status(status).string())
+        print ("Demo terminated, reason: %s" % status.brief().lower())        
         sys.exit(0)
-    
 
+    
     print ("\n")
     print (">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
     print (">>> Demo End")

@@ -3,9 +3,95 @@
 import sys
 import time
 import json
+import sys
+import xmltodict
+
 from framework.controller import Controller,STATUS,Status
 
 if __name__ == "__main__":
+
+    xmlPayloadTemplate = '''
+    <module xmlns="urn:opendaylight:params:xml:ns:yang:controller:config">
+      <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:md:sal:connector:netconf">prefix:sal-netconf-connector</type>
+      <name>{}</name>
+      <address xmlns="urn:opendaylight:params:xml:ns:yang:controller:md:sal:connector:netconf">{}</address>
+      <port xmlns="urn:opendaylight:params:xml:ns:yang:controller:md:sal:connector:netconf">{}</port>
+      <username xmlns="urn:opendaylight:params:xml:ns:yang:controller:md:sal:connector:netconf">{}</username>
+      <password xmlns="urn:opendaylight:params:xml:ns:yang:controller:md:sal:connector:netconf">{}</password>
+      <tcp-only xmlns="urn:opendaylight:params:xml:ns:yang:controller:md:sal:connector:netconf">{}</tcp-only>
+      <event-executor xmlns="urn:opendaylight:params:xml:ns:yang:controller:md:sal:connector:netconf">
+        <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:netty">prefix:netty-event-executor</type>
+        <name>global-event-executor</name>
+      </event-executor>
+      <binding-registry xmlns="urn:opendaylight:params:xml:ns:yang:controller:md:sal:connector:netconf">
+        <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:md:sal:binding">prefix:binding-broker-osgi-registry</type>
+        <name>binding-osgi-broker</name>
+      </binding-registry>
+      <dom-registry xmlns="urn:opendaylight:params:xml:ns:yang:controller:md:sal:connector:netconf">
+        <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:md:sal:dom">prefix:dom-broker-osgi-registry</type>
+        <name>dom-broker</name>
+      </dom-registry>
+      <client-dispatcher xmlns="urn:opendaylight:params:xml:ns:yang:controller:md:sal:connector:netconf">
+        <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:config:netconf">prefix:netconf-client-dispatcher</type>
+        <name>global-netconf-dispatcher</name>
+      </client-dispatcher>
+      <processing-executor xmlns="urn:opendaylight:params:xml:ns:yang:controller:md:sal:connector:netconf">
+        <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:threadpool">prefix:threadpool</type>
+        <name>global-netconf-processing-executor</name>
+      </processing-executor>
+    </module>
+    '''
+    
+#    print xmlPayloadTemplate
+#    print type(xmlPayloadTemplate)
+
+    doc = xmltodict.parse(xmlPayloadTemplate)
+    print type(doc)
+#    print doc
+    for key, value in doc.items():
+        print "......."
+        print key
+        print value
+        print "......."
+#    print json.dumps(doc)
+    
+    '''
+    try:
+        schema = doc['get-schema']['output']['data']
+        status = STATUS.CTRL_OK
+    except (KeyError) as e:
+        print "Error: " + repr(e)
+    print "TBD: not implemented content type parser"
+    '''
+
+    sys.exit(0)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     print ("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
     print ("<<< Demo Start")
