@@ -1,3 +1,9 @@
+"""
+controller.py: Controller's specific properties and communication methods
+
+
+"""
+
 import json
 import xmltodict
 import requests
@@ -6,14 +12,11 @@ from requests.exceptions import ConnectionError, Timeout
 from framework.status import OperStatus, STATUS
 
 
-#===============================================================================
-# Class 'Controller'
-#===============================================================================
 class Controller():
-    #---------------------------------------------------------------------------
-    # 
-    #---------------------------------------------------------------------------
+    """Class that represents a Controller device."""
+    
     def __init__(self, ipAddr, portNum, adminName, adminPassword, timeout=5):
+        """Initializes this object properties."""        
         self.ipAddr = ipAddr
         self.portNum = portNum
         self.adminName = adminName
@@ -40,18 +43,21 @@ class Controller():
     # 
     #---------------------------------------------------------------------------
     def to_string(self):
+        """Returns string representation of this object."""
         return str(vars(self))
 
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def to_json(self):
+        """Returns JSON representation of this object."""
         return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
 
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def http_get_request(self, url, data, headers):
+        """Sends HTTP GET request to a remote server and returns the response."""
         resp = None
         
         try:
@@ -67,6 +73,7 @@ class Controller():
     # 
     #---------------------------------------------------------------------------
     def http_post_request(self, url, data, headers):
+        """Sends HTTP POST request to a remote server and returns the response."""
         resp = None
         
         try:
@@ -82,6 +89,7 @@ class Controller():
     # 
     #---------------------------------------------------------------------------
     def http_put_request(self, url, data, headers):
+        """Sends HTTP PUT request to a remote server and returns the response."""
         resp = None
 
         try:
@@ -97,6 +105,7 @@ class Controller():
     # 
     #---------------------------------------------------------------------------
     def http_delete_request(self, url, data, headers):
+        """Sends HTTP DELETE request to a remote server and returns the response."""
         resp = None
         
         try:
@@ -194,7 +203,7 @@ class Controller():
             else:
                 status.set_status(STATUS.DATA_NOT_FOUND)
         else:
-            status.set_status(STATUS.HTTP_ERROR)
+            status.set_status(STATUS.HTTP_ERROR, resp)
         
         return (status, nlist)
 
@@ -233,7 +242,7 @@ class Controller():
             else:
                 status.set_status(STATUS.DATA_NOT_FOUND)
         else:
-            status.set_status(STATUS.HTTP_ERROR)
+            status.set_status(STATUS.HTTP_ERROR, resp)
 
         return (status, nlist)
     
@@ -259,7 +268,7 @@ class Controller():
                 data = json.loads(resp.content).get(p1).get(p2)
                 slist = data
         else:
-            status.set_status(STATUS.HTTP_ERROR)
+            status.set_status(STATUS.HTTP_ERROR, resp)
         
         return (status, slist)
     
@@ -295,7 +304,7 @@ class Controller():
                 status.set_status(STATUS.DATA_NOT_FOUND)
                 print "TBD: not implemented content type parser"
         else:
-            status.set_status(STATUS.HTTP_ERROR)
+            status.set_status(STATUS.HTTP_ERROR, resp)
         
         return (status, schema)
     
@@ -348,7 +357,7 @@ class Controller():
             else:
                 status.set_status(STATUS.DATA_NOT_FOUND)
         else:
-            status.set_status(STATUS.HTTP_ERROR)
+            status.set_status(STATUS.HTTP_ERROR, resp)
 
         return (status, mlist)
     
@@ -374,7 +383,7 @@ class Controller():
             else:
                 status.set_status(STATUS.DATA_NOT_FOUND)
         else:
-            status.set_status(STATUS.HTTP_ERROR)
+            status.set_status(STATUS.HTTP_ERROR, resp)
         
         return (status, module)
     
@@ -400,7 +409,7 @@ class Controller():
             else:
                 status.set_status(STATUS.DATA_NOT_FOUND)
         else:
-            status.set_status(STATUS.HTTP_ERROR)                
+            status.set_status(STATUS.HTTP_ERROR, resp)                
         
         return (status, slist)
     
@@ -426,7 +435,7 @@ class Controller():
             else:
                 status.set_status(STATUS.DATA_NOT_FOUND)                
         else:
-            status.set_status(STATUS.HTTP_ERROR)
+            status.set_status(STATUS.HTTP_ERROR, resp)
 
         return (status, slist)
     
@@ -453,7 +462,7 @@ class Controller():
             else:
                 status.set_status(STATUS.DATA_NOT_FOUND)
         else:
-            status.set_status(STATUS.HTTP_ERROR)
+            status.set_status(STATUS.HTTP_ERROR, resp)
 
         return (status, slist)
     
@@ -534,7 +543,7 @@ class Controller():
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
         
-        return (status, None)
+        return (status, resp)
     
     #---------------------------------------------------------------------------
     # 
@@ -549,7 +558,7 @@ class Controller():
             status.set_status(STATUS.CONN_ERROR)
         elif(resp.content == None):
             status.set_status(STATUS.CTRL_INTERNAL_ERROR)
-        elif (resp.status_code == 200 or resp.status_code == 204):
+        elif (resp.status_code == 200):
             status.set_status(STATUS.OK)
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
@@ -583,7 +592,7 @@ class Controller():
             status.set_status(STATUS.CONN_ERROR)
         elif(resp.content == None):
             status.set_status(STATUS.CTRL_INTERNAL_ERROR)
-        elif (resp.status_code == 200 or resp.status_code == 204):
+        elif (resp.status_code == 200):
             status.set_status(STATUS.OK)
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)

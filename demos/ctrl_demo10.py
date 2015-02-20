@@ -62,7 +62,8 @@ if __name__ == "__main__":
     if(status.eq(STATUS.OK)):
         print ("'%s' NETCONF node was successfully added to the Controller" % nodeName)
     else:
-        print ("Demo terminated, reason: %s" % status.brief().lower())        
+        print ("Demo terminated, reason: %s" % status.brief().lower())
+        print status.detail()
         sys.exit(0)
     
 

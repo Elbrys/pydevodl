@@ -1,3 +1,9 @@
+"""
+vrouter5600.py: vRouter-5600 specific properties and communication methods
+
+
+"""
+
 import string
 import json
 from framework.netconfnode import NetconfNode
@@ -7,22 +13,27 @@ from framework.status import OperStatus, STATUS
 # Class 'VRouter5600'
 #===============================================================================
 class VRouter5600(NetconfNode):
+    """Class that represents an instance of vRouter-5600 (NETCONF capable server device)."""
+    
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def __init__(self, ctrl, name, ipAddr, portNum, adminName, adminPassword, tcpOnly=False):
+        """Initializes this object properties."""
         super(VRouter5600, self).__init__(ctrl, name, ipAddr, portNum, adminName, adminPassword, tcpOnly)
     
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def to_string(self):
+        """Returns string representation of this object."""
         return str(vars(self))
 
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def to_json(self):
+        """Returns JSON representation of this object."""
         return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4) 
 
     #---------------------------------------------------------------------------
@@ -374,12 +385,12 @@ class VRouter5600(NetconfNode):
         elif (resp.status_code == 200):
             status.set_status(STATUS.OK)
         else:
-            status.set_status(STATUS.HTTP_ERROR)
+            status.set_status(STATUS.HTTP_ERROR, resp)
         
         return (status, resp)
 
 #===============================================================================
-# 
+# Class 'Firewall'
 #===============================================================================
 class Firewall():
     mn1 = "vyatta-security:security"
@@ -407,12 +418,13 @@ class Firewall():
         payload = {self.mn1:{self.mn2:obj}}
         return json.dumps(payload, default=lambda o: o.__dict__, sort_keys=True, indent=4)
     
+    '''
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def get_name(self):
-        return 
-
+    def __get_name(self):
+        return
+    '''
     
     #---------------------------------------------------------------------------
     # 
