@@ -4,9 +4,10 @@ import time
 import sys
 import json
 
-from framework.controller import Controller
-from framework.vrouter5600 import VRouter5600, Firewall, Rules, Rule
-from framework.status import STATUS
+from framework.controller.controller import Controller
+from framework.netconfdev.vrouter.vrouter5600 import VRouter5600
+from framework.common.status import STATUS
+
 
 if __name__ == "__main__":
 
@@ -51,15 +52,60 @@ if __name__ == "__main__":
     else:
         print ("Demo terminated, reason: %s" % status.brief().lower())
         sys.exit(0)
-
+    
+    
+    print("\n")
+    print ("<<< Show list of loopback interfaces on the '%s'" % nodeName)
+    time.sleep(rundelay)
+    result = vrouter.get_loopback_interfaces_list()
+    status = result[0]
+    if(status.eq(STATUS.OK) == True):
+        print "Loopback interfaces:"
+        dpIfList = result[1]
+        print json.dumps(dpIfList, indent=4)
+    else:
+        print ("Demo terminated, reason: %s" % status.brief().lower())
+        sys.exit(0)
+    
 
     print("\n")
-    print ("<<< Show firewalls configuration of the '%s'" % nodeName)
+    ifName = "lo4"
+    print ("<<< Show '%s' loopback interface configuration on the '%s'" % (ifName,nodeName))
     time.sleep(rundelay)
-    result = vrouter.get_firewalls_cfg()
+    result = vrouter.get_loopback_interface_cfg(ifName)
     status = result[0]
-    if (status.eq(STATUS.OK) == True):
-        print ("'%s' firewalls config:" % nodeName)
+    if(status.eq(STATUS.OK) == True):
+        print ("Loopback interface '%s' config:" % ifName)
+        response = result[1]
+        content = response.content
+        data = json.loads(content)
+        print json.dumps(data, indent=4)
+    else:
+        print ("Demo terminated, reason: %s" % status.brief().lower())
+        sys.exit(0)
+    
+    
+    print("\n")
+    print ("<<< Show configuration of loopback interfaces on the '%s'" % nodeName)
+    time.sleep(rundelay)
+    result = vrouter.get_loopback_interfaces_cfg()
+    status = result[0]
+    if(status.eq(STATUS.OK) == True):
+        print "Loopback interfaces config:"
+        lbIfCfg = result[1]
+        print json.dumps(lbIfCfg, indent=4)
+    else:
+        print ("Demo terminated, reason: %s" % status.brief().lower())
+        sys.exit(0)
+        
+    
+    print("\n")
+    print ("<<< Show interfaces configuration on the '%s'" % nodeName)
+    time.sleep(rundelay)
+    result = vrouter.get_interfaces_cfg()
+    status = result[0]
+    if(status.eq(STATUS.OK) == True):
+        print "Interfaces config:"
         cfg = result[1]
         data = json.loads(cfg)
         print json.dumps(data, indent=4)
@@ -67,88 +113,9 @@ if __name__ == "__main__":
         print ("Demo terminated, reason: %s" % status.brief().lower())
         sys.exit(0)
     
-    
-    print "\n"
-    firewallgroup = "FW-ACCEPT-SRC-172_22_17_108"
-    firewall = Firewall()    
-    rules = Rules(firewallgroup)    
-    rulenum = 33
-    rule = Rule(rulenum)
-    rule.add_action("accept")
-    rule.add_source_address("172.22.17.108")    
-    rules.add_rule(rule)
-    firewall.add_rules(rules)
-    print ("<<< Create new firewall instance '%s' on '%s' " % (firewallgroup, nodeName))
-    time.sleep(rundelay)    
-    result = vrouter.create_firewall_instance(firewall)
-    status = result[0]
-    if(status.eq(STATUS.OK) == True):
-        print ("Firewall instance '%s' was successfully created" % firewallgroup)
-    else:
-        print ("Demo terminated, reason: %s" % status.brief().lower())
-        sys.exit(0)
-    
 
-    print("\n")
-    print ("<<< Show content of the firewall instance '%s' on '%s' " % (firewallgroup, nodeName))
-    time.sleep(rundelay)
-    result = vrouter.get_firewall_instance_cfg(firewallgroup)
-    status = result[0]
-    if(status.eq(STATUS.OK) == True):
-        print ("Firewall instance '%s': " % firewallgroup)
-        cfg = result[1]
-        data = json.loads(cfg)
-        print json.dumps(data, indent=4)
-    else:
-        print ("Demo terminated, reason: %s" % status.brief().lower())
-        sys.exit(0)
-    
- 
-    print("\n")
-    print ("<<< Show firewalls configuration on the '%s'" % nodeName)
-    time.sleep(rundelay)
-    result = vrouter.get_firewalls_cfg()
-    status = result[0]
-    if(status.eq(STATUS.OK) == True):
-        print ("'%s' firewalls config:" % nodeName)
-        cfg = result[1]
-        data = json.loads(cfg)
-        print json.dumps(data, indent=4)
-    else:
-        print ("Demo terminated, reason: %s" % status.brief().lower())
-        sys.exit(0)
-    
-
-    print "\n"
-    print ("<<< Remove firewall instance '%s' from '%s' " % (firewallgroup, nodeName))
-    time.sleep(rundelay)
-    result = vrouter.delete_firewall_instance(firewall)  
-    status = result[0]
-    if(status.eq(STATUS.OK) == True):
-        print ("Firewall instance '%s' was successfully deleted" % firewallgroup)
-    else:
-        print ("Demo terminated, reason: %s" % status.brief().lower())
-        sys.exit(0)
-    
-
-    print("\n")
-    print ("<<< Show firewalls configuration on the '%s'" % nodeName)
-    time.sleep(rundelay)
-    result = vrouter.get_firewalls_cfg()
-    status = result[0]
-    if(status.eq(STATUS.OK) == True):
-        print ("'%s' firewalls config:" % nodeName)
-        cfg = result[1]
-        data = json.loads(cfg)
-        print json.dumps(data, indent=4)
-    else:
-        print ("Demo terminated, reason: %s" % status.brief().lower())
-        sys.exit(0)
-    
-    
     print ("\n")
     print (">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
     print (">>> Demo End")
     print (">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-    
     

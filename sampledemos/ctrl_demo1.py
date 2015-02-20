@@ -3,8 +3,10 @@
 import sys
 import time
 import json
-from framework.controller import Controller
-from framework.status import STATUS
+
+from framework.controller.controller import Controller
+from framework.common.status import STATUS
+
 
 if __name__ == "__main__":
 
@@ -25,24 +27,21 @@ if __name__ == "__main__":
     print ("'Controller':")
     print ctrl.to_json()
 
-    
+   
     print "\n"
-    print ("<<< Show operational state of a particular configuration module on the Controller")
-    moduleType = "opendaylight-rest-connector:rest-connector-impl"
-    moduleName = "rest-connector-default-impl"
-    print ("    (module type: %s,\n     module name: %s)"  % (moduleType, moduleName))
+    print ("<<< Get list of YANG models supported by the Controller")
     time.sleep(rundelay)
-    result = ctrl.get_module_operational_state(moduleType, moduleName)
+    nodeName = "controller-config"
+    result = ctrl.get_schemas(nodeName)
     status = result[0]
     if(status.eq(STATUS.OK)):
-        print "Module:"
+        print "YANG models list:"
         slist = result[1]
         print json.dumps(slist, default=lambda o: o.__dict__, sort_keys=True, indent=4)
     else:
         print ("Demo terminated, reason: %s" % status.brief().lower())        
         sys.exit(0)
 
-    
     print ("\n")
     print (">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
     print (">>> Demo End")

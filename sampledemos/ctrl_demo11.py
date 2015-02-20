@@ -4,9 +4,10 @@ import sys
 import time
 import os
 
-from framework.controller import Controller
-from framework.status import STATUS
-from framework.netconfnode import NetconfNode
+from framework.controller.controller import Controller
+from framework.common.status import STATUS
+from framework.controller.netconfnode import NetconfNode
+
 
 if __name__ == "__main__":
 

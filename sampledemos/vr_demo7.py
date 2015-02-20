@@ -4,9 +4,10 @@ import time
 import sys
 import json
 
-from framework.controller import Controller
-from framework.vrouter5600 import VRouter5600, Firewall, Rules, Rule
-from framework.status import STATUS
+from framework.controller.controller import Controller
+from framework.netconfdev.vrouter.vrouter5600 import VRouter5600, Firewall, Rules, Rule
+from framework.common.status import STATUS
+
 
 if __name__ == "__main__":
 

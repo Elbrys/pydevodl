@@ -3,8 +3,10 @@
 import sys
 import time
 import json
-from framework.controller import Controller
-from framework.status import STATUS
+
+from framework.controller.controller import Controller
+from framework.common.status import STATUS
+
 
 if __name__ == "__main__":
 
@@ -25,14 +27,14 @@ if __name__ == "__main__":
     print ("'Controller':")
     print ctrl.to_json()
 
-    
+   
     print "\n"
-    print ("<<< Show notification event streams registered on the Controller")
+    print ("<<< Show operational state of all configuration modules on the Controller")
     time.sleep(rundelay)
-    result = ctrl.get_streams_info()
+    result = ctrl.get_all_modules_operational_state()
     status = result[0]
     if(status.eq(STATUS.OK)):
-        print "Streams:"
+        print "Modules:"
         slist = result[1]
         print json.dumps(slist, default=lambda o: o.__dict__, sort_keys=True, indent=4)
     else:

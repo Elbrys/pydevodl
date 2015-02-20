@@ -6,8 +6,10 @@ vrouter5600.py: vRouter-5600 specific properties and communication methods
 
 import string
 import json
-from framework.netconfnode import NetconfNode
-from framework.status import OperStatus, STATUS
+
+from framework.controller.netconfnode import NetconfNode
+from framework.common.status import OperStatus, STATUS
+
 
 #===============================================================================
 # Class 'VRouter5600'

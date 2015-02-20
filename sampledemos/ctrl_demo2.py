@@ -2,9 +2,9 @@
 
 import sys
 import time
-import json
-from framework.controller import Controller
-from framework.status import STATUS
+
+from framework.controller.controller import Controller
+from framework.common.status import STATUS
 
 if __name__ == "__main__":
 
@@ -25,20 +25,23 @@ if __name__ == "__main__":
     print ("'Controller':")
     print ctrl.to_json()
 
-   
+
     print "\n"
-    print ("<<< Show operational state of all configuration modules on the Controller")
+    yangModelName = "flow-topology-discovery"
+    yangModelVerson = "2013-08-19"
+    print ("<<< Retrieve '%s' YANG model definition from the Controller" % yangModelName)
     time.sleep(rundelay)
-    result = ctrl.get_all_modules_operational_state()
-    status = result[0]
+    nodeName = "controller-config"
+    result = ctrl.get_schema(nodeName, yangModelName, yangModelVerson)
+    status = result[0]    
     if(status.eq(STATUS.OK)):
-        print "Modules:"
-        slist = result[1]
-        print json.dumps(slist, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+        print ("YANG model:")
+        schema = result[1]
+        print schema
     else:
         print ("Demo terminated, reason: %s" % status.brief().lower())        
         sys.exit(0)
-    
+
     
     print ("\n")
     print (">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")

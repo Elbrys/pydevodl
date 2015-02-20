@@ -1,5 +1,5 @@
 """
-controller.py: Controller's specific properties and communication methods
+controller.py: Controller's properties and communication methods
 
 
 """
@@ -9,7 +9,7 @@ import xmltodict
 import requests
 from requests.auth import HTTPBasicAuth
 from requests.exceptions import ConnectionError, Timeout
-from framework.status import OperStatus, STATUS
+from framework.common.status import OperStatus, STATUS
 
 
 class Controller():

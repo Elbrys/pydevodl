@@ -1,11 +1,13 @@
 #!/usr/bin/python
 
-import sys
 import time
+import sys
+import json
 
-from framework.controller import Controller
-from framework.vrouter5600 import VRouter5600
-from framework.status import STATUS
+from framework.controller.controller import Controller
+from framework.netconfdev.vrouter.vrouter5600 import VRouter5600
+from framework.common.status import STATUS
+
 
 if __name__ == "__main__":
 
@@ -15,7 +17,6 @@ if __name__ == "__main__":
 
     rundelay = 5
     
-
     print ("\n")
     ctrlIpAddr =  "172.22.18.186"
     ctrlPortNum = "8080"     
@@ -28,7 +29,7 @@ if __name__ == "__main__":
     nodeUname = "vyatta"
     nodePswd = "vyatta"      
     vrouter = VRouter5600(ctrl, nodeName, nodeIpAddr, nodePortNum, nodeUname, nodePswd)
-    print (">>> 'Controller': %s, '%s': %s" % (ctrlIpAddr, nodeName, nodeIpAddr))
+    print ("<<< 'Controller': %s, '%s': %s" % (ctrlIpAddr, nodeName, nodeIpAddr))
     
     
     print ("\n")
@@ -52,24 +53,23 @@ if __name__ == "__main__":
         print ("Demo terminated, reason: %s" % status.brief().lower())
         sys.exit(0)
     
-
-    print "\n"
-    yangModelName = "vyatta-security-firewall"
-    yangModelVerson = "2014-11-07"
-    print ("<<< Retrieve the '%s' YANG model definition from the '%s'" % (yangModelName, nodeName))
-    time.sleep(rundelay)
-    result = ctrl.get_schema(nodeName, yangModelName, yangModelVerson)
+    
+    print("\n")
+    print ("<<< Show configuration of the '%s'" % nodeName)
+    time.sleep(rundelay)    
+    result = vrouter.get_cfg()
     status = result[0]
     if(status.eq(STATUS.OK) == True):
-        print "YANG model definition:"
-        schema = result[1]
-        print schema
+        print ("'%s' configuration:" % nodeName)
+        cfg = result[1]
+        data = json.loads(cfg)
+        print json.dumps(data, indent=4)
     else:
         print ("Demo terminated, reason: %s" % status.brief().lower())
-        sys.exit(0)
+        sys.exit(0)    
     
     
-    print "\n"
+    print ("\n")
     print (">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
     print (">>> Demo End")
     print (">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")

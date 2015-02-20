@@ -3,8 +3,10 @@
 import sys
 import time
 import json
-from framework.controller import Controller
-from framework.status import STATUS
+
+from framework.controller.controller import Controller
+from framework.common.status import STATUS
+
 
 if __name__ == "__main__":
 
@@ -25,16 +27,16 @@ if __name__ == "__main__":
     print ("'Controller':")
     print ctrl.to_json()
 
-    
+   
     print "\n"
-    print ("<<< Show list of all NETCONF operations supported by the Controller")
+    print ("<<< Get list of service provider applications available on the Controller")
     time.sleep(rundelay)
-    result = ctrl.get_netconf_operations("controller-config")
+    result = ctrl.get_service_providers_info()
     status = result[0]
     if(status.eq(STATUS.OK)):
-        print "NETCONF operations:"
-        slist = result[1]
-        print json.dumps(slist, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+        services = result[1]
+        print "Service providers:"
+        print json.dumps(services, default=lambda o: o.__dict__, sort_keys=True, indent=4)
     else:
         print ("Demo terminated, reason: %s" % status.brief().lower())        
         sys.exit(0)

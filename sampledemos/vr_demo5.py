@@ -4,9 +4,10 @@ import time
 import sys
 import json
 
-from framework.controller import Controller
-from framework.vrouter5600 import VRouter5600
-from framework.status import STATUS
+from framework.controller.controller import Controller
+from framework.netconfdev.vrouter.vrouter5600 import VRouter5600
+from framework.common.status import STATUS
+
 
 if __name__ == "__main__":
 
@@ -52,59 +53,29 @@ if __name__ == "__main__":
         print ("Demo terminated, reason: %s" % status.brief().lower())
         sys.exit(0)
     
-    
+        
     print("\n")
-    print ("<<< Show list of loopback interfaces on the '%s'" % nodeName)
+    print ("<<< Show list of dataplane interfaces on the '%s'" % nodeName)
     time.sleep(rundelay)
-    result = vrouter.get_loopback_interfaces_list()
+    result = vrouter.get_dataplane_interfaces_list()
     status = result[0]
     if(status.eq(STATUS.OK) == True):
-        print "Loopback interfaces:"
+        print "Dataplane interfaces:"
         dpIfList = result[1]
         print json.dumps(dpIfList, indent=4)
     else:
         print ("Demo terminated, reason: %s" % status.brief().lower())
         sys.exit(0)
     
-
-    print("\n")
-    ifName = "lo4"
-    print ("<<< Show '%s' loopback interface configuration on the '%s'" % (ifName,nodeName))
-    time.sleep(rundelay)
-    result = vrouter.get_loopback_interface_cfg(ifName)
-    status = result[0]
-    if(status.eq(STATUS.OK) == True):
-        print ("Loopback interface '%s' config:" % ifName)
-        response = result[1]
-        content = response.content
-        data = json.loads(content)
-        print json.dumps(data, indent=4)
-    else:
-        print ("Demo terminated, reason: %s" % status.brief().lower())
-        sys.exit(0)
-    
-    
-    print("\n")
-    print ("<<< Show configuration of loopback interfaces on the '%s'" % nodeName)
-    time.sleep(rundelay)
-    result = vrouter.get_loopback_interfaces_cfg()
-    status = result[0]
-    if(status.eq(STATUS.OK) == True):
-        print "Loopback interfaces config:"
-        lbIfCfg = result[1]
-        print json.dumps(lbIfCfg, indent=4)
-    else:
-        print ("Demo terminated, reason: %s" % status.brief().lower())
-        sys.exit(0)
         
-    
     print("\n")
-    print ("<<< Show interfaces configuration on the '%s'" % nodeName)
+    ifName = "dp0p1p7"
+    print ("<<< Show '%s' dataplane interface configuration on the '%s'" % (ifName,nodeName))
     time.sleep(rundelay)
-    result = vrouter.get_interfaces_cfg()
+    result = vrouter.get_dataplane_interface_cfg(ifName)
     status = result[0]
     if(status.eq(STATUS.OK) == True):
-        print "Interfaces config:"
+        print ("Dataplane interface '%s' config:" % ifName)
         cfg = result[1]
         data = json.loads(cfg)
         print json.dumps(data, indent=4)
@@ -112,9 +83,22 @@ if __name__ == "__main__":
         print ("Demo terminated, reason: %s" % status.brief().lower())
         sys.exit(0)
     
-
+    
+    print("\n")
+    print ("<<< Show configuration of dataplane interfaces on the '%s'" % nodeName)
+    time.sleep(rundelay)
+    result = vrouter.get_dataplane_interfaces_cfg()
+    status = result[0]
+    if(status.eq(STATUS.OK) == True):
+        print "Dataplane interfaces config:"
+        dpIfCfg = result[1]
+        print json.dumps(dpIfCfg, indent=4)
+    else:
+        print ("Demo terminated, reason: %s" % status.brief().lower())
+        sys.exit(0)
+    
+    
     print ("\n")
     print (">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
     print (">>> Demo End")
     print (">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-    
