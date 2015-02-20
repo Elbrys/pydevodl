@@ -7,7 +7,9 @@ from framework.controller.controller import Controller
 from framework.netconfdev.vrouter.vrouter5600  import VRouter5600
 from framework.common.status import STATUS
 
+
 if __name__ == "__main__":
+
     ctrlIpAddr =  "172.22.18.186"
     ctrlPortNum = "8080"     
     ctrlUname = 'admin' 
@@ -19,17 +21,18 @@ if __name__ == "__main__":
     nodePortNum = 830
     nodeUname = "vyatta"
     nodePswd = "vyatta"      
-    vrouter = VRouter5600(ctrl, nodeName, nodeIpAddr, nodePortNum, nodeUname, nodePswd) 
+    vrouter = VRouter5600(ctrl, nodeName, nodeIpAddr, nodePortNum, nodeUname, nodePswd)    
     print ("<<< 'Controller': %s, '%s': %s" % (ctrlIpAddr, nodeName, nodeIpAddr))
-    
-    print("\n")
-    result = vrouter.get_cfg()
+
+    result = vrouter.get_schemas()
     status = result[0]
     if(status.eq(STATUS.OK) == True):
-        print ("'%s' configuration:" % nodeName)
-        cfg = result[1]
-        data = json.loads(cfg)
-        print json.dumps(data, indent=4)
+        print "YANG models list:"
+        slist = result[1]
+        print json.dumps(slist, default=lambda o: o.__dict__, sort_keys=True, indent=4)
     else:
         print ("Failed, reason: %s" % status.brief().lower())
+        print ("%s" % status.detail())
         sys.exit(0)
+
+    print "\n"

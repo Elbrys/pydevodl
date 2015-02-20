@@ -22,12 +22,15 @@ if __name__ == "__main__":
     vrouter = VRouter5600(ctrl, nodeName, nodeIpAddr, nodePortNum, nodeUname, nodePswd) 
     print ("<<< 'Controller': %s, '%s': %s" % (ctrlIpAddr, nodeName, nodeIpAddr))
     
-    result = vrouter.get_dataplane_interfaces_cfg()
+    print("\n")
+    result = vrouter.get_cfg()
     status = result[0]
     if(status.eq(STATUS.OK) == True):
-        print "Dataplane interfaces config:"
-        dpIfCfg = result[1]
-        print json.dumps(dpIfCfg, indent=4)
+        print ("'%s' configuration:" % nodeName)
+        cfg = result[1]
+        data = json.loads(cfg)
+        print json.dumps(data, indent=4)
     else:
         print ("Failed, reason: %s" % status.brief().lower())
+        print ("%s" % status.detail())
         sys.exit(0)

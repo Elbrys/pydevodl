@@ -22,12 +22,13 @@ if __name__ == "__main__":
     vrouter = VRouter5600(ctrl, nodeName, nodeIpAddr, nodePortNum, nodeUname, nodePswd) 
     print ("<<< 'Controller': %s, '%s': %s" % (ctrlIpAddr, nodeName, nodeIpAddr))
     
-    result = vrouter.get_loopback_interfaces_list()
+    result = vrouter.get_loopback_interfaces_cfg()
     status = result[0]
     if(status.eq(STATUS.OK) == True):
-        print "Loopback interfaces:"
-        dpIfList = result[1]
-        print json.dumps(dpIfList, indent=4)
+        print "Loopback interfaces config:"
+        dpIfCfg = result[1]
+        print json.dumps(dpIfCfg, indent=4)
     else:
         print ("Failed, reason: %s" % status.brief().lower())
+        print ("%s" % status.detail())
         sys.exit(0)

@@ -65,7 +65,7 @@ if __name__ == "__main__":
         print schema
     else:
         print ("Failed, reason: %s" % status.brief().lower())
-        print status.detail()
+        print ("%s" % status.detail())
         sys.exit(0)
 
     print ("\n")
