@@ -27,9 +27,7 @@ if __name__ == "__main__":
     if(status.eq(STATUS.OK) == True):
         print "Dataplane interfaces:"
         dpIfList = result[1]
-        print dpIfList
-
-#        print json.dumps(dpIfList, indent=4)
+        print json.dumps(dpIfList, indent=4)
     else:
         print ("Failed, reason: %s" % status.brief().lower())
         print ("%s" % status.detail())
