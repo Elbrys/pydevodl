@@ -9,6 +9,7 @@ import json
 
 from framework.controller.netconfnode import NetconfNode
 from framework.common.status import OperStatus, STATUS
+from framework.common.utils import remove_empty_from_dict
 
 
 #===============================================================================
@@ -139,7 +140,6 @@ class VRouter5600(NetconfNode):
         url = ctrl.get_ext_mount_config_url(myname)
         headers = {'content-type': 'application/yang.data+json'}
         payload = fwInstance.get_payload()
-        
         resp = ctrl.http_post_request(url, payload, headers)
         if(resp == None):
             status.set_status(STATUS.CONN_ERROR)
@@ -197,13 +197,22 @@ class VRouter5600(NetconfNode):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def set_dataplane_interface_inbound_firewall(self, ifName, fwName):
+#    def set_dataplane_interface_inbound_firewall(self, ifName, fwName):
+    def set_dataplane_interface_firewall(self, ifName,
+                                         inboundFwName, outboundFwName):
         status = OperStatus()
         ctrl = self.ctrl
         headers = {'content-type': 'application/yang.data+json'}
         url = ctrl.get_ext_mount_config_url(self.name)        
         obj = DataplaneInterfaceFirewall(ifName)
-        obj.add_in_item(fwName)
+        
+        if (inboundFwName != None):
+            obj.add_in_item(inboundFwName)
+        
+        if (outboundFwName != None):
+            obj.add_out_item(outboundFwName)
+        
+#        obj.add_in_item(fwName)
         payload = obj.get_payload()
         urlext = obj.get_url_extension()
         
@@ -441,21 +450,18 @@ class Firewall():
     def to_json(self):
         return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4) 
     
+    
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def get_payload(self):
-        obj = json.loads(self.to_json())
-        payload = {self.mn1:{self.mn2:obj}}
+        s = self.to_json()
+        s = string.replace(s, 'typename', 'type-name')
+        d1 = json.loads(s)
+        d2 = remove_empty_from_dict(d1)
+        payload = {self.mn1:{self.mn2:d2}}
         return json.dumps(payload, default=lambda o: o.__dict__, sort_keys=True, indent=4)
     
-    '''
-    #---------------------------------------------------------------------------
-    # 
-    #---------------------------------------------------------------------------
-    def __get_name(self):
-        return
-    '''
     
     #---------------------------------------------------------------------------
     # 
@@ -523,6 +529,7 @@ class Rule():
     def __init__(self, number):
         self.tagnode = number
         self.source = Object()
+        self.icmp = Object()
     
     #---------------------------------------------------------------------------
     # 
@@ -547,6 +554,14 @@ class Rule():
     #---------------------------------------------------------------------------
     def add_source_address(self, srcAddr):
         self.source.address = srcAddr
+
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def add_icmp_typename(self, typeName):
+        self.protocol = "icmp"
+        self.icmp.typename = typeName
+
 
 #===============================================================================
 # Class 'DataplaneInterfaceFirewall'
