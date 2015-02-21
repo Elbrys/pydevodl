@@ -9,39 +9,7 @@ from framework.netconfdev.vrouter.vrouter5600 import VRouter5600, Firewall, Rule
 from framework.common.status import STATUS
 
 
-if __name__ == "__main__":
-
-    '''
-    print "\n"
-    firewallgroup1 = "FW-ACCEPT-SRC-172_22_17_108"
-    firewall1 = Firewall()    
-    rules = Rules(firewallgroup1)    
-    rulenum = 30
-    rule = Rule(rulenum)
-    rule.add_action("accept")
-    rule.add_source_address("172.22.17.108")
-    rules.add_rule(rule)
-    firewall1.add_rules(rules)
-    print("1)+++")
-    print firewall1.get_payload()
-    
-    print "\n"
-    firewallgroup2 = "ICMP-DROP"
-    firewall2 = Firewall()    
-    rules = Rules(firewallgroup2)    
-    rulenum = 40
-    rule = Rule(rulenum)
-    rule.add_action("drop")
-    rule.add_icmp_typename("ping")
-    rules.add_rule(rule)
-    firewall2.add_rules(rules)   
-    print("2)+++")
-    print firewall2.get_payload()
-    sys.exit(0)
-    
-    sys.exit(0)
-    '''
-    
+if __name__ == "__main__":    
 
     print ("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
     print ("<<< Demo Start")

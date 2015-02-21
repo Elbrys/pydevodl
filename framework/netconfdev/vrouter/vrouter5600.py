@@ -140,6 +140,7 @@ class VRouter5600(NetconfNode):
         url = ctrl.get_ext_mount_config_url(myname)
         headers = {'content-type': 'application/yang.data+json'}
         payload = fwInstance.get_payload()
+        
         resp = ctrl.http_post_request(url, payload, headers)
         if(resp == None):
             status.set_status(STATUS.CONN_ERROR)
@@ -197,7 +198,6 @@ class VRouter5600(NetconfNode):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-#    def set_dataplane_interface_inbound_firewall(self, ifName, fwName):
     def set_dataplane_interface_firewall(self, ifName,
                                          inboundFwName, outboundFwName):
         status = OperStatus()
@@ -212,7 +212,6 @@ class VRouter5600(NetconfNode):
         if (outboundFwName != None):
             obj.add_out_item(outboundFwName)
         
-#        obj.add_in_item(fwName)
         payload = obj.get_payload()
         urlext = obj.get_url_extension()
         
