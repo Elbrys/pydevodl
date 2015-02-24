@@ -5,9 +5,27 @@ import time
 
 from framework.controller.controller import Controller
 from framework.common.status import STATUS
+from framework.common.utils import load_dict_from_file
+
 
 if __name__ == "__main__":
 
+    f = "cfg1.yml"
+    d = {}
+    if(load_dict_from_file(f, d) == False):
+        print("Config file '%s' read error: " % f)
+        exit()
+
+    try:
+        ctrlIpAddr = d['ctrlIpAddr']
+        ctrlPortNum = d['ctrlPortNum']
+        ctrlUname = d['ctrlUname']
+        ctrlPswd = d['ctrlPswd']
+    except:
+        print ("Failed to get Controller device attributes")
+        exit(0)
+    
+    
     print ("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
     print ("<<< Demo Start")
     print ("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
@@ -16,16 +34,12 @@ if __name__ == "__main__":
     
     print ("\n")
     print ("<<< Creating Controller instance")
-    ctrlIpAddr =  "172.22.18.186"
-    ctrlPortNum = "8080"     
-    ctrlUname = 'admin' 
-    ctrlPswd = 'admin'    
     time.sleep(rundelay)
     ctrl = Controller(ctrlIpAddr, ctrlPortNum, ctrlUname, ctrlPswd)
     print ("'Controller':")
     print ctrl.to_json()
-
-
+    
+    
     print "\n"
     yangModelName = "flow-topology-discovery"
     yangModelVerson = "2013-08-19"
@@ -39,9 +53,10 @@ if __name__ == "__main__":
         schema = result[1]
         print schema
     else:
-        print ("Demo terminated, reason: %s" % status.brief().lower())        
-        sys.exit(0)
-
+        print ("\n")
+        print ("!!!Demo terminated, reason: %s" % status.brief())        
+        exit(0)
+    
     
     print ("\n")
     print (">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")

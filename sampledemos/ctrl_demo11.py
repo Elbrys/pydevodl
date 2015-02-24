@@ -7,10 +7,33 @@ import os
 from framework.controller.controller import Controller
 from framework.common.status import STATUS
 from framework.controller.netconfnode import NetconfNode
+from framework.common.utils import load_dict_from_file
 
 
 if __name__ == "__main__":
 
+    f = "cfg3.yml"
+    d = {}
+    if(load_dict_from_file(f, d) == False):
+        print("Config file '%s' read error: " % f)
+        exit()
+
+    try:
+        ctrlIpAddr = d['ctrlIpAddr']
+        ctrlPortNum = d['ctrlPortNum']
+        ctrlUname = d['ctrlUname']
+        ctrlPswd = d['ctrlPswd']
+
+        nodeName = d['nodeName']
+        nodeIpAddr = d['nodeIpAddr']
+        nodePortNum = d['nodePortNum']
+        nodeUname = d['nodeUname']
+        nodePswd = d['nodePswd']
+    except:
+        print ("Failed to get Controller or NETCONF device attributes")
+        exit(0)
+    
+    
     print ("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
     print ("<<< Demo Start")
     print ("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
@@ -19,14 +42,10 @@ if __name__ == "__main__":
     
     print ("\n")
     print ("<<< Creating Controller instance")
-    ctrlIpAddr =  "172.22.18.186"
-    ctrlPortNum = "8080"     
-    ctrlUname = 'admin' 
-    ctrlPswd = 'admin'    
     ctrl = Controller(ctrlIpAddr, ctrlPortNum, ctrlUname, ctrlPswd)
     print ("'Controller':")
     print ctrl.to_json()
-
+    
     
     print "\n"
     print ("<<< Show NETCONF nodes configured on the Controller")
@@ -39,23 +58,19 @@ if __name__ == "__main__":
         for item in nlist:
             print "   '{}'".format(item)   
     else:
-        print ("Demo terminated, reason: %s" % status.brief().lower())        
-        sys.exit(0)
-
-
+        print ("\n")
+        print ("!!!Demo terminated, reason: %s" % status.brief())        
+        exit(0)
+    
+    
     print ("\n")
     time.sleep(rundelay)    
-    nodeName = "dut-device"
-    nodeIpAddr = "172.22.17.107"
-    nodePortNum = 830
-    nodeUname = "vyatta"
-    nodePswd = "vyatta"
     print ("<<< Creating new '%s' NETCONF node" % nodeName)
     node = NetconfNode(ctrl, nodeName, nodeIpAddr, nodePortNum, nodeUname, nodePswd)
     print ("'%s':" % nodeName)
     print node.to_json()
-
-
+    
+    
     print ("\n")
     print ("<<< Check '%s' NETCONF node availability on the network" % nodeName)
     time.sleep(rundelay)
@@ -65,9 +80,10 @@ if __name__ == "__main__":
         print nodeIpAddr, 'is up!'
     else:
         print nodeIpAddr, 'is down!'
-        print ("Demo terminated")
-        sys.exit(0)
-
+        print ("!!!Demo terminated")
+        exit(0)
+    
+    
     print ("\n")
     print ("<<< Add '%s' NETCONF node to the Controller" % nodeName)
     time.sleep(rundelay)    
@@ -76,10 +92,11 @@ if __name__ == "__main__":
     if(status.eq(STATUS.OK)):
         print ("'%s' NETCONF node was successfully added to the Controller" % nodeName)
     else:
-        print ("Demo terminated, reason: %s" % status.brief().lower())        
-        sys.exit(0)
+        print ("\n")
+        print ("!!!Demo terminated, reason: %s" % status.brief())        
+        exit(0)
     
-
+    
     print "\n"
     print ("<<< Show NETCONF nodes configured on the Controller")
     time.sleep(rundelay)
@@ -91,10 +108,11 @@ if __name__ == "__main__":
         for item in nlist:
             print "   '{}'".format(item)   
     else:
-        print ("Demo terminated, reason: %s" % status.brief().lower())        
-        sys.exit(0)
-
-
+        print ("\n")
+        print ("!!!Demo terminated, reason: %s" % status.brief())        
+        exit(0)
+    
+    
     print "\n"
     print ("<<< Find the '%s' NETCONF node on the Controller" % nodeName)
     time.sleep(rundelay)
@@ -103,7 +121,8 @@ if __name__ == "__main__":
     if(status.eq(STATUS.NODE_CONFIGURED)):
         print ("'%s' node is configured" % nodeName)
     else:
-        print ("Demo terminated, reason: %s" % status.brief().lower())        
+        print ("\n")
+        print ("!!!Demo terminated, reason: %s" % status.brief())        
         sys.exit(0)
     
     
@@ -123,10 +142,11 @@ if __name__ == "__main__":
                 status = "not connected"
             print "   '{}' is {}".format(item['node'], status )
     else:
-        print ("Demo terminated, reason: %s" % status.brief().lower())        
-        sys.exit(0)
-
-
+        print ("\n")
+        print ("!!!Demo terminated, reason: %s" % status.brief())        
+        exit(0)
+    
+    
     print "\n"
     print ("<<< Show connection status for the '%s' NETCONF node" % nodeName)
     time.sleep(rundelay)
@@ -139,8 +159,9 @@ if __name__ == "__main__":
     elif (status.eq(STATUS.NODE_NOT_FOUND)):
         print ("'%s' node is not found" % nodeName)
     else:
-        print ("Demo terminated, reason: %s" % status.brief().lower())        
-        sys.exit(0)
+        print ("\n")
+        print ("!!!Demo terminated, reason: %s" % status.brief())        
+        exit(0)
     
     
     print "\n"
@@ -151,10 +172,11 @@ if __name__ == "__main__":
     if(status.eq(STATUS.OK)):
         print ("'%s' NETCONF node was successfully removed from the Controller" % nodeName)
     else:
-        print ("Demo terminated, reason: %s" % status.brief().lower())        
-        sys.exit(0)
+        print ("\n")
+        print ("!!!Demo terminated, reason: %s" % status.brief())        
+        exit(0)
     
-
+    
     print "\n"
     print ("<<< Show NETCONF nodes configured on the Controller")
     time.sleep(rundelay)
@@ -166,10 +188,11 @@ if __name__ == "__main__":
         for item in nlist:
             print "   '{}'".format(item)   
     else:
-        print ("Demo terminated, reason: %s" % status.brief().lower())        
-        sys.exit(0)
+        print ("\n")
+        print ("!!!Demo terminated, reason: %s" % status.brief())        
+        exit(0)
     
-
+    
     print "\n"
     print ("<<< Show connection status for the '%s' NETCONF node" % nodeName)
     time.sleep(rundelay)
@@ -182,10 +205,11 @@ if __name__ == "__main__":
     elif (status.eq(STATUS.NODE_NOT_FOUND)):
         print ("'%s' node is not found" % nodeName)
     else:
-        print ("Demo terminated, reason: %s" % status.brief().lower())        
-        sys.exit(0)
+        print ("\n")
+        print ("!!!Demo terminated, reason: %s" % status.brief())        
+        exit(0)
     
-
+    
     print ("\n")
     print (">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
     print (">>> Demo End")

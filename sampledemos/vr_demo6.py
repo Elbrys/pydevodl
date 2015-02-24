@@ -7,10 +7,33 @@ import json
 from framework.controller.controller import Controller
 from framework.netconfdev.vrouter.vrouter5600 import VRouter5600
 from framework.common.status import STATUS
+from framework.common.utils import load_dict_from_file
 
 
 if __name__ == "__main__":
 
+    f = "cfg4.yml"
+    d = {}
+    if(load_dict_from_file(f, d) == False):
+        print("Config file '%s' read error: " % f)
+        exit()
+
+    try:
+        ctrlIpAddr = d['ctrlIpAddr']
+        ctrlPortNum = d['ctrlPortNum']
+        ctrlUname = d['ctrlUname']
+        ctrlPswd = d['ctrlPswd']
+
+        nodeName = d['nodeName']
+        nodeIpAddr = d['nodeIpAddr']
+        nodePortNum = d['nodePortNum']
+        nodeUname = d['nodeUname']
+        nodePswd = d['nodePswd']
+    except:
+        print ("Failed to get Controller device attributes")
+        exit(0)
+    
+    
     print ("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
     print ("<<< Demo Start")
     print ("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
@@ -18,16 +41,7 @@ if __name__ == "__main__":
     rundelay = 5
     
     print ("\n")
-    ctrlIpAddr =  "172.22.18.186"
-    ctrlPortNum = "8080"     
-    ctrlUname = 'admin' 
-    ctrlPswd = 'admin'
     ctrl = Controller(ctrlIpAddr, ctrlPortNum, ctrlUname, ctrlPswd)
-    nodeName = "vRouter"
-    nodeIpAddr = "172.22.17.107"
-    nodePortNum = 830
-    nodeUname = "vyatta"
-    nodePswd = "vyatta"      
     vrouter = VRouter5600(ctrl, nodeName, nodeIpAddr, nodePortNum, nodeUname, nodePswd)
     print ("<<< 'Controller': %s, '%s': %s" % (ctrlIpAddr, nodeName, nodeIpAddr))
     
@@ -39,8 +53,9 @@ if __name__ == "__main__":
     if(status.eq(STATUS.OK) == True):
         print ("<<< '%s' added to the Controller" % nodeName)
     else:
-        print ("Demo terminated, reason: %s" % status.brief().lower())
-        sys.exit(0)
+        print ("\n")
+        print ("!!!Demo terminated, reason: %s" % status.brief().lower())
+        exit(0)
     
     
     print ("\n")
@@ -50,8 +65,9 @@ if __name__ == "__main__":
     if(status.eq(STATUS.NODE_CONNECTED) == True):
         print ("<<< '%s' is connected to the Controller" % nodeName)
     else:
-        print ("Demo terminated, reason: %s" % status.brief().lower())
-        sys.exit(0)
+        print ("\n")
+        print ("!!!Demo terminated, reason: %s" % status.brief().lower())
+        exit(0)
     
     
     print("\n")
@@ -64,8 +80,9 @@ if __name__ == "__main__":
         dpIfList = result[1]
         print json.dumps(dpIfList, indent=4)
     else:
-        print ("Demo terminated, reason: %s" % status.brief().lower())
-        sys.exit(0)
+        print ("\n")
+        print ("!!!Demo terminated, reason: %s" % status.brief().lower())
+        exit(0)
     
 
     print("\n")
@@ -81,8 +98,9 @@ if __name__ == "__main__":
         data = json.loads(content)
         print json.dumps(data, indent=4)
     else:
-        print ("Demo terminated, reason: %s" % status.brief().lower())
-        sys.exit(0)
+        print ("\n")
+        print ("!!!Demo terminated, reason: %s" % status.brief().lower())
+        exit(0)
     
     
     print("\n")
@@ -95,8 +113,9 @@ if __name__ == "__main__":
         lbIfCfg = result[1]
         print json.dumps(lbIfCfg, indent=4)
     else:
-        print ("Demo terminated, reason: %s" % status.brief().lower())
-        sys.exit(0)
+        print ("\n")
+        print ("!!!Demo terminated, reason: %s" % status.brief().lower())
+        exit(0)
         
     
     print("\n")
@@ -110,8 +129,9 @@ if __name__ == "__main__":
         data = json.loads(cfg)
         print json.dumps(data, indent=4)
     else:
-        print ("Demo terminated, reason: %s" % status.brief().lower())
-        sys.exit(0)
+        print ("\n")
+        print ("!!!Demo terminated, reason: %s" % status.brief().lower())
+        exit(0)
     
 
     print ("\n")

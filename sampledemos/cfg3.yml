@@ -1,0 +1,12 @@
+# Controller specification
+ctrlIpAddr: "172.22.18.186"
+ctrlPortNum: "8181"     
+ctrlUname: 'admin' 
+ctrlPswd:  'admin'   
+
+# NetconfNode specification
+nodeName: "dut-device"
+nodeIpAddr: "172.22.17.107"
+nodePortNum: 830
+nodeUname: "vyatta"
+nodePswd: "vyatta"

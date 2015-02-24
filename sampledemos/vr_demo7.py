@@ -7,10 +7,33 @@ import json
 from framework.controller.controller import Controller
 from framework.netconfdev.vrouter.vrouter5600 import VRouter5600, Firewall, Rules, Rule
 from framework.common.status import STATUS
+from framework.common.utils import load_dict_from_file
 
 
 if __name__ == "__main__":    
 
+    f = "cfg4.yml"
+    d = {}
+    if(load_dict_from_file(f, d) == False):
+        print("Config file '%s' read error: " % f)
+        exit()
+
+    try:
+        ctrlIpAddr = d['ctrlIpAddr']
+        ctrlPortNum = d['ctrlPortNum']
+        ctrlUname = d['ctrlUname']
+        ctrlPswd = d['ctrlPswd']
+
+        nodeName = d['nodeName']
+        nodeIpAddr = d['nodeIpAddr']
+        nodePortNum = d['nodePortNum']
+        nodeUname = d['nodeUname']
+        nodePswd = d['nodePswd']
+    except:
+        print ("Failed to get Controller device attributes")
+        exit(0)
+    
+    
     print ("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
     print ("<<< Demo Start")
     print ("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
@@ -20,18 +43,7 @@ if __name__ == "__main__":
     print ("\n")
     
     ifName = "dp0p1p7"
-
-    ctrlIpAddr =  "172.22.18.186"
-    ctrlPortNum = "8080"     
-    ctrlUname = 'admin' 
-    ctrlPswd = 'admin'
-    ctrl = Controller(ctrlIpAddr, ctrlPortNum, ctrlUname, ctrlPswd)
-    
-    nodeName = "vRouter"
-    nodeIpAddr = "172.22.17.107"
-    nodePortNum = 830
-    nodeUname = "vyatta"
-    nodePswd = "vyatta"      
+    ctrl = Controller(ctrlIpAddr, ctrlPortNum, ctrlUname, ctrlPswd)    
     vrouter = VRouter5600(ctrl, nodeName, nodeIpAddr, nodePortNum, nodeUname, nodePswd)
     print ("<<< 'Controller': %s, '%s': %s" % (ctrlIpAddr, nodeName, nodeIpAddr))
     
@@ -43,8 +55,9 @@ if __name__ == "__main__":
     if(status.eq(STATUS.OK) == True):
         print ("<<< '%s' added to the Controller" % nodeName)
     else:
-        print ("Demo terminated, reason: %s" % status.brief().lower())
-        sys.exit(0)
+        print ("\n")
+        print ("!!!Demo terminated, reason: %s" % status.brief().lower())
+        exit(0)
     
     
     print ("\n")
@@ -54,12 +67,13 @@ if __name__ == "__main__":
     if(status.eq(STATUS.NODE_CONNECTED) == True):
         print ("<<< '%s' is connected to the Controller" % nodeName)
     else:
-        print ("Demo terminated, reason: %s" % status.brief().lower())
-        sys.exit(0)
+        print ("\n")
+        print ("!!!Demo terminated, reason: %s" % status.brief().lower())
+        exit(0)
     
     
     print("\n")
-    print ("<<< Show firewalls configuration of the '%s'" % nodeName)
+    print ("<<< Show firewalls configuration on the '%s'" % nodeName)
     time.sleep(rundelay)
     result = vrouter.get_firewalls_cfg()
     status = result[0]
@@ -69,8 +83,9 @@ if __name__ == "__main__":
         data = json.loads(cfg)
         print json.dumps(data, indent=4)
     else:
-        print ("Demo terminated, reason: %s" % status.brief().lower())
-        sys.exit(0)
+        print ("\n")
+        print ("!!!Demo terminated, reason: %s" % status.brief().lower())
+        exit(0)
     
     
     print "\n"
@@ -90,8 +105,9 @@ if __name__ == "__main__":
     if(status.eq(STATUS.OK) == True):
         print ("Firewall instance '%s' was successfully created" % fwName1)
     else:
-        print ("Demo terminated, reason: %s" % status.brief().lower())
-        sys.exit(0)
+        print ("\n")
+        print ("!!!Demo terminated, reason: %s" % status.brief().lower())
+        exit(0)
 
     
     print "\n"
@@ -111,13 +127,14 @@ if __name__ == "__main__":
     if(status.eq(STATUS.OK) == True):
         print ("Firewall instance '%s' was successfully created" % fwName2)
     else:
-        print ("Demo terminated, reason: %s" % status.brief().lower())
+        print ("\n")
+        print ("!!!Demo terminated, reason: %s" % status.brief().lower())
         print status.detail()
-        sys.exit(0)
+        exit(0)
     
     
     print("\n")
-    print ("<<< Show firewalls configuration of the '%s'" % nodeName)
+    print ("<<< Show firewalls configuration on the '%s'" % nodeName)
     time.sleep(rundelay)
     result = vrouter.get_firewalls_cfg()
     status = result[0]
@@ -127,8 +144,9 @@ if __name__ == "__main__":
         data = json.loads(cfg)
         print json.dumps(data, indent=4)
     else:
-        print ("Demo terminated, reason: %s" % status.brief().lower())
-        sys.exit(0)
+        print ("\n")
+        print ("!!!Demo terminated, reason: %s" % status.brief().lower())
+        exit(0)
     
     
     print("\n")
@@ -139,8 +157,9 @@ if __name__ == "__main__":
     if(status.eq(STATUS.OK) == True):
         print ("Firewall instances were successfully applied to the '%s' dataplane interface" % (ifName))
     else:
-        print ("Demo terminated, reason: %s" % status.brief().lower())
-        sys.exit(0)
+        print ("\n")
+        print ("!!!Demo terminated, reason: %s" % status.brief().lower())
+        exit(0)
     
     
     print("\n")
@@ -154,8 +173,9 @@ if __name__ == "__main__":
         data = json.loads(cfg)
         print json.dumps(data, indent=4)
     else:
-        print ("Demo terminated, reason: %s" % status.brief().lower())
-        sys.exit(0)
+        print ("\n")
+        print ("!!!Demo terminated, reason: %s" % status.brief().lower())
+        exit(0)
     
     print("\n")
     print ("<<< Remove firewall settings from the '%s' dataplane interface" % (ifName))
@@ -165,8 +185,9 @@ if __name__ == "__main__":
     if(status.eq(STATUS.OK) == True):
         print ("Firewall settings successfully removed from '%s' dataplane interface" % ifName)
     else:
-        print ("Demo terminated, reason: %s" % status.brief().lower())
-        sys.exit(0)
+        print ("\n")
+        print ("!!!Demo terminated, reason: %s" % status.brief().lower())
+        exit(0)
     
     
     print("\n")
@@ -180,8 +201,9 @@ if __name__ == "__main__":
         data = json.loads(cfg)
         print json.dumps(data, indent=4)
     else:
-        print ("Demo terminated, reason: %s" % status.brief().lower())
-        sys.exit(0)
+        print ("\n")
+        print ("!!!Demo terminated, reason: %s" % status.brief().lower())
+        exit(0)
     
     
     print "\n"
@@ -192,8 +214,9 @@ if __name__ == "__main__":
     if(status.eq(STATUS.OK) == True):
         print ("Firewall instance '%s' was successfully deleted" % fwName1)
     else:
-        print ("Demo terminated, reason: %s" % status.brief().lower())
-        sys.exit(0)
+        print ("\n")
+        print ("!!!Demo terminated, reason: %s" % status.brief().lower())
+        exit(0)
 
     
     print "\n"
@@ -204,12 +227,13 @@ if __name__ == "__main__":
     if(status.eq(STATUS.OK) == True):
         print ("Firewall instance '%s' was successfully deleted" % fwName2)
     else:
-        print ("Demo terminated, reason: %s" % status.brief().lower())
-        sys.exit(0)
+        print ("\n")
+        print ("!!!Demo terminated, reason: %s" % status.brief().lower())
+        exit(0)
     
 
     print("\n")
-    print ("<<< Show firewalls configuration of the '%s'" % nodeName)
+    print ("<<< Show firewalls configuration on the '%s'" % nodeName)
     time.sleep(rundelay)
     result = vrouter.get_firewalls_cfg()
     status = result[0]
@@ -219,8 +243,9 @@ if __name__ == "__main__":
         data = json.loads(cfg)
         print json.dumps(data, indent=4)
     else:
-        print ("Demo terminated, reason: %s" % status.brief().lower())
-        sys.exit(0)
+        print ("\n")
+        print ("!!!Demo terminated, reason: %s" % status.brief().lower())
+        exit(0)
     
 
     print ("\n")

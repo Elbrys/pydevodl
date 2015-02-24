@@ -5,20 +5,33 @@ import sys
 from framework.controller.controller import Controller
 from framework.controller.netconfnode import NetconfNode
 from framework.common.status import STATUS
+from framework.common.utils import load_dict_from_file
+
 
 if __name__ == "__main__":
 
-    ctrlIpAddr =  "172.22.18.186"
-    ctrlPortNum = "8080"     
-    ctrlUname = 'admin' 
-    ctrlPswd = 'admin'
-    ctrl = Controller(ctrlIpAddr, ctrlPortNum, ctrlUname, ctrlPswd)
+    f = "cfg.yml"
+    d = {}
+    if(load_dict_from_file(f, d) == False):
+        print("Config file '%s' read error: " % f)
+        exit()
 
-    nodeName = "vRouter"
-    nodeIpAddr = "172.22.17.107"
-    nodePortNum = 830
-    nodeUname = "vyatta"
-    nodePswd = "vyatta"      
+    try:
+        ctrlIpAddr = d['ctrlIpAddr']
+        ctrlPortNum = d['ctrlPortNum']
+        ctrlUname = d['ctrlUname']
+        ctrlPswd = d['ctrlPswd']
+
+        nodeName = d['nodeName']
+        nodeIpAddr = d['nodeIpAddr']
+        nodePortNum = d['nodePortNum']
+        nodeUname = d['nodeUname']
+        nodePswd = d['nodePswd']
+    except:
+        print ("Failed to get Controller device attributes")
+        exit(0)
+
+    ctrl = Controller(ctrlIpAddr, ctrlPortNum, ctrlUname, ctrlPswd)
     node = NetconfNode(ctrl, nodeName, nodeIpAddr, nodePortNum, nodeUname, nodePswd)
 
     print (">>> Adding '%s' to the Controller '%s'" % (nodeName, ctrlIpAddr))
@@ -27,8 +40,9 @@ if __name__ == "__main__":
     if(status.eq(STATUS.OK) == True):
         print ("'%s' was successfully added to the Controller" % nodeName)
     else:
-        print ("Failed, reason: %s" % status.brief().lower())
-        sys.exit(0)
+        print ("\n")
+        print ("!!!Failed, reason: %s" % status.brief().lower())
+        exit(0)
 
     print "\n"
     

@@ -1,7 +1,9 @@
 *.pyc
 *.swp
+.settings
 cscope.out
 *.*~
 *.log
 dump.txt
 tmp*
+t1

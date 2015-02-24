@@ -73,7 +73,12 @@ class OperStatus(object):
         elif( self.status_code == STATUS.NODE_CONFIGURED):
             return "Node is configured"
         elif( self.status_code == STATUS.HTTP_ERROR):
-            return "HTTP error"
+            errMsg = "HTTP error"
+            if(self.http_resp != None and 
+               self.http_resp.status_code and
+               self.http_resp.reason != None):
+                errMsg += " %d - '%s'" % (self.http_resp.status_code, self.http_resp.reason)
+            return errMsg
         elif( self.status_code == STATUS.UNKNOWN):
             return "Unknown error"
         else:

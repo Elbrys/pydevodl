@@ -297,9 +297,9 @@ class Controller():
                     p3 = 'data'
                     schema = doc[p1][p2][p3]
                     status.set_status(STATUS.OK)
-                except (KeyError) as e:
+                except (KeyError, TypeError, ValueError) as e:
+                    print repr(e)
                     status.set_status(STATUS.DATA_NOT_FOUND)
-                    print "Error: " + repr(e)
             else:
                 status.set_status(STATUS.DATA_NOT_FOUND)
                 print "TBD: not implemented content type parser"
@@ -349,13 +349,25 @@ class Controller():
         elif(resp.content == None):
             status.set_status(STATUS.CTRL_INTERNAL_ERROR)
         elif (resp.status_code == 200):
+            try:
+                p1 = 'modules'
+                p2 = 'module'
+                mlist = json.loads(resp.content).get(p1).get(p2)
+                status.set_status(STATUS.OK)
+            except (KeyError, TypeError, ValueError)as  e:
+                print repr(e)
+                status.set_status(STATUS.DATA_NOT_FOUND)
+                
+                
+            '''
             p1 = 'modules'
             p2 = 'module'
-            if(p1 in resp.content and p2 in resp.content):             
+            if(p1 in resp.content and p2 in resp.content):
                 mlist = json.loads(resp.content).get(p1).get(p2)
                 status.set_status(STATUS.OK)
             else:
                 status.set_status(STATUS.DATA_NOT_FOUND)
+            '''
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
 

@@ -7,13 +7,37 @@ import json
 from framework.controller.controller import Controller
 from framework.netconfdev.vrouter.vrouter5600  import VRouter5600
 from framework.common.status import STATUS
+from framework.common.utils import load_dict_from_file
+
 
 def usage(myname):
-    print('   Usage: %s -n <name> -v <version>' % myname)
+    print('   Usage: %s -i <identifier> -v <version>' % myname)
     sys.exit()
 
 if __name__ == "__main__":
-    model_name = None
+
+    f = "cfg.yml"
+    d = {}
+    if(load_dict_from_file(f, d) == False):
+        print("Config file '%s' read error: " % f)
+        exit()
+
+    try:
+        ctrlIpAddr = d['ctrlIpAddr']
+        ctrlPortNum = d['ctrlPortNum']
+        ctrlUname = d['ctrlUname']
+        ctrlPswd = d['ctrlPswd']
+
+        nodeName = d['nodeName']
+        nodeIpAddr = d['nodeIpAddr']
+        nodePortNum = d['nodePortNum']
+        nodeUname = d['nodeUname']
+        nodePswd = d['nodePswd']
+    except:
+        print ("Failed to get Controller device attributes")
+        exit(0)
+    
+    model_identifier = None
     model_version = None    
 
     if(len(sys.argv) == 1):
@@ -22,7 +46,7 @@ if __name__ == "__main__":
 
     argv = sys.argv[1:]
     try:
-        opts, args = getopt.getopt(argv,"n:v:h",["name=","version=","help"])
+        opts, args = getopt.getopt(argv,"i:v:h",["identifier=","version=","help"])
     except getopt.GetoptError, e:
         print("   Error: %s" % e.msg)
         usage(sys.argv[0])
@@ -30,43 +54,32 @@ if __name__ == "__main__":
     for opt, arg in opts:
         if opt in ("-h", "--help"):
             usage(sys.argv[0])
-        elif opt in ("-n", "--name"):
-            model_name = arg
+        elif opt in ("-i", "--identifier"):
+            model_identifier = arg
         elif opt in ("-v", "--version"):
             model_version = arg
         else:
             print("Error: failed to parse option %s" % opt)
             usage(sys.argv[0])
 
-    if(model_name == None) or (model_version == None):
+    if(model_identifier == None) or (model_version == None):
         print("Error: incomplete command")
         usage(sys.argv[0])
 
-    ctrlIpAddr =  "172.22.18.186"
-    ctrlPortNum = "8080"     
-    ctrlUname = 'admin' 
-    ctrlPswd = 'admin'
     ctrl = Controller(ctrlIpAddr, ctrlPortNum, ctrlUname, ctrlPswd)
-
-    nodeName = "vRouter"
-    nodeIpAddr = "172.22.17.107"
-    nodePortNum = 830
-    nodeUname = "vyatta"
-    nodePswd = "vyatta"      
     vrouter = VRouter5600(ctrl, nodeName, nodeIpAddr, nodePortNum, nodeUname, nodePswd) 
     print ("<<< 'Controller': %s, '%s': %s" % (ctrlIpAddr, nodeName, nodeIpAddr))
-    print ("model name: %s" % model_name)
-    print ("model version: %s" % model_version)
-    result = vrouter.get_schema(model_name, model_version)
+    result = vrouter.get_schema(model_identifier, model_version)
     status = result[0]
     if(status.eq(STATUS.OK) == True):
         print "YANG model definition:"
         schema = result[1]
         print schema
     else:
-        print ("Failed, reason: %s" % status.brief().lower())
+        print ("\n")
+        print ("!!!Failed, reason: %s" % status.brief().lower())
         print ("%s" % status.detail())
-        sys.exit(0)
+        exit(0)
 
     print ("\n")
     
