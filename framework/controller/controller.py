@@ -120,6 +120,63 @@ class Controller():
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
+    def get_nodes_operational_list(self):
+        status = OperStatus()
+        templateUrl = "http://{}:{}/restconf/operational/opendaylight-inventory:nodes"        
+        url = templateUrl.format(self.ipAddr, self.portNum)
+        nlist = [] 
+        
+        resp = self.http_get_request(url, data=None, headers=None)
+        if(resp == None):
+            status.set_status(STATUS.CONN_ERROR)
+        elif(resp.content == None):
+            status.set_status(STATUS.CTRL_INTERNAL_ERROR)
+        elif (resp.status_code == 200):
+            p1 = 'nodes'
+            p2 = 'node'
+            if(p1 in resp.content and p2 in resp.content):
+                elemlist = json.loads(resp.content).get(p1).get(p2)
+                for elem in elemlist:
+                    p3 = 'id'
+                    if(p3 in elem):
+                        nlist.append(str(elem[p3]))
+                status.set_status(STATUS.OK)
+            else:
+                status.set_status(STATUS.DATA_NOT_FOUND)
+        else:
+            status.set_status(STATUS.HTTP_ERROR, resp)
+        
+        return (status, nlist)     
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_node_info(self, nodeId):
+        status = OperStatus()
+        templateUrl = "http://{}:{}/restconf/operational/opendaylight-inventory:nodes/node/{}"
+        url = templateUrl.format(self.ipAddr, self.portNum, nodeId)
+        info = [] 
+
+        resp = self.http_get_request(url, data=None, headers=None)
+        if(resp == None):
+            status.set_status(STATUS.CONN_ERROR)
+        elif(resp.content == None):
+            status.set_status(STATUS.CTRL_INTERNAL_ERROR)
+        elif (resp.status_code == 200):
+            p1 = 'node'
+            if(p1 in resp.content):
+                info = json.loads(resp.content).get(p1)
+                status.set_status(STATUS.OK)
+            else:
+                status.set_status(STATUS.DATA_NOT_FOUND, resp)
+        else:
+            status.set_status(STATUS.HTTP_ERROR, resp)
+        
+        return (status, info)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def check_node_config_status(self, nodeId):
         status = OperStatus()
         templateUrl = "http://{}:{}/restconf/config/opendaylight-inventory:nodes"
@@ -618,7 +675,7 @@ class Controller():
         templateUrl = "http://{}:{}/restconf/config/opendaylight-inventory:nodes/node/{}/yang-ext:mount/"
         url = templateUrl.format(self.ipAddr, self.portNum, node)
         return url    
-
+    
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
@@ -626,3 +683,13 @@ class Controller():
         templateUrl = "http://{}:{}/restconf/operational/opendaylight-inventory:nodes/node/{}/yang-ext:mount/"
         url = templateUrl.format(self.ipAddr, self.portNum, node)
         return url    
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_node_operational_url(self, node):
+        templateUrl = "http://{}:{}/restconf/operational/opendaylight-inventory:nodes/node/{}"
+        url = templateUrl.format(self.ipAddr, self.portNum, node)
+        return url    
+
+
