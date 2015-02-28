@@ -33,6 +33,8 @@ if __name__ == "__main__":
     ctrl = Controller(ctrlIpAddr, ctrlPortNum, ctrlUname, ctrlPswd)
     name = "openflow:1"
     vswitch = VSwitch(ctrl, name)
+    
+    '''
     result = vswitch.get_switch_info()
     status = result[0]
     if(status.eq(STATUS.OK) == True):
@@ -43,7 +45,9 @@ if __name__ == "__main__":
         print ("\n")
         print ("!!!Demo terminated, reason: %s" % status.brief().lower())
         exit(0)
+    '''
     
+    '''
     print ("\n")
     result = vswitch.get_features_info()
     status = result[0]
@@ -55,10 +59,13 @@ if __name__ == "__main__":
         print ("\n")
         print ("!!!Demo terminated, reason: %s" % status.brief().lower())
         exit(0)
+    '''
+    
 
-
+    '''
     print ("\n")
     result = vswitch.get_ports_info()
+    status = result[0]
     if(status.eq(STATUS.OK) == True):
         print ("'%s' ports:" % name)
         info = result[1]
@@ -67,7 +74,55 @@ if __name__ == "__main__":
         print ("\n")
         print ("!!!Demo terminated, reason: %s" % status.brief().lower())
         exit(0)
+    '''
 
+    '''
+    print ("\n")
+    portnum = 1
+    result = vswitch.get_port_info(portnum)
+    status = result[0]
+    if(status.eq(STATUS.OK) == True):
+        print ("Port '%s' info:" % portnum)
+        info = result[1]
+        print json.dumps(info, indent=4, sort_keys=True)
+    else:
+        print ("\n")
+        print ("!!!Demo terminated, reason: %s" % status.brief().lower())
+        exit(0)
+    '''
+
+    '''
+    print ("\n")
+    tableid = 0
+    result = vswitch.get_flows(tableid)
+    status = result[0]
+    if(status.eq(STATUS.OK) == True):
+        print ("Table '%s' flows:" % tableid)
+        info = result[1]
+        print json.dumps(info, indent=4, sort_keys=True)
+    else:
+        print ("\n")
+        print ("!!!Demo terminated, reason: %s" % status.brief().lower())
+        exit(0)
+    '''
+
+    def getKey(item):
+        return item['priority']
+    
+    print ("\n")
+    tableid = 0
+    result = vswitch.get_flows_ovs_syntax(tableid)
+    status = result[0]
+    if(status.eq(STATUS.OK) == True):
+        print ("Table '%s' flows:" % tableid)
+        flist = result[1]
+        flist.sort(key=getKey)
+        for f in flist:
+            print json.dumps(f)
+    else:
+        print ("\n")
+        print ("!!!Demo terminated, reason: %s" % status.brief().lower())
+        exit(0)
 
 
     '''

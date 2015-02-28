@@ -51,15 +51,83 @@ def find_key_values_in_dict(d, key):
     
     return values
 
-def replace_str_in_dict(d, old, new):
+
+
+def find_key_value_in_dict(d, key):
+    """
+    Searches a dictionary (with nested lists and dictionaries)
+    for the first value matching to the provided key.
+    """
+    for k, v in d.iteritems():
+        if k == key:
+            return v
+        elif isinstance(v, dict):
+            results = find_key_values_in_dict(v, key)
+            for result in results:
+                return result
+        elif isinstance(v, list):
+            for item in v:
+                if isinstance(item, dict):
+                    more_results = find_key_values_in_dict(item, key)
+                    for another_result in more_results:
+                        return another_result
+    
+    return None
+
+def find_dict_in_list(l, key):
+    for i in l:
+        if (type(i) is dict):
+            for k, v in i.items():
+#                print "<<<<<<<<<<<<<<<"
+#                print k
+#                print key
+#                print ">>>>>>>>>>>>>>>"
+                if (k == key):
+#                    print "##############################"
+                    return i
+    
+    return None
+    '''
+    try:
+        res = l.index(item)
+        print "+++"
+        print res
+    except ValueError:
+        print "---"
+        pass
+    '''
+    
+#    return res
+    '''
+    print "-------"
+    for i in l:
+        print i
+        print type(i)
+        print item
+        print type(item)
+        if (i == item):
+            return item
+    print "-------"
+        
+    return None
+    '''
+
+
+
+
+def replace_str_value_in_dict(d, old, new):
+#    print "! type=%s %s" % (type(d), d)
     if type(d) is dict:
-        return dict((k, replace_str_in_dict(v, old, new)) for k, v in d.iteritems() if v and replace_str_in_dict(v, old, new))
+        return dict((k, replace_str_value_in_dict(v, old, new)) for k, v in d.iteritems() if v and replace_str_value_in_dict(v, old, new))
     elif type(d) is list:
-        return [replace_str_in_dict(v, old, new) for v in d if v and replace_str_in_dict(v, old, new)]
+        return [replace_str_value_in_dict(v, old, new) for v in d if v and replace_str_value_in_dict(v, old, new)]
     elif type(d) is unicode:
+#        print "6.1 %s => %s ; %s" % (d, old, new)
         d = string.replace(d, unicode(old), unicode(new))
+#        print "6.2 %s => %s ; %s" % (d, old, new)
         return d        
     elif type(d) is str:
+#        print "777777777777"
         d = string.replace(d, old, new)
         return d
     else:
