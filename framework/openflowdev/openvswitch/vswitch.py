@@ -213,7 +213,7 @@ class VSwitch(OpenflowNode):
             dictionary = json.loads(resp.content)
             try:
                 vlist = dictionary['flow-node-inventory:table']
-                if (len(vlist) != 0 and (type(vlist[0]) is dict)):
+                if (len(vlist) != 0 and (type(vlist[0]) is dict) and ('flow' in vlist[0])):
                     flows = vlist[0]['flow']
                     status.set_status(STATUS.OK)
                 else:
@@ -225,12 +225,14 @@ class VSwitch(OpenflowNode):
         
         return (status, flows)
 
-    def get_flows_ovs_syntax(self, tableid):
+    def get_flows_ovs_syntax(self, tableid, sort=None):
         ovsflows = []
         result = self.get_flows(tableid)
         status = result[0]
         if(status.eq(STATUS.OK) == True):
             flist = result[1]
+            if (sort == True):
+                flist.sort(key=self.__getPriorityKey)                
             for item in flist:
                 f = self.odl_to_ovs_flow_syntax(item)
                 ovsflows.append(f)
@@ -239,13 +241,7 @@ class VSwitch(OpenflowNode):
         
     def odl_to_ovs_flow_syntax(self, odlflow):
         od = OrderedDict()
-        '''
-        d = {}
-        print ",,,,,,,,,,,,,,,,,,,,,,,,,,"
-        f = odlflow
-        print type(f)
-        print f
-        '''
+#        print ("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")        
         f = odlflow
         
         v = find_key_value_in_dict(f, 'cookie')
@@ -284,12 +280,50 @@ class VSwitch(OpenflowNode):
             if (p != None and isinstance(p, basestring)):
                 od['in_port'] = string.replace(p, self.name + ":", '')
             
-            e = find_key_value_in_dict(v, 'ethernet-match')
-            if (e != None and type(v) is dict):
-                t = find_key_value_in_dict(e, 'type')
-                if(t != None and type(t) is int):
-                    od['dl_type'] = hex(t)
-
+            vlanmatch = find_key_value_in_dict(v, 'vlan-match')
+            if (vlanmatch != None and type(vlanmatch) is dict):
+                if ('vlan-id' in vlanmatch and type(vlanmatch['vlan-id'] is dict)):
+                    if ('vlan-id' in vlanmatch['vlan-id'] and type(vlanmatch['vlan-id']['vlan-id']) is int):
+                        od['dl_vlan'] = vlanmatch['vlan-id']['vlan-id']
+                
+                if ('vlan-pcp' in vlanmatch and type(vlanmatch['vlan-pcp'] is int)):
+                    od['dl_vlan_pcp'] = vlanmatch['vlan-pcp']
+            
+            ethermatch = find_key_value_in_dict(v, 'ethernet-match')
+            if (ethermatch != None and type(v) is dict):
+                ethertype = find_key_value_in_dict(ethermatch, 'type')
+                if(ethertype != None and type(ethertype) is int):
+                    od['dl_type'] = hex(ethertype)
+                
+                ethersrc = find_key_value_in_dict(ethermatch, 'ethernet-source')
+                if(ethersrc != None and type(ethersrc) is dict):
+                    addr = find_key_value_in_dict(ethersrc, 'address')
+                    if(addr != None):
+                        od['dl_src'] = addr
+                
+                etherdst = find_key_value_in_dict(ethermatch, 'ethernet-destination')
+                if(etherdst != None and type(etherdst) is dict):
+                    addr = find_key_value_in_dict(etherdst, 'address')
+                    if(addr != None):
+                        od['dl_dst'] = addr
+            
+            ipmatch = find_key_value_in_dict(v, 'ip-match')
+            if (ipmatch != None and type(ipmatch) is dict):
+                if('ip-protocol' in ipmatch and type(ipmatch['ip-protocol']) is int):                    
+                    od['nw_proto'] = ipmatch['ip-protocol']
+            
+            tcpsrcport = find_key_value_in_dict(v, 'tcp-source-port')
+            if (tcpsrcport != None and type(tcpsrcport) is int):
+                od['tp_src'] = tcpsrcport
+            
+            ipv4src = find_key_value_in_dict(v, 'ipv4-source')
+            if (ipv4src != None and isinstance(ipv4src, basestring)):
+                od['nw_src'] = ipv4src
+            
+            ipv4dst = find_key_value_in_dict(v, 'ipv4-destination')
+            if (ipv4dst != None and isinstance(ipv4dst, basestring)):
+                od['nw_dst'] = ipv4dst
+        
         # Flow Actions
         v = find_key_value_in_dict(f, 'instructions')
         if (v != None and type(v) is dict):
@@ -300,26 +334,47 @@ class VSwitch(OpenflowNode):
                     if (v != None and type(v) is dict):
                         v = find_key_value_in_dict(v, 'action')
                         if (v != None and type(v) is list):
-                            v = find_dict_in_list(v, 'output-action')
-                            if (v != None):
-                                p = find_key_value_in_dict(v, 'output-node-connector')
-                                if (p != None and isinstance(p, basestring)):                                    
-                                    if (p == 'CONTROLLER'):
-                                        m = find_key_value_in_dict(v, 'max-length')
-                                        if (m != None and isinstance(m, int)):  
-                                            od['actions'] = '{}:{}'.format(p, m)
-                                        else:
-                                            od['actions'] = '{}'.format(p)
-                                    else:
-                                        od['actions'] = 'output:{}'.format(p)
+                            astr = ""
+                            al = self.__build_ovs_action_list(v)
+                            if(al != None):
+                                al.sort(key=self.__getOrderKey)
+                                l = len(al)
+                                i = 0
+                                for a in al:
+                                    astr += a.to_string()
+                                    i += 1
+                                    if(i < l):
+                                        astr += ","
+
+                            od['actions'] = '{}'.format(astr)
+        # Following 'else' case is a hack, ODL flows do not seem to contain
+        # the 'instructions' info for flows that were set with 'drop' action
+        # TBD: Perhaps this hack should be removed!!!
+        else:
+            od['actions'] = 'drop'
                                     
 #        print json.dumps(od, indent=4)
+#        print (">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+
         return od
 
 
+    def __build_ovs_action_list(self, alist):
+        al = []
+        
+        for item in alist:
+            if ('output-action' in item):
+                a = ActionOutput()
+                a.update_from_list(item)
+                al.append(a)
 
+        return al
 
+    def __getOrderKey(self, item):
+        return item.order
 
+    def __getPriorityKey(self, item):
+        return item['priority']
     
     '''
     #---------------------------------------------------------------------------
@@ -373,3 +428,38 @@ class VSwitch(OpenflowNode):
         
         return (status, info)                        
     '''
+
+class ActionOutput():
+    def __init__(self, port=None, length=None, order=None):        
+        self.type = 'output'
+        self.order = order
+        self.action = {'port': port, 'max-len': length}
+                
+    def update(self, port=None, length=None, order=None):
+        self.action = {'port': port, 'max-len': length}
+        if(port != None):
+            self.action['port'] = port
+        if(length != None):
+            self.action['max-len'] = length
+        if(order != None):
+            self.order = order
+    
+    def update_from_list(self, data):
+        if(data != None and type(data) is dict and ('output-action' in data)):
+            self.type = 'output'
+            self.order = find_key_value_in_dict(data, 'order')
+            self.action = {'port': None, 'max-len': None}
+            self.action['port'] = find_key_value_in_dict(data, 'output-node-connector')
+            self.action['max-len'] = find_key_value_in_dict(data, 'max-length')
+
+    def to_string(self):
+        s = ""
+        p = self.action['port']
+        l = self.action['max-len']
+        if(p != None and l != None):
+            if(p == 'CONTROLLER'):
+                s = '{}:{}'.format(p, l)
+            else:
+                s = '{}:{}'.format(self.type, p)
+        
+        return s
