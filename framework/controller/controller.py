@@ -543,7 +543,7 @@ class Controller():
             try:
                 p1 = 'modules'
                 p2 = 'module'
-                mlist = json.loads(resp.content).get(p1).get(p2)
+                mlist = json.loads(resp.content.replace('\\\n','')).get(p1).get(p2)
                 status.set_status(STATUS.OK)
             except (KeyError, TypeError, ValueError)as  e:
                 print repr(e)
