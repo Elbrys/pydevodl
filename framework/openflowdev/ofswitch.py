@@ -625,6 +625,7 @@ class FlowEntry(object):
         s = self.to_json()
         s = string.replace(s, 'idle_timeout', 'idle-timeout')
         s = string.replace(s, 'hard_timeout', "hard-timeout")
+        s = string.replace(s, 'apply_actions', "apply-actions")
         d1 = json.loads(s)
         d2 = remove_empty_from_dict(d1)
         payload = d2
@@ -658,6 +659,17 @@ class Action():
         if(action_type == "drop-action"):
             self.drop_action = {}
 
+class OutputAction(Action):
+    def __init__(self, order=0, port=0, max_len=0):
+        self.order = order
+        self.output_action = {'output-node-connector' : port, 'max-length' : max_len }
+    def set_outport(self, port):
+        self.output_action['output-node-connector'] = port
+    def set_max_len(self, max_len):
+        self.output_action['max-length'] = max_len
+    def set_order(self, order):
+        self.order = order
+
 class Match():
     pass
 
@@ -685,8 +697,140 @@ if __name__ == "__main__":
     flow_payload = flow.get_payload()
     print "flow HTTP payload"
     print flow_payload
+ 
+    #------------------------------------------
+    
+    flow = FlowEntry()
+
+    instruction_order = "1"
+    instruction = Instruction(instruction_order)
+
+    action_order = "1"
+    portnum = 3
+    max_pkt_len = 60
+    action = OutputAction(action_order, portnum, max_pkt_len)
+    
+    instruction.add_apply_action(action)
+    
+    flow.add_instruction(instruction)
+    
+    flow_json = flow.to_json()
+    print "flow JSON"
+    print flow_json
+    
+    flow_payload = flow.get_payload()
+    print "flow HTTP payload"
+    print flow_payload
+    
 ''' Tmp code - END'''
     
+'''
+enum ofp_instruction_type {
+OFPIT_GOTO_TABLE = 1,     /* Setup the next table in the lookup pipeline */
+OFPIT_WRITE_METADATA = 2, /* Setup the metadata field for use later in pipeline */
+OFPIT_WRITE_ACTIONS = 3,  /* Write the action(s) onto the datapath action set */
+OFPIT_APPLY_ACTIONS = 4,  /* Applies the action(s) immediately */
+OFPIT_CLEAR_ACTIONS = 5,  /* Clears all actions from the datapath action set */
+OFPIT_METER = 6,          /* Apply meter (rate limiter) */
+OFPIT_EXPERIMENTER = 0xFFFF /* Experimenter instruction */
+};
+'''
+'''
+enum ofp_action_type {
+OFPAT_OUTPUT = 0,        /* Output to switch port. */
+OFPAT_COPY_TTL_OUT = 11, /* Copy TTL "outwards" -- from next-to-outermost to outermost */
+OFPAT_COPY_TTL_IN = 12,  /* Copy TTL "inwards" -- from outermost to next-to-outermost */
+OFPAT_SET_MPLS_TTL = 15, /* MPLS TTL */
+OFPAT_DEC_MPLS_TTL = 16, /* Decrement MPLS TTL */
+OFPAT_PUSH_VLAN = 17,    /* Push a new VLAN tag */
+OFPAT_POP_VLAN = 18,     /* Pop the outer VLAN tag */
+OFPAT_PUSH_MPLS = 19,    /* Push a new MPLS tag */
+OFPAT_POP_MPLS = 20,     /* Pop the outer MPLS tag */
+OFPAT_SET_QUEUE = 21,    /* Set queue id when outputting to a port */
+OFPAT_GROUP = 22,        /* Apply group. */
+OFPAT_SET_NW_TTL = 23,   /* IP TTL. */
+OFPAT_DEC_NW_TTL = 24,   /* Decrement IP TTL. */
+OFPAT_SET_FIELD = 25,    /* Set a header field using OXM TLV format. */
+OFPAT_PUSH_PBB = 26,     /* Push a new PBB service tag (I-TAG) */
+OFPAT_POP_PBB = 27,      /* Pop the outer PBB service tag (I-TAG) */
+OFPAT_EXPERIMENTER = 0xffff
+};
+'''
+'''
+5.9 Instructions
+Each flow entry contains a set of instructions that are executed when a packet matches the entry. These
+instructions result in changes to the packet, action set and/or pipeline processing.
+A switch is not required to support all instruction types, just those marked
+\Required Instruction" below. The controller can also query the switch about which of the
+\Optional Instruction" types it supports.
 
+Optional Instruction: Meter meter_id: Direct packet to the specified meter. As the result of
+the metering, the packet may be dropped (depending on meter configuration and state).
 
+Optional Instruction: Apply-Actions action(s): Applies the specific action(s) immediately,
+without any change to the Action Set. This instruction may be used to modify the packet between
+two tables or to execute multiple actions of the same type. The actions are specified as an action
+list (see 5.11).
 
+Optional Instruction: Clear-Actions: Clears all the actions in the action set immediately.
+
+Required Instruction: Write-Actions action(s): Merges the specified action(s) into the current
+action set (see 5.10). If an action of the given type exists in the current set, overwrite it, otherwise
+add it.
+
+Optional Instruction: Write-Metadata metadata / mask: Writes the masked metadata value
+into the metadata field. The mask specifies which bits of the metadata register should be modified
+(i.e. new metadata = old metadata & ~mask | value & mask).
+
+Required Instruction: Goto-Table next-table-id: Indicates the next table in the processing
+pipeline. The table-id must be greater than the current table-id. The flow entries of the last table
+of the pipeline can not include this instruction (see 5.1). OpenFlow switches with only a single
+flow table are not required to implement this instruction.
+
+The instruction set associated with a flow entry contains a maximum of one instruction of each type. The
+instructions of the set execute in the order specified by this above list. In practice, the only constraints
+are that the Meter instruction is executed before the Apply-Actions instruction, that the Clear-Actions
+instruction is executed before the Write-Actions instruction, and that Goto-Table is executed last.
+
+A switch must reject a flow entry if it is unable to execute the instructions associated with the flow
+entry. In this case, the switch must return an unsupported flow error (see 6.4). Flow tables may not
+support every match, every instruction or every action.
+
+5.10 Action Set
+An action set is associated with each packet. This set is empty by default. A ow entry can modify the
+action set using a Write-Action instruction or a Clear-Action instruction associated with a particular
+match. The action set is carried between ow tables. When the instruction set of a ow entry does
+not contain a Goto-Table instruction, pipeline processing stops and the actions in the action set of the
+packet are executed.
+An action set contains a maximum of one action of each type.
+
+5.12 Actions
+A switch is not required to support all action types, just those marked "Required Action" below. The
+controller can also query the switch about which of the "Optional Action" it supports.
+
+Required Action: Output. The Output action forwards a packet to a specified OpenFlow port (see4.1). 
+OpenFlow switches must support forwarding to physical ports, switch-defined logical ports and
+the required reserved ports (see 4.5).
+
+Optional Action: Set-Queue. The set-queue action sets the queue id for a packet. When the packet is
+forwarded to a port using the output action, the queue id determines which queue attached to this port
+is used for scheduling and forwarding the packet. Forwarding behavior is dictated by the configuration
+of the queue and is used to provide basic Quality-of-Service (QoS) support (see section 7.2.2).
+
+Required Action: Drop. There is no explicit action to represent drops. Instead, packets whose action
+sets have no output actions should be dropped. This result could come from empty instruction sets or
+empty action buckets in the processing pipeline, or after executing a Clear-Actions instruction.
+
+Required Action: Group. Process the packet through the specified group. The exact interpretation
+depends on group type.
+
+Optional Action: Push-Tag/Pop-Tag. Switches may support the ability to push/pop tags as shown in Table 6.
+To aid integration with existing networks, we suggest that the ability to push/pop VLAN tags be supported.
+Newly pushed tags should always be inserted as the outermost tag in the outermost valid location for
+that tag. When a new VLAN tag is pushed, it should be the outermost tag inserted, immediately after
+the Ethernet header and before other tags. Likewise, when a new MPLS tag is pushed, it should be the
+outermost tag inserted, immediately after the Ethernet header and before other tags.
+When multiple push actions are added to the action set of the packet, they apply to the packet in the
+order defined by the action set rules, first MPLS, then PBB, than VLAN (see 5.10). When multiple push
+actions are included in an action list, they apply to the packet in the list order (see 5.11)
+'''
