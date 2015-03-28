@@ -626,6 +626,8 @@ class FlowEntry(object):
         s = string.replace(s, 'idle_timeout', 'idle-timeout')
         s = string.replace(s, 'hard_timeout', "hard-timeout")
         s = string.replace(s, 'apply_actions', "apply-actions")
+        s = string.replace(s, 'drop_action', "drop-action")
+        s = string.replace(s, 'output_action', "output-action")
         d1 = json.loads(s)
         d2 = remove_empty_from_dict(d1)
         payload = d2
@@ -653,15 +655,20 @@ class Instruction():
     def add_apply_action(self, action):
         self.apply_actions.update({'action':action})
 
-class Action():
-    def __init__(self, order, action_type):
+class Action(object):
+    def __init__(self, order=None):
         self.order = order
-        if(action_type == "drop-action"):
-            self.drop_action = {}
 
+class DropAction(Action):
+    def __init__(self, order=None):
+        super(DropAction, self).__init__(order)
+        self.drop_action = {}
+    def set_order(self, order):
+        self.order = order
+    
 class OutputAction(Action):
     def __init__(self, order=0, port=0, max_len=0):
-        self.order = order
+        super(OutputAction, self).__init__(order)
         self.output_action = {'output-node-connector' : port, 'max-length' : max_len }
     def set_outport(self, port):
         self.output_action['output-node-connector'] = port
@@ -682,10 +689,9 @@ if __name__ == "__main__":
     instruction_order = "1"
     instruction = Instruction(instruction_order)
 
-    action_type = "drop-action"
     action_order = "1"
-    action = Action(action_order, action_type)
-
+    action = DropAction(action_order)
+    
     instruction.add_apply_action(action)
     
     flow.add_instruction(instruction)
