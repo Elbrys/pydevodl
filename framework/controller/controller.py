@@ -926,4 +926,11 @@ class Controller():
         url = templateUrl.format(self.ipAddr, self.portNum, node)
         return url    
 
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_node_config_url(self, node):
+        templateUrl = "http://{}:{}/restconf/config/opendaylight-inventory:nodes/node/{}"
+        url = templateUrl.format(self.ipAddr, self.portNum, node)
+        return url    
 

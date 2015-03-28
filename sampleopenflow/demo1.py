@@ -7,7 +7,7 @@ import json
 
 from framework.controller.controller import Controller
 #from framework.controller.openflownode import OpenflowNode
-from framework.openflowdev.openvswitch.vswitch import VSwitch
+from framework.openflowdev.ofswitch import OFSwitch
 from framework.common.status import STATUS
 from framework.common.utils import load_dict_from_file
 
@@ -32,10 +32,11 @@ if __name__ == "__main__":
     
     ctrl = Controller(ctrlIpAddr, ctrlPortNum, ctrlUname, ctrlPswd)
     name = "openflow:1"
-    vswitch = VSwitch(ctrl, name)
+#    name = "openflow:10195227440578560"
+    ofswitch = OFSwitch(ctrl, name)
     
     
-    result = vswitch.get_switch_info()
+    result = ofswitch.get_switch_info()
     status = result[0]
     if(status.eq(STATUS.OK) == True):
         print ("'%s' info:" % name)
@@ -49,7 +50,7 @@ if __name__ == "__main__":
     
     
     print ("\n")
-    result = vswitch.get_features_info()
+    result = ofswitch.get_features_info()
     status = result[0]
     if(status.eq(STATUS.OK) == True):
         print ("'%s' features:" % name)
@@ -64,7 +65,7 @@ if __name__ == "__main__":
 
     
     print ("\n")
-    result = vswitch.get_ports_info()
+    result = ofswitch.get_ports_info()
     status = result[0]
     if(status.eq(STATUS.OK) == True):
         print ("'%s' ports:" % name)
@@ -78,7 +79,7 @@ if __name__ == "__main__":
         
     print ("\n")
     portnum = 1
-    result = vswitch.get_port_info(portnum)
+    result = ofswitch.get_port_info(portnum)
     status = result[0]
     if(status.eq(STATUS.OK) == True):
         print ("Port '%s' info:" % portnum)
@@ -92,10 +93,10 @@ if __name__ == "__main__":
     
     print ("\n")
     tableid = 0
-    result = vswitch.get_flows(tableid)
+    result = ofswitch.get_operational_flows(tableid)
     status = result[0]
     if(status.eq(STATUS.OK) == True):
-        print ("Table '%s' flows:" % tableid)
+        print ("Table '%s' operational flows:" % tableid)
         info = result[1]
         print json.dumps(info, indent=4, sort_keys=True)
     else:
@@ -105,11 +106,11 @@ if __name__ == "__main__":
     
     print ("\n")
     tableid = 0
-    result = vswitch.get_flows_ovs_syntax(tableid, sort=True)
+    result = ofswitch.get_operational_flows_ovs_syntax(tableid, sort=True)
     status = result[0]
     
     if(status.eq(STATUS.OK) == True):
-        print ("Table '%s' flows:" % tableid)
+        print ("Table '%s' operational flows:" % tableid)
         flist = result[1]
         for f in flist:
             print json.dumps(f)
@@ -117,3 +118,47 @@ if __name__ == "__main__":
         print ("\n")
         print ("!!!Demo terminated, reason: %s" % status.brief().lower())
         exit(0)
+        
+
+
+
+
+
+
+
+
+
+
+
+
+    print ("\n")
+    tableid = 0
+    result = ofswitch.get_configured_flows(tableid)
+    status = result[0]
+    if(status.eq(STATUS.OK) == True):
+        print ("Table '%s' configured flows:" % tableid)
+        info = result[1]
+        print json.dumps(info, indent=4, sort_keys=True)
+    else:
+        print ("\n")
+        print ("!!!Demo terminated, reason: %s" % status.brief().lower())
+        exit(0)
+
+
+
+
+    print ("\n")
+    tableid = 0
+    result = ofswitch.get_configured_flows_ovs_syntax(tableid, sort=True)
+    status = result[0]
+    
+    if(status.eq(STATUS.OK) == True):
+        print ("Table '%s' configured flows:" % tableid)
+        flist = result[1]
+        for f in flist:
+            print json.dumps(f)
+    else:
+        print ("\n")
+        print ("!!!Demo terminated, reason: %s" % status.brief().lower())
+        exit(0)
+        

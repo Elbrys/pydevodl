@@ -1,6 +1,6 @@
 
-import json
 import string
+import json
 #import collections
 
 from collections import OrderedDict
@@ -11,17 +11,18 @@ from framework.common.utils import find_key_values_in_dict
 from framework.common.utils import replace_str_value_in_dict
 from framework.common.utils import find_key_value_in_dict
 from framework.common.utils import find_dict_in_list
+from framework.common.utils import remove_empty_from_dict
 
 
-class VSwitch(OpenflowNode):
-    """Class that represents an instance of 'Open vSwitch' (OpenFlow capable device)."""
+class OFSwitch(OpenflowNode):
+    """Class that represents an instance of 'OpenFlow Switch' (OpenFlow capable device)."""
     
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def __init__(self, ctrl=None, name=None, dpid=None):
         """Initializes this object properties."""
-        super(VSwitch, self).__init__(ctrl, name)
+        super(OFSwitch, self).__init__(ctrl, name)
         self.dpid = dpid
         self.ports=[]
 
@@ -163,8 +164,10 @@ class VSwitch(OpenflowNode):
             status.set_status(STATUS.HTTP_ERROR, resp)
         
         return (status, info)
-
-
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def get_port_info(self, portnum):
         status = OperStatus()
         info = {}
@@ -194,16 +197,22 @@ class VSwitch(OpenflowNode):
             status.set_status(STATUS.HTTP_ERROR, resp)
         
         return (status, info)
-    
-    def get_flows(self, tableid):
+        
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_flows(self, tableid, operational=True):
         status = OperStatus()
         flows = {}
+        url = ""
         templateUrlExt = "/flow-node-inventory:table/{}"
         urlext = templateUrlExt.format(tableid)
         ctrl = self.ctrl
-        url = ctrl.get_node_operational_url(self.name)
+        if (operational):
+            url = ctrl.get_node_operational_url(self.name)
+        else:
+            url = ctrl.get_node_config_url(self.name)        
         url += urlext
-        
         resp = ctrl.http_get_request(url, data=None, headers=None)
         if(resp == None):
             status.set_status(STATUS.CONN_ERROR)
@@ -223,11 +232,26 @@ class VSwitch(OpenflowNode):
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
         
+        return (status, flows)    
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_operational_flows(self, tableid):
+        flows = {}
+        result = self.get_flows(tableid, operational=True)
+        status = result[0]
+        if(status.eq(STATUS.OK) == True):
+            flows = result[1]
+        
         return (status, flows)
-
-    def get_flows_ovs_syntax(self, tableid, sort=None):
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_operational_flows_ovs_syntax(self, tableid, sort=None):
         ovsflows = []
-        result = self.get_flows(tableid)
+        result = self.get_operational_flows(tableid)
         status = result[0]
         if(status.eq(STATUS.OK) == True):
             flist = result[1]
@@ -238,10 +262,44 @@ class VSwitch(OpenflowNode):
                 ovsflows.append(f)
 
         return (status, ovsflows)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_configured_flows(self, tableid):
+        flows = {}
+        result = self.get_flows(tableid, operational=False)
+        status = result[0]
+        if(status.eq(STATUS.OK) == True):
+            flows = result[1]
         
+        return (status, flows)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_configured_flows_ovs_syntax(self, tableid, sort=None):
+        ovsflows = []
+        result = self.get_configured_flows(tableid)
+        status = result[0]
+        if(status.eq(STATUS.OK) == True):
+            flist = result[1]
+            if (sort == True):
+                flist.sort(key=self.__getPriorityKey)                
+            for item in flist:
+                f = self.odl_to_ovs_flow_syntax(item)
+                ovsflows.append(f)
+
+        return (status, ovsflows)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def odl_to_ovs_flow_syntax(self, odlflow):
         od = OrderedDict()
-#        print ("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")        
+#        print ("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
+#        print (odlflow)
+        
         f = odlflow
         
         v = find_key_value_in_dict(f, 'cookie')
@@ -269,6 +327,14 @@ class VSwitch(OpenflowNode):
         if (v != None and type(v) is int):
             od['n_bytes'] = v
 
+        v = find_key_value_in_dict(f, 'idle-timeout')
+        if (v != None and type(v) is int and v != 0):
+            od['idle_timeout'] = v
+
+        v = find_key_value_in_dict(f, 'hard-timeout')
+        if (v != None and type(v) is int and v != 0):
+            od['hard_timeout'] = v
+        
         v = find_key_value_in_dict(f, 'priority')
         if (v != None and type(v) is int):
             od['priority'] = v
@@ -298,14 +364,14 @@ class VSwitch(OpenflowNode):
                 ethersrc = find_key_value_in_dict(ethermatch, 'ethernet-source')
                 if(ethersrc != None and type(ethersrc) is dict):
                     addr = find_key_value_in_dict(ethersrc, 'address')
-                    if(addr != None):
-                        od['dl_src'] = addr
+                    if(addr != None and isinstance(addr, basestring)):
+                        od['dl_src'] = addr.lower()
                 
                 etherdst = find_key_value_in_dict(ethermatch, 'ethernet-destination')
                 if(etherdst != None and type(etherdst) is dict):
                     addr = find_key_value_in_dict(etherdst, 'address')
-                    if(addr != None):
-                        od['dl_dst'] = addr
+                    if(addr != None and isinstance(addr, basestring)):
+                        od['dl_dst'] = addr.lower()
             
             ipmatch = find_key_value_in_dict(v, 'ip-match')
             if (ipmatch != None and type(ipmatch) is dict):
@@ -357,8 +423,10 @@ class VSwitch(OpenflowNode):
 #        print (">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
 
         return od
-
-
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def __build_ovs_action_list(self, alist):
         al = []
         
@@ -369,10 +437,16 @@ class VSwitch(OpenflowNode):
                 al.append(a)
 
         return al
-
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def __getOrderKey(self, item):
         return item.order
-
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def __getPriorityKey(self, item):
         return item['priority']
     
@@ -429,6 +503,9 @@ class VSwitch(OpenflowNode):
         return (status, info)                        
     '''
 
+#---------------------------------------------------------------------------
+# 
+#---------------------------------------------------------------------------
 class ActionOutput():
     def __init__(self, port=None, length=None, order=None):        
         self.type = 'output'
@@ -463,3 +540,153 @@ class ActionOutput():
                 s = '{}:{}'.format(self.type, p)
         
         return s
+
+
+#---------------------------------------------------------------------------
+# 
+#---------------------------------------------------------------------------
+class FlowEntry(object):
+    ''' Class for creating and interacting with OpenFlow flows '''
+    
+    def __init__(self):
+        ''' Opaque Controller-issued identifier '''
+        self.cookie = 0
+        
+        ''' Mask used to restrict the cookie bits that must match when the command is
+            OFPFC_MODIFY* or OFPFC_DELETE*. A value of 0 indicates no restriction '''
+        self.cookie_mask = 0  
+          
+        ''' ID of the table to put the flow in '''
+        self.table_id = ""
+        
+        ''' Priority level of flow entry '''
+        self.priority = 0
+        
+        ''' Idle time before discarding (seconds) '''
+        self.idle_timeout = 0
+        
+        ''' Max time before discarding (seconds) '''
+        self.hard_timeout = 0 
+           
+        ''' Modify/Delete entry strictly matching wildcards and priority '''
+#        self.strict = "false"
+        self.strict = False
+        
+        ''' For OFPFC_DELETE* commands, require matching entries to include this as an
+            output port. A value of OFPP_ANY indicates no restriction. '''
+        self.out_port = ""
+        
+        ''' For OFPFC_DELETE* commands, require matching entries to include this as an
+            output group. A value of OFPG_ANY indicates no restriction '''
+        self.out_group = ""
+        
+        ''' Bitmap of OFPFF_* flags '''
+        self.flags = ""
+        
+        ''' This FlowEntry name in the FlowTable (internal Controller's inventory attribute) '''
+        self.flow_name = ""
+        
+        ''' This FlowEntry identifier in the FlowTable (internal Controller's inventory attribute) '''    
+        self.id = ""
+        
+        ''' ??? (internal Controller's inventory attribute) '''
+        self.installHw = False
+        
+        ''' Boolean flag used to enforce OpenFlow switch to do ordered message processing.
+            Barrier request/reply messages are used by the controller to ensure message dependencies
+            have been met or to receive notifications for completed operations. When the controller
+            wants to ensure message dependencies have been met or wants to receive notifications for
+            completed operations, it may use an OFPT_BARRIER_REQUEST message. This message has no body.
+            Upon receipt, the switch must finish processing all previously-received messages, including
+            sending corresponding reply or error messages, before executing any messages beyond the
+            Barrier Request. '''
+        self.barrier=False
+        
+        ''' Buffered packet to apply to, or OFP_NO_BUFFER. Not meaningful for OFPFC_DELETE* '''
+        self.buffer_id = ""
+        
+        '''  Flow match fields '''
+        self.match = {}
+
+        ''' Instructions to be executed when a flow matches this entry flow match fields '''
+        self.instructions = {}
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def to_json(self):
+        """ Return FlowEntry as JSON """
+        return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_payload(self):
+        s = self.to_json()
+        s = string.replace(s, 'idle_timeout', 'idle-timeout')
+        s = string.replace(s, 'hard_timeout', "hard-timeout")
+        d1 = json.loads(s)
+        d2 = remove_empty_from_dict(d1)
+        payload = d2
+        return json.dumps(payload, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+    
+    def add_instruction(self, instruction):
+        self.instructions.update({'instruction':instruction})
+
+class Instructions():
+    """The class that defines OpenFlow flow Instructions""" 
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init__(self):
+        self.instructions = {}
+    def add_instruction(self, instruction):
+        self.instructions.append(instruction)
+
+class Instruction():
+    def __init__(self, order=0):
+        self.order = order
+        self.apply_actions = {}
+    def add_action(self, action):
+        self.actions.append(action)
+    def add_apply_action(self, action):
+        self.apply_actions.update({'action':action})
+
+class Action():
+    def __init__(self, order, action_type):
+        self.order = order
+        if(action_type == "drop-action"):
+            self.drop_action = {}
+
+class Match():
+    pass
+
+
+''' Tmp code - START '''
+if __name__ == "__main__":
+    print "Start"
+    flow = FlowEntry()
+    
+    instruction_order = "1"
+    instruction = Instruction(instruction_order)
+
+    action_type = "drop-action"
+    action_order = "1"
+    action = Action(action_order, action_type)
+
+    instruction.add_apply_action(action)
+    
+    flow.add_instruction(instruction)
+
+    flow_json = flow.to_json()
+    print "flow JSON"
+    print flow_json
+    
+    flow_payload = flow.get_payload()
+    print "flow HTTP payload"
+    print flow_payload
+''' Tmp code - END'''
+    
+
+
+
