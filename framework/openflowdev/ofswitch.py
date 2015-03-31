@@ -643,11 +643,111 @@ class FlowEntry(object):
     #---------------------------------------------------------------------------
     def get_payload(self):
         s = self.to_json()
+        
+        s = string.replace(s, 'buffer_id', 'buffer-id')
+        s = string.replace(s, 'flow_name', 'flow-name')
         s = string.replace(s, 'idle_timeout', 'idle-timeout')
         s = string.replace(s, 'hard_timeout', "hard-timeout")
-        s = string.replace(s, 'apply_actions', "apply-actions")
-        s = string.replace(s, 'drop_action', "drop-action")
-        s = string.replace(s, 'output_action', "output-action")
+        
+        s = string.replace(s, 'apply_actions', 'apply-actions')
+        
+        s = string.replace(s, 'output_action', 'output-action')
+        s = string.replace(s, 'set_queue_action', 'set-queue-action')
+        s = string.replace(s, 'drop_action', 'drop-action')
+        s = string.replace(s, 'group_action', 'group-action')
+        
+        s = string.replace(s, 'set_vlan_id_action', 'set-vlan-id-action')
+        s = string.replace(s, 'set_vlan_pcp_action', 'set-vlan-pcp-action')
+        s = string.replace(s, 'set_vlan_cfi_action', 'set-vlan-cfi-action')
+        s = string.replace(s, 'strip_vlan_action', 'strip-vlan-action')
+        s = string.replace(s, 'set_dl_src_action', 'set-dl-src-action')
+        s = string.replace(s, 'set_dl_dst_action', 'set-dl-dst-action')
+        s = string.replace(s, 'set_nw_src_action', 'set-nw-src-action')
+        s = string.replace(s, 'set_nw_dst_action', 'set-nw-dst-action')
+        s = string.replace(s, 'set_tp_src_action', 'set-tp-src-action')
+        s = string.replace(s, 'set_tp_dst_action', 'set-tp-dst-action')
+        
+        s = string.replace(s, 'push_vlan_action', 'push-vlan-action')
+        s = string.replace(s, 'pop_vlan_action', 'pop-vlan-action')
+        s = string.replace(s, 'push_mpls_action', 'push-mpls-action')
+        s = string.replace(s, 'pop_mpls_action', 'pop-mpls-action')
+        s = string.replace(s, 'push_pbb_action', 'push-pbb-action')
+        s = string.replace(s, 'pop_pbb_action', 'pop-pbb-action')
+        s = string.replace(s, 'set_mpls_ttl_action', 'set-mpls-ttl-action')
+        s = string.replace(s, 'dec_mpls_ttl', 'dec-mpls-ttl')
+        s = string.replace(s, 'set_nw_ttl_action', 'set-nw-ttl-action')
+        s = string.replace(s, 'dec_nw_ttl', 'dec-nw-ttl')
+        s = string.replace(s, 'copy_ttl_out', 'copy-ttl-out')
+        s = string.replace(s, 'copy_ttl_in', 'copy-ttl-in')
+
+        s = string.replace(s, 'set_field', 'set-field')
+        
+        s = string.replace(s, 'flood_action', 'flood-action')
+        s = string.replace(s, 'flood_all_action', 'flood-all-action')
+        s = string.replace(s, 'hw_path_action', 'hw-path-action')
+        s = string.replace(s, 'sw_path_action', 'sw-path-action')
+        s = string.replace(s, 'loopback_action', 'loopback-action')
+        
+        s = string.replace(s, 'in_port', 'in-port')
+        s = string.replace(s, 'in_phy_port', 'in-phy-port')
+        
+        s = string.replace(s, 'ethernet_match', 'ethernet-match')
+        s = string.replace(s, 'ethernet_destination', 'ethernet-destination')
+        s = string.replace(s, 'ethernet_source', 'ethernet-source')
+        s = string.replace(s, 'ethernet_type', 'ethernet-type')
+        
+        s = string.replace(s, 'ip_match', 'ip-match')
+        s = string.replace(s, 'ip_dscp', 'ip-dscp')
+        s = string.replace(s, 'ip_ecn', 'ip-ecn')
+        s = string.replace(s, 'ip_proto', 'ip-proto')
+
+        s = string.replace(s, 'ipv4_source', 'ipv4-source')
+        s = string.replace(s, 'ipv4_destination', 'ipv4-destination')
+        s = string.replace(s, 'ipv6_source', 'ipv6-source')
+        s = string.replace(s, 'ipv6_destination', 'ipv6-destination')
+        s = string.replace(s, 'ipv6_nd_target', 'ipv6-nd-target')
+        s = string.replace(s, 'ipv6_nd_sll', 'ipv6-nd-sll')
+        s = string.replace(s, 'ipv6_nd_tll', 'ipv6-nd-tll')
+        s = string.replace(s, 'ipv6_label', 'ipv6-label')
+
+        s = string.replace(s, 'ipv6_ext_header', 'ipv6-ext-header')
+        s = string.replace(s, 'ipv6_exthdr', 'ipv6-exthdr')
+        s = string.replace(s, 'ipv6_exthdr_mask', 'ipv6-exthdr-mask')
+  
+        s = string.replace(s, 'protocol_match_fields', 'protocol-match-fields')
+        s = string.replace(s, 'mpls_label', 'mpls-label')
+        s = string.replace(s, 'mpls_tc', 'mpls-tc')
+        s = string.replace(s, 'mpls_bos', 'mpls-bos')
+        s = string.replace(s, 'pbb_isid', 'pbb-isid')
+        s = string.replace(s, 'pbb_mask', 'pbb-mask')
+ 
+        s = string.replace(s, 'udp_source_port', 'udp-source-port')
+        s = string.replace(s, 'udp_destination_port', 'udp-destination-port')
+        s = string.replace(s, 'tcp_source_port', 'tcp-source-port')
+        s = string.replace(s, 'tcp_destination_port', 'tcp-destination-port')
+        s = string.replace(s, 'sctp_source_port', 'sctp-source-port')
+        s = string.replace(s, 'sctp_destination_port', 'sctp-destination-port')
+
+        s = string.replace(s, 'icmpv4_type', 'icmpv4-type')
+        s = string.replace(s, 'icmpv4_code', 'icmpv4-code')
+        s = string.replace(s, 'icmpv6_type', 'icmpv6-type')
+        s = string.replace(s, 'icmpv6_code', 'icmpv6-code')
+       
+        s = string.replace(s, 'vlan_match', 'vlan-match')
+        s = string.replace(s, 'vlan_id', 'vlan-id')
+        s = string.replace(s, 'vlan_id_present', 'vlan-id-present')
+        s = string.replace(s, 'vlan_pcp', 'vlan-pcp')
+
+        s = string.replace(s, 'arp_op', 'arp-op')
+        s = string.replace(s, 'arp_source_transport_address', 'arp-source-transport-address')
+        s = string.replace(s, 'arp_target_transport_address', 'arp-target-transport-address')
+        s = string.replace(s, 'arp_source_hardware_address', 'arp-source-hardware-address')
+        s = string.replace(s, 'arp_target_hardware_address', 'arp-target-hardware-address')
+        
+        s = string.replace(s, 'tunnel_id', 'tunnel-id')
+
+        s = string.replace(s, 'metadata_mask', 'metadata-mask')
+        
         d1 = json.loads(s)
         d2 = remove_empty_from_dict(d1)
         payload = {self._mn : d2}
@@ -700,14 +800,21 @@ class Instruction():
     #---------------------------------------------------------------------------
     def __init__(self, order=0):
         self.order = order
+#  TBD      self.goto_table = {}
+#  TBD      self.write_metadata = {}
+#  TBD      self.write_actions = {}
         self.apply_actions = {}
+#  TBD      self.clear_actions = {}
+#  TBD      self.meter = {}
 
+    '''
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def add_action(self, action):
         self.actions.append(action)
-
+    '''
+    
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
@@ -723,28 +830,20 @@ class Action(object):
     #---------------------------------------------------------------------------
     def __init__(self, order=None):
         self.order = order
-
-#-------------------------------------------------------------------------------
-# 
-#-------------------------------------------------------------------------------
-class DropAction(Action):
-    #---------------------------------------------------------------------------
-    # 
-    #---------------------------------------------------------------------------
-    def __init__(self, order=None):
-        super(DropAction, self).__init__(order)
-        self.drop_action = {}
-
+        
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def set_order(self, order):
         self.order = order
-    
+
 #-------------------------------------------------------------------------------
 # 
 #-------------------------------------------------------------------------------
 class OutputAction(Action):
+    ''' The Output action forwards a packet to a specified OpenFlow port
+        OpenFlow switches must support forwarding to physical ports, 
+        switch-defined logical ports and the required reserved ports  '''
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
@@ -769,7 +868,595 @@ class OutputAction(Action):
     #---------------------------------------------------------------------------
     def set_order(self, order):
         self.order = order
+    
+#-------------------------------------------------------------------------------
+# TBD
+#-------------------------------------------------------------------------------
+class SetQueueAction(Action):
+    ''' The set-queue action sets the queue id for a packet. When the packet is
+        forwarded to a port using the output action, the queue id determines 
+        which queue attached to this port is used for scheduling and forwarding
+        the packet. Forwarding behavior is dictated by the configuration of the
+        queue and is used to provide basic Quality-of-Service (QoS) support '''
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init__(self, order=None, queue=None, queue_id=None):
+        super(SetQueueAction, self).__init__(order)
+        self.set_queue_action = {'queue': queue, 'queue-id': queue_id}
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_queue(self, queue):
+        self.group_action['queue'] = queue
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_group_id(self, queue_id):
+        self.group_action['queue_id'] = queue_id
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_order(self, order):
+        self.order = order
 
+#-------------------------------------------------------------------------------
+# TBD
+#-------------------------------------------------------------------------------
+class DropAction(Action):
+    ''' There is no explicit action to represent drops. Instead, packets whose
+        action sets have no output actions should be dropped. This result could
+        come from empty instruction sets or empty action buckets in the
+        processing pipeline, or after executing a Clear-Actions instruction '''
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init__(self, order=None):
+        super(DropAction, self).__init__(order)
+        self.drop_action = {}
+
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_order(self, order):
+        self.order = order
+        
+#-------------------------------------------------------------------------------
+# TBD
+#-------------------------------------------------------------------------------
+class GroupAction(Action):
+    ''' Process the packet through the specified group.
+        The exact interpretation depends on group type. '''
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init__(self, order=None, group=None, group_id=None):
+        super(GroupAction, self).__init__(order)
+        self.group_action = {'group': group, 'group-id': group_id}
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_group(self, group):
+        self.group_action['group'] = group
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_group_id(self, group_id):
+        self.group_action['group_id'] = group_id
+
+#-------------------------------------------------------------------------------
+# TBD
+#-------------------------------------------------------------------------------
+class SetVlanIdAction(Action):
+    ''' Set the 802.1q VLAN id '''
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init__(self, order=None, vid=None):
+        super(SetVlanIdAction, self).__init__(order)
+        self.set_vlan_id_action = {'vlan-id' : vid}
+
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_vid(self, vid):
+        self.set_vlan_id_action['vlan-id'] = vid
+
+#-------------------------------------------------------------------------------
+# TBD
+#-------------------------------------------------------------------------------
+class SetVlanPCPAction(Action):
+    ''' Set the 802.1q priority '''
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init__(self, order=None, vlan_pcp=None):
+        super(SetVlanPCPAction, self).__init__(order)
+        self.set_vlan_pcp_action = {'vlan-pcp' : vlan_pcp}
+
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_vlan_pcp(self, vlan_pcp):
+        self.set_vlan_pcp_action['vlan-pcp'] = vlan_pcp
+
+#-------------------------------------------------------------------------------
+# TBD
+#-------------------------------------------------------------------------------
+class SetVlanCfiAction(Action):
+    ''' Seems to be ODL proprietary action type ???
+        CFI (1-bit field) was formerly designated Canonical Format Indicator
+        with a value of 0 indicating a MAC address in canonical format. It is
+        always set to zero for Ethernet. CFI was used for compatibility between
+        Ethernet and Token Ring networks. If a frame received at an Ethernet
+        port had a CFI set to 1, then that frame would not be bridged to an
+        untagged port.
+        Currently renamed as Drop eligible indicator (DEI).        
+        May be used separately or in conjunction with PCP to indicate
+        frames eligible to be dropped in the presence of congestion. '''
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init__(self, order=None, vlan_cfi=None):
+        super(SetVlanCfiAction, self).__init__(order)
+        self.set_vlan_cfi_action = {'vlan-cfi' : vlan_cfi}
+
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_vlan_cfi(self, vlan_cfi):
+        self.set_vlan_cfi_action['vlan-cfi'] = vlan_cfi
+
+#-------------------------------------------------------------------------------
+# TBD
+#-------------------------------------------------------------------------------
+class StripVlanAction(Action):
+    ''' Strip the 802.1q header '''
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init__(self, order=None):
+        super(StripVlanAction, self).__init__(order)
+        self.strip_vlan_action = {}
+
+#-------------------------------------------------------------------------------
+# TBD
+#-------------------------------------------------------------------------------
+class SetDlSrcAction(Action):
+    ''' Set Ethernet source address '''
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init__(self, order=None, mac_addr=None):
+        super(SetDlSrcAction, self).__init__(order)
+        self.set_dl_src_action = {'address' : mac_addr}
+
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_dl_src(self, mac_addr):
+        self.set_dl_src_action['address'] = mac_addr
+
+#-------------------------------------------------------------------------------
+# TBD
+#-------------------------------------------------------------------------------
+class SetDlDstAction(Action):
+    ''' Set Ethernet destination address '''
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init__(self, order=None, mac_addr=None):
+        super(SetDlDstAction, self).__init__(order)
+        self.set_dl_dst_action = {'address' : mac_addr}
+
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_dl_dst(self, mac_addr):
+        self.set_dl_dst_action['address'] = mac_addr
+
+#-------------------------------------------------------------------------------
+# TBD
+#-------------------------------------------------------------------------------
+class SetNwSrcAction(Action):
+    ''' Set IP source address '''
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init__(self, order=None, ip_addr=None):
+        super(SetNwSrcAction, self).__init__(order)
+        self.set_nw_src_action = {'address' : ip_addr}
+
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_nw_src(self, ip_addr):
+        self.set_nw_src_action['address'] = ip_addr
+    
+#-------------------------------------------------------------------------------
+# TBD
+#-------------------------------------------------------------------------------
+class SetNwDstAction(Action):
+    ''' Set IP destination address '''
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init__(self, order=None, ip_addr=None):
+        super(SetNwDstAction, self).__init__(order)
+        self.set_nw_dst_action = {'address' : ip_addr}
+
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_nw_dst(self, ip_addr):
+        self.set_nw_dst_action['address'] = ip_addr
+
+#-------------------------------------------------------------------------------
+# TBD
+#-------------------------------------------------------------------------------
+class SetTpSrcAction(Action):
+    ''' Set TCP/UDP source port '''
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init__(self, order=None, port=None):
+        super(SetTpSrcAction, self).__init__(order)
+        self.set_tp_src_action = {'port' : port}
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_tp_src_port(self, port):
+        self.set_tp_src_action['port'] = port
+ 
+#-------------------------------------------------------------------------------
+# TBD
+#-------------------------------------------------------------------------------
+class SetTpDstAction(Action):
+    ''' Set TCP/UDP destination port '''
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init__(self, order=None, port=None):
+        super(SetTpDstAction, self).__init__(order)
+        self.set_tp_dst_action = {'port' : port}
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_tp_dst_port(self, port):
+        self.set_tp_dst_action['port'] = port
+    
+#-------------------------------------------------------------------------------
+# 
+#-------------------------------------------------------------------------------
+class PushVlanHeaderAction(Action):
+    ''' Push a new VLAN header onto the packet. The 'ethernet-type' is used as
+        the Ethertype for the tag. Only 'ethernet-type' 0x8100 and 0x88a8 should
+        be used. '''
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init__(self, order=0, eth_type=None, tag=None, pcp=None, cfi=None, vid=None):
+        super(PushVlanHeaderAction, self).__init__(order)
+        self.push_vlan_action = {'ethernet-type': eth_type, 'tag': tag, 'pcp': pcp, 'cfi': cfi, 'vlan-id': vid }
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_eth_type(self, eth_type):
+        self.output_action['ethernet-type'] = eth_type
+
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_tag(self, tag):
+        self.output_action['tag'] = tag
+
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_pcp(self, pcp):
+        self.output_action['pcp'] = pcp
+
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_cfi(self, cfi):
+        self.output_action['cfi'] = cfi
+
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_vid(self, vid):
+        self.output_action['vlan-id'] = vid
+
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_order(self, order):
+        self.order = order
+    
+#-------------------------------------------------------------------------------
+# TBD
+#-------------------------------------------------------------------------------
+class PopVlanHeaderAction(Action):
+    ''' Pop the outer-most VLAN header from the packet '''
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init__(self, order=0):
+        super(PopVlanHeaderAction, self).__init__(order)
+        self.pop_vlan_action = {}
+
+#-------------------------------------------------------------------------------
+# TBD
+#-------------------------------------------------------------------------------
+class PushMplsHeaderAction(Action):
+    ''' Push a new MPLS shim header onto the packet. The 'ethernet-type' is used
+        as the Ethertype for the tag. Only Ethertype 0x8847 and 0x8848 should be
+        used. '''
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init__(self, order=0, ethernet_type=None):
+        super(PushMplsHeaderAction, self).__init__(order)
+        self.push_mpls_action = {'ethernet-type': ethernet_type}
+        
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_eth_type(self, ethernet_type):
+        self.push_mpls_action['ethernet-type'] = ethernet_type
+    
+#-------------------------------------------------------------------------------
+# TBD
+#-------------------------------------------------------------------------------
+class PopMplsHeaderAction(Action):
+    ''' Pop the outer-most MPLS tag or shim header from the packet.
+        The Ethertype is used as the Ethertype for the resulting packet
+        (Ethertype for the MPLS payload). '''
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init__(self, order=0, ethernet_type=None):
+        super(PopMplsHeaderAction, self).__init__(order)
+        self.pop_mpls_action = {'ethernet-type': ethernet_type}
+
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_eth_type(self, ethernet_type):
+        self.pop_mpls_action['ethernet-type'] = ethernet_type
+
+#-------------------------------------------------------------------------------
+# TBD
+#-------------------------------------------------------------------------------
+class PushPBBHeaderAction(Action):
+    ''' Push a new PBB service instance header (I-TAG TCI) onto the packet.
+        The Ethertype is used as the Ethertype for the tag. Only Ethertype
+        0x88E7 should be used 
+        PBB - Provider Backbone Bridges is an Ethernet data-plane technology
+              (also known as MAC-in-MAC) that involves encapsulating an
+              Ethernet datagram inside another one with new source and
+              destination addresses '''
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init__(self, order=0, ethernet_type=None):
+        super(PushPBBHeaderAction, self).__init__(order)
+        self.push_pbb_action = {'ethernet-type': ethernet_type}
+        
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_eth_type(self, ethernet_type):
+        self.push_pbb_action['ethernet-type'] = ethernet_type
+        
+#-------------------------------------------------------------------------------
+# TBD
+#-------------------------------------------------------------------------------
+class PopPBBHeaderAction(Action):
+    ''' Pop the outer-most PBB service instance header (I-TAG TCI)
+        from the packet
+        PBB - Provider Backbone Bridges is an Ethernet data-plane technology
+              (also known as MAC-in-MAC) that involves encapsulating an
+              Ethernet datagram inside another one with new source and
+              destination addresses '''
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init__(self, order=0):
+        super(PopPBBHeaderAction, self).__init__(order)
+        self.pop_pbb_action = {}
+
+
+#-------------------------------------------------------------------------------
+# TBD
+#-------------------------------------------------------------------------------
+class SetMplsTTLAction(Action):
+    ''' Replace the existing MPLS TTL. Only applies to packets with an existing
+        MPLS shim header '''
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init__(self, order=0, mpls_ttl=None):
+        super(SetMplsTTLAction, self).__init__(order)
+        self.set_mpls_ttl_action = {'mpls-ttl': mpls_ttl}
+
+    def set_mpls_ttl(self, mpls_ttl):
+        self.set_mpls_ttl_action['mpls-ttl'] = mpls_ttl
+
+#-------------------------------------------------------------------------------
+# TBD
+#-------------------------------------------------------------------------------
+class DecMplsTTLAction(Action):
+    ''' Decrement the MPLS TTL. Only applies to packets with an existing MPLS
+        shim header '''
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init__(self, order=0):
+        super(DecMplsTTLAction, self).__init__(order)
+        self.dec_mpls_ttl = {}
+ 
+#-------------------------------------------------------------------------------
+# TBD
+#-------------------------------------------------------------------------------
+class SetNwTTLAction(Action):
+    ''' Replace the existing IPv4 TTL or IPv6 Hop Limit and update the IP
+       checksum. Only applies to IPv4 and IPv6 packets. '''
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init__(self, order=0, ip_ttl=None):
+        super(SetNwTTLAction, self).__init__(order)
+        self.set_nw_ttl_action = {'nw-ttl': ip_ttl}
+
+    def set_ip_ttl(self, ip_ttl):
+        self.set_nw_ttl_action['nw-ttl'] = ip_ttl
+
+#-------------------------------------------------------------------------------
+# TBD
+#-------------------------------------------------------------------------------
+class DecNwTTLAction(Action):
+    ''' Decrement the IPv4 TTL or IPv6 Hop Limit field and update the IP
+        checksum. Only applies to IPv4 and IPv6 packets. '''
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init__(self, order=0):
+        super(DecNwTTLAction, self).__init__(order)
+        self.dec_nw_ttl = {}
+
+#-------------------------------------------------------------------------------
+# TBD
+#-------------------------------------------------------------------------------
+class CopyTTLOutwardsAction(Action):
+    ''' Copy the TTL from next-to-outermost to outermost header with TTL.
+        Copy can be IP-to-IP, MPLS-to-MPLS, or IP-to-MPLS. '''
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init__(self, order=0):
+        super(CopyTTLOutwardsAction, self).__init__(order)
+        self.copy_ttl_out = {}
+
+#-------------------------------------------------------------------------------
+# TBD
+#-------------------------------------------------------------------------------
+class CopyTTLInwardsAction(Action):
+    ''' Copy the TTL from outermost to next-to-outermost header with TTL.
+        Copy can be IP-to-IP, MPLS-to-MPLS, or MPLS-to-IP. '''
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init__(self, order=0):
+        super(CopyTTLInwardsAction, self).__init__(order)
+        self.copy_ttl_in = {}
+
+#-------------------------------------------------------------------------------
+# TBD
+#-------------------------------------------------------------------------------
+class SetFieldAction(Action):
+    ''' The Extensible set_field action reuses the OXM encoding defined for
+        matches, and enables to rewrite any header field in a single action.
+        This allows any new match field, including experimenter fields, to be
+        available for rewrite.
+        The various Set-Field actions are identified by their field type and
+        modify the values of respective header fields in the packet. While 
+        not strictly required, the support of rewriting various header fields
+        using Set-Field actions greatly increase the usefulness of an OpenFlow
+        implementation. To aid integration with existing networks, we suggest
+        that VLAN modification actions be supported. Set-Field actions should
+        always be applied to the outermost-possible header (e.g. a 'Set VLAN ID'
+        action always sets the ID of the outermost VLAN tag), unless the field
+        type specifies otherwise. '''
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init__(self, order=0):
+        super(SetFieldAction, self).__init__(order)
+        self.set_field = {'vlan-match': None}
+        
+        
+        self.vlan_match = VlanMatch()
+#        self.protocol_match_fields = ProtocolMatchFields()
+    
+    def set_vlan_id(self, vid):
+        vlan_match = VlanMatch()
+        vlan_match.set_vid(vid)
+        self.set_field['vlan-match'] = vlan_match.__dict__
+    
+#-------------------------------------------------------------------------------
+# TBD
+#-------------------------------------------------------------------------------
+class FloodAction(Action):
+    ''' Flood the packet along the minimum spanning tree, not including the
+        incoming interface.
+        The sentence 'along the minimum spanning tree' implies: flood the packet
+        on all the ports that are not disabled by Spanning Tree Protocol. '''
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init__(self, order=0):
+        super(FloodAction, self).__init__(order)
+        self.flood_action = {}
+    
+#-------------------------------------------------------------------------------
+# TBD
+#-------------------------------------------------------------------------------
+class FloodAllAction(Action):
+    ''' Send the packet out all interfaces, not including the incoming
+        interface '''
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init__(self, order=0):
+        super(FloodAllAction, self).__init__(order)
+        self.flood_all_action = {}
+    
+#-------------------------------------------------------------------------------
+# TBD
+#-------------------------------------------------------------------------------
+class HwPathAction(Action):
+    ''' Seems to be ODL proprietary action type ??? '''
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init__(self, order=0):
+        super(HwPathAction, self).__init__(order)
+        self.hw_path_action = {}
+
+#-------------------------------------------------------------------------------
+# TBD
+#-------------------------------------------------------------------------------
+class SwPathAction(Action):
+    ''' Seems to be ODL proprietary action type ??? '''
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init__(self, order=0):
+        super(SwPathAction, self).__init__(order)
+        self.sw_path_action = {}
+
+#-------------------------------------------------------------------------------
+# TBD
+#-------------------------------------------------------------------------------
+class LoopbackAction(Action):
+    ''' Seems to be ODL proprietary action type ???'''
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init__(self, order=0):
+        super(LoopbackAction, self).__init__(order)
+        self.loopback_action = {}
+ 
 #-------------------------------------------------------------------------------
 # 
 #-------------------------------------------------------------------------------
@@ -1088,20 +1775,24 @@ class EthernetMatch(Match):
         self.ethernet_source = ""
         self.ethernet_destination = ""
     
-    '''
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def set_ether_type(self, ether_type):
+    def set_type(self, ether_type):
         self.ethernet_type = ether_type
-    '''
-    '''
+        
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def get_key(self):
-        return "ethernet-match"
-    '''
+    def set_src(self, ether_src):
+        self.ethernet_source = ether_src
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_dst(self, ether_dst):
+        self.ethernet_destination = ether_dst
+    
 #-------------------------------------------------------------------------------
 # 
 #-------------------------------------------------------------------------------
@@ -1116,26 +1807,26 @@ class VlanMatch(Match):
         
         ''' VLAN-PCP from 802.1Q header '''
         self.vlan_pcp = ""
-    
-    '''
+        
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def set_vid(self, vid):
         self.vlan_id = vid
         self.vlan_id_present = True
-    '''
     
-    '''
-    def get_key(self):
-        return "vlan-match"
-    '''
-
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_pcp(self, pcp):
+        self.vlan_pcp = pcp
+    
 #-------------------------------------------------------------------------------
 # 
 #-------------------------------------------------------------------------------
 class VlanId(VlanMatch):
-    
+    ''' Helper subclass of VlanMatch class to help in serialization
+        of VLAN ID information encoded in match rules of a flow entry '''
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
@@ -1165,11 +1856,6 @@ class IpMatch(Match):
         
         ''' IP protocol (IPv4 or IPv6 Protocol Number)'''
         self.ip_proto = ""
-    '''
-    def get_key(self):
-        return "ip-match"
-    pass
-    '''
 
 #-------------------------------------------------------------------------------
 # 
@@ -1179,10 +1865,23 @@ class Ipv6Label(Match):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def __init__(self):
-        self.ipv6_flabel = ""
-        self.flabel_mask = ""
+    def __init__(self, flabel=None, flabel_mask=None):
+        self.ipv6_flabel = flabel
+        self.flabel_mask = flabel_mask
+ 
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_flabel(self, flabel, flabel_mask=None):
+        self.ipv6_flabel = flabel
+        self.flabel_mask = flabel_mask
 
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_flabel_mask(self, flabel_mask):
+        self.flabel_mask = flabel_mask
+ 
 #-------------------------------------------------------------------------------
 # 
 #-------------------------------------------------------------------------------
@@ -1191,27 +1890,23 @@ class Ipv6ExtHdr(Match):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def __init__(self):
-        self.ipv6_exthdr = ""
-'''
-class Ipv4Match(Match):
-    def __init__(self):
-        self.ipv4_source = ""
-        self.ipv4_destination = ""
-    def get_key(self):
-        return None
-'''
-
-'''
-class Ipv6Match(Match):
-    pass
-'''
-
-'''
-class UdpMatch(Match):
-    pass
-'''
-
+    def __init__(self, exthdr=None, exthdr_mask=None):
+        self.ipv6_exthdr = exthdr
+        self.ipv6_exthdr_mask = exthdr_mask
+        
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_exthdr(self, exthdr, exthdr_mask=None):
+        self.ipv6_exthdr = exthdr
+        self.ipv6_exthdr_mask = exthdr_mask
+        
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_exthdr_mask(self, exthdr_mask):
+        self.ipv6_exthdr_mask = exthdr_mask
+    
 #-------------------------------------------------------------------------------
 # 
 #-------------------------------------------------------------------------------
@@ -1245,36 +1940,6 @@ class Pbb(ProtocolMatchFields):
     def __init__(self):
         self.pbb_isid = ""
         self.pbb_mask = ""
-        
-    '''
-    def get_key(self):
-        return "protocol-match-fields"
-    pass
-    '''
-
-'''
-class TcpMatch(Match):
-    def __init__(self):
-        self.tcp_source_port = ""
-        self.tcp_destination_port = ""
-    def get_key(self):
-        return None
-'''
-
-'''
-class SctpMatch(Match):
-    pass
-'''
-
-'''
-class Icmpv4Match(Match):
-    pass
-'''
-
-'''
-class Icmpv6Match(Match):
-    pass
-'''
 
 #-------------------------------------------------------------------------------
 # 
@@ -1321,15 +1986,7 @@ class Metadata(Match):
     def __init__(self):
         self.metadata = ""
         self.metadata_mask = ""
-'''
-class TcpFlagMatch(Match):
-    pass
-'''
 
-'''
-class TunnelIpv4Match(Match):
-    pass
-'''
 
 ''' Tmp code - START '''
 if __name__ == "__main__":
@@ -1401,27 +2058,14 @@ if __name__ == "__main__":
     match.set_in_phy_port(in_phy_port)
     
     flow.add_match(match)
-    '''
-    ether_match = EthernetMatch()
-    etype = 34525
-    ether_match.set_ether_type(etype)
-    
-    flow.add_match(ether_match)
-    '''
-
-
-
-
 
     flow_json = flow.to_json()
     print "flow JSON"
     print flow_json
     
-    '''
     flow_payload = flow.get_payload()
     print "flow HTTP payload"
     print flow_payload
-    '''
  
     #------------------------------------------
     '''
@@ -1523,9 +2167,9 @@ entry. In this case, the switch must return an unsupported flow error (see 6.4).
 support every match, every instruction or every action.
 
 5.10 Action Set
-An action set is associated with each packet. This set is empty by default. A ow entry can modify the
+An action set is associated with each packet. This set is empty by default. A flow entry can modify the
 action set using a Write-Action instruction or a Clear-Action instruction associated with a particular
-match. The action set is carried between ow tables. When the instruction set of a ow entry does
+match. The action set is carried between flow tables. When the instruction set of a flow entry does
 not contain a Goto-Table instruction, pipeline processing stops and the actions in the action set of the
 packet are executed.
 An action set contains a maximum of one action of each type.
