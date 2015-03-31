@@ -14,6 +14,10 @@ from framework.common.utils import find_dict_in_list
 from framework.common.utils import remove_empty_from_dict
 
 
+    
+#-------------------------------------------------------------------------------
+# 
+#-------------------------------------------------------------------------------
 class OFSwitch(OpenflowNode):
     """Class that represents an instance of 'OpenFlow Switch' (OpenFlow capable device)."""
     
@@ -507,11 +511,18 @@ class OFSwitch(OpenflowNode):
 # 
 #---------------------------------------------------------------------------
 class ActionOutput():
+
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def __init__(self, port=None, length=None, order=None):        
         self.type = 'output'
         self.order = order
         self.action = {'port': port, 'max-len': length}
                 
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def update(self, port=None, length=None, order=None):
         self.action = {'port': port, 'max-len': length}
         if(port != None):
@@ -521,6 +532,9 @@ class ActionOutput():
         if(order != None):
             self.order = order
     
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def update_from_list(self, data):
         if(data != None and type(data) is dict and ('output-action' in data)):
             self.type = 'output'
@@ -529,6 +543,9 @@ class ActionOutput():
             self.action['port'] = find_key_value_in_dict(data, 'output-node-connector')
             self.action['max-len'] = find_key_value_in_dict(data, 'max-length')
 
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def to_string(self):
         s = ""
         p = self.action['port']
@@ -541,13 +558,16 @@ class ActionOutput():
         
         return s
 
-
-#---------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 # 
-#---------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 class FlowEntry(object):
     ''' Class for creating and interacting with OpenFlow flows '''
-    
+    _mn = "flow-node-inventory:flow"
+
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def __init__(self):
         ''' Opaque Controller-issued identifier '''
         self.cookie = 0
@@ -630,12 +650,33 @@ class FlowEntry(object):
         s = string.replace(s, 'output_action', "output-action")
         d1 = json.loads(s)
         d2 = remove_empty_from_dict(d1)
-        payload = d2
+        payload = {self._mn : d2}
         return json.dumps(payload, default=lambda o: o.__dict__, sort_keys=True, indent=4)
     
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def add_instruction(self, instruction):
         self.instructions.update({'instruction':instruction})
 
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def add_match(self, match):
+        print type(match)
+        self.match.update(match.__dict__)
+#        self.match.update(match)
+        '''
+        key = match.get_key()
+        if (key != None):
+            self.match.update({key:match})
+        else:
+            self.match.update({match})
+        '''
+
+#-------------------------------------------------------------------------------
+# 
+#-------------------------------------------------------------------------------
 class Instructions():
     """The class that defines OpenFlow flow Instructions""" 
     #---------------------------------------------------------------------------
@@ -643,43 +684,652 @@ class Instructions():
     #---------------------------------------------------------------------------
     def __init__(self):
         self.instructions = {}
+
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def add_instruction(self, instruction):
         self.instructions.append(instruction)
 
+#-------------------------------------------------------------------------------
+# 
+#-------------------------------------------------------------------------------
 class Instruction():
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def __init__(self, order=0):
         self.order = order
         self.apply_actions = {}
+
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def add_action(self, action):
         self.actions.append(action)
+
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def add_apply_action(self, action):
         self.apply_actions.update({'action':action})
 
+#-------------------------------------------------------------------------------
+# 
+#-------------------------------------------------------------------------------
 class Action(object):
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def __init__(self, order=None):
         self.order = order
 
+#-------------------------------------------------------------------------------
+# 
+#-------------------------------------------------------------------------------
 class DropAction(Action):
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def __init__(self, order=None):
         super(DropAction, self).__init__(order)
         self.drop_action = {}
+
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def set_order(self, order):
         self.order = order
     
+#-------------------------------------------------------------------------------
+# 
+#-------------------------------------------------------------------------------
 class OutputAction(Action):
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def __init__(self, order=0, port=0, max_len=0):
         super(OutputAction, self).__init__(order)
         self.output_action = {'output-node-connector' : port, 'max-length' : max_len }
+
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def set_outport(self, port):
         self.output_action['output-node-connector'] = port
+
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def set_max_len(self, max_len):
         self.output_action['max-length'] = max_len
+
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def set_order(self, order):
         self.order = order
 
-class Match():
-    pass
+#-------------------------------------------------------------------------------
+# 
+#-------------------------------------------------------------------------------
+class Match(object):
+    """Class that represents OpenFlow flow matching attributes """
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init__(self):
+        ''' Ingress port. Numerical representation of in-coming port, starting at 1
+            (may be a physical or switch-defined logical port) '''
+        self.in_port = ""
+        
+        ''' Physical port (in 'ofp_packet_in messages', underlying physical port when
+            packet received on a logical port) '''
+        self.in_phy_port = ""
+        
+        ''' Ethernet match fields: 
+            - ethernet destination MAC address
+            - ethernet source MAC address
+            - ethernet type of the OpenFlow packet payload (after VLAN tags) '''
+        self.ethernet_match = EthernetMatch()
+        
+        ''' IPv4 source address (can use subnet mask) '''
+        self.ipv4_source = ""
+        
+        ''' IPv4 destination address (can use subnet mask) '''
+        self.ipv4_destination = ""
+        
+        ''' IP match fields:
+            - Differentiated Service Code Point (DSCP). Part of the IPv4 ToS field or
+              the IPv6 Traffic Class field.
+            - ECN bits of the IP header. Part of the IPv4 ToS field or
+              the IPv6 Traffic Class field 
+            - IPv4 or IPv6 protocol number '''
+        self.ip_match = IpMatch()
+        
+        ''' IPv6 source address (can use subnet mask) '''
+        self.ipv6_source = ""
+        
+        ''' IPv6 destination address (can use subnet mask) '''
+        self.ipv6_destination = ""
+        
+        ''' The target address in an IPv6 Neighbor Discovery message '''
+        self.ipv6_nd_target = ""
+        
+        ''' The source link-layer address option in an IPv6 Neighbor Discovery message '''
+        self.ipv6_nd_sll = ""
+        
+        ''' The target link-layer address option in an IPv6 Neighbor Discovery message '''
+        self.ipv6_nd_tll = ""
+        
+        ''' IPv6 flow label '''
+        self.ipv6_label = Ipv6Label()
+        
+        ''' IPv6 Extension Header pseudo-field '''
+        self.ipv6_ext_header = Ipv6ExtHdr()
+        
+        ''' Protocol match fields:
+           - The LABEL in the first MPLS shim header
+           - The TC in the first MPLS shim header
+           - The BoS bit (Bottom of Stack bit) in the first MPLS shim header
+           - The I-SID in the first PBB service instance tag '''
+        self.protocol_match_fields = ProtocolMatchFields()
+        
+        ''' UDP source port '''
+        self.udp_source_port = ""
+        
+        ''' UDP destination port '''
+        self.udp_destination_port = ""
+        
+        ''' TCP source port '''
+        self.tcp_source_port = ""
+        
+        ''' TCP destination port '''
+        self.tcp_destination_port = ""
+        
+        ''' SCTP source port '''
+        self.sctp_source_port = ""
+        
+        ''' SCTP destination port '''
+        self.sctp_destination_port = ""
+        
+        ''' ICMP type '''
+        self.icmpv4_type = ""
+        
+        ''' ICMP code'''
+        self.icmpv4_code = ""
+        
+        ''' ICMPv6 type '''
+        self.icmpv6_type = ""
+        
+        ''' ICMPv6 code '''
+        self.icmpv6_code = ""        
+        
+        ''' VLAN match fields:
+            - VLAN-ID from 802.1Q header (the CFI bit indicate the presence of a valid VLAN-ID)
+            - VLAN-PCP from 802.1Q header
+        '''
+        self.vlan_match = VlanMatch()
+                
+        ''' ARP opcode '''
+        self.arp_op = ""
+        
+        ''' Source IPv4 address in the ARP payload (can use subnet mask) '''
+        self.arp_source_transport_address = ""
+        
+        ''' Target IPv4 address in the ARP payload (can use subnet mask) '''
+        self.arp_target_transport_address = ""
+        
+        ''' Source Ethernet address in the ARP payload '''
+        self.arp_source_hardware_address = ArpSrcHwAddrMatch()
+        
+        ''' Target Ethernet address in the ARP payload '''
+        self.arp_target_hardware_address = ArpTgtHwAddrMatch()
+        
+        ''' Metadata associated with a logical port '''
+        self.tunnel = Tunnel()
 
+        ''' Table metadata (used to pass information between tables) '''
+        self.metadata = Metadata()
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_eth_type(self, eth_type):
+        self.ethernet_match.ethernet_type = eth_type
+#        self.ethernet_match.set_type(eth_type)
+
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_eth_src(self, eth_src):
+        self.ethernet_match.ethernet_source = eth_src
+#        self.ethernet_match.set_src(eth_src)
+
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_eth_dst(self, eth_dst):
+        self.ethernet_match.ethernet_destination = eth_dst        
+#        self.ethernet_match.set_dst(eth_dst)
+
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_ipv4_src(self, ipv4_src):
+        self.ipv4_source = ipv4_src
+
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_ipv4_dst(self, ipv4_dst):
+        self.ipv4_destination = ipv4_dst
+
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_ipv6_src(self, ipv6_src):
+        self.ipv6_source = ipv6_src
+
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_ipv6_dst(self, ipv6_dst):
+        self.ipv6_destination = ipv6_dst    
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_ip_dscp(self, ip_dscp):
+        self.ip_match.ip_dscp = ip_dscp
+
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_ip_ecn(self, ip_ecn):
+        self.ip_match.ip_ecn = ip_ecn
+
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_ip_proto(self, ip_proto):
+        self.ip_match.ip_protocol = ip_proto
+
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    '''        
+    def ip_proto_version(self, version):
+        self.ip_match.ip_proto = version    
+    '''    
+
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_udp_src(self, udp_port):
+        self.udp_source_port = udp_port
+
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_udp_dst(self, udp_port):
+        self.udp_destination_port = udp_port
+
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_tcp_src(self, tcp_port):
+        self.tcp_source_port = tcp_port
+
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_tcp_dst(self, tcp_port):
+        self.tcp_destination_port = tcp_port        
+
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_sctp_src(self, sctp_port):
+        self.sctp_source_port = sctp_port
+
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def sctp_dst(self, sctp_port):
+        self.sctp_destination_port = sctp_port
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_icmpv4_type(self, icmpv4_type):
+        self.icmpv4_type = icmpv4_type
+
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_icmpv4_code(self, icmpv4_code):
+        self.icmpv4_code = icmpv4_code        
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_icmpv6_type(self, icmpv6_type):
+        self.icmpv6_type = icmpv6_type
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_icmpv6_code(self, icmpv6_code):
+        self.icmpv6_code = icmpv6_code        
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_in_port(self, in_port):
+        self.in_port = in_port
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_in_phy_port(self, in_phy_port):
+        self.in_phy_port = in_phy_port
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_arp_opcode(self, arp_opcode):
+        self.arp_op = arp_opcode
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_arp_src_transport_address(self, ip_addr):
+        self.arp_source_transport_address = ip_addr        
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_arp_tgt_transport_address(self, ip_addr):
+        self.arp_target_transport_address = ip_addr
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_arp_src_hw_address(self, mac_addr):
+        self.arp_source_hardware_address.address = mac_addr
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_arp_tgt_hw_address(self, mac_addr):
+        self.arp_target_hardware_address = mac_addr    
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_tunnel_id(self, tunnel_id):
+        self.tunnel.tunnel_id = tunnel_id
+    
+#    def __getattr__(self, attr):
+#         return self[attr]
+        
+#-------------------------------------------------------------------------------
+# 
+#-------------------------------------------------------------------------------
+class EthernetMatch(Match):
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init__(self):
+        self.ethernet_type = ""
+        self.ethernet_source = ""
+        self.ethernet_destination = ""
+    
+    '''
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_ether_type(self, ether_type):
+        self.ethernet_type = ether_type
+    '''
+    '''
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_key(self):
+        return "ethernet-match"
+    '''
+#-------------------------------------------------------------------------------
+# 
+#-------------------------------------------------------------------------------
+class VlanMatch(Match):
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init__(self):
+        ''' VLAN-ID from 802.1Q header '''
+        self.vlan_id = VlanId()
+        
+        ''' VLAN-PCP from 802.1Q header '''
+        self.vlan_pcp = ""
+    
+    '''
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_vid(self, vid):
+        self.vlan_id = vid
+        self.vlan_id_present = True
+    '''
+    
+    '''
+    def get_key(self):
+        return "vlan-match"
+    '''
+
+#-------------------------------------------------------------------------------
+# 
+#-------------------------------------------------------------------------------
+class VlanId(VlanMatch):
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init__(self):
+        ''' VLAN-ID from 802.1Q header '''
+        self.vlan_id = ""
+        
+        ''' Flag that indicates that 'vlan_id' value is set and matching is
+            only for packets with VID equal to 'vlan_id' value '''
+        self.vlan_id_present = False
+
+#-------------------------------------------------------------------------------
+# 
+#-------------------------------------------------------------------------------
+class IpMatch(Match):
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init__(self):
+#        self.ip_protocol = ""
+        ''' "IP DSCP (6 bits in ToS field) '''
+        self.ip_dscp = ""
+        
+        ''' IP ECN (2 bits in ToS field) '''
+        self.ip_ecn = ""
+        
+        ''' IP protocol (IPv4 or IPv6 Protocol Number)'''
+        self.ip_proto = ""
+    '''
+    def get_key(self):
+        return "ip-match"
+    pass
+    '''
+
+#-------------------------------------------------------------------------------
+# 
+#-------------------------------------------------------------------------------
+class Ipv6Label(Match):
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init__(self):
+        self.ipv6_flabel = ""
+        self.flabel_mask = ""
+
+#-------------------------------------------------------------------------------
+# 
+#-------------------------------------------------------------------------------
+class Ipv6ExtHdr(Match):
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init__(self):
+        self.ipv6_exthdr = ""
+'''
+class Ipv4Match(Match):
+    def __init__(self):
+        self.ipv4_source = ""
+        self.ipv4_destination = ""
+    def get_key(self):
+        return None
+'''
+
+'''
+class Ipv6Match(Match):
+    pass
+'''
+
+'''
+class UdpMatch(Match):
+    pass
+'''
+
+#-------------------------------------------------------------------------------
+# 
+#-------------------------------------------------------------------------------
+class ProtocolMatchFields(Match):
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init__(self):
+        ''' The LABEL in the first MPLS shim header '''
+        self.mpls_label = ""
+        
+        ''' The TC in the first MPLS shim header '''
+        self.mpls_tc = ""
+        
+        ''' The BoS bit (Bottom of Stack bit) in the first MPLS shim header '''
+        self.mpls_bos = ""
+        
+        ''' The I-SID in the first PBB service instance tag '''
+        self.pbb = Pbb()
+
+#-------------------------------------------------------------------------------
+# 
+#-------------------------------------------------------------------------------
+class Pbb(ProtocolMatchFields):
+    ''' The I-SID in the first PBB service instance tag '''
+     
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init__(self):
+        self.pbb_isid = ""
+        self.pbb_mask = ""
+        
+    '''
+    def get_key(self):
+        return "protocol-match-fields"
+    pass
+    '''
+
+'''
+class TcpMatch(Match):
+    def __init__(self):
+        self.tcp_source_port = ""
+        self.tcp_destination_port = ""
+    def get_key(self):
+        return None
+'''
+
+'''
+class SctpMatch(Match):
+    pass
+'''
+
+'''
+class Icmpv4Match(Match):
+    pass
+'''
+
+'''
+class Icmpv6Match(Match):
+    pass
+'''
+
+#-------------------------------------------------------------------------------
+# 
+#-------------------------------------------------------------------------------
+class ArpSrcHwAddrMatch(Match):
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init__(self):
+        self.address = ""
+
+#-------------------------------------------------------------------------------
+# 
+#-------------------------------------------------------------------------------
+class ArpTgtHwAddrMatch(Match):
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init__(self):
+        self.address = ""
+
+#-------------------------------------------------------------------------------
+# 
+#-------------------------------------------------------------------------------
+class Tunnel(Match):
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init__(self):
+        ''' Metadata associated with a logical port'''
+        self.tunnel_id = ""
+
+#-------------------------------------------------------------------------------
+# 
+#-------------------------------------------------------------------------------
+class Metadata(Match):
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init__(self):
+        self.metadata = ""
+        self.metadata_mask = ""
+'''
+class TcpFlagMatch(Match):
+    pass
+'''
+
+'''
+class TunnelIpv4Match(Match):
+    pass
+'''
 
 ''' Tmp code - START '''
 if __name__ == "__main__":
@@ -696,16 +1346,85 @@ if __name__ == "__main__":
     
     flow.add_instruction(instruction)
 
+    
+    match = Match()
+    
+    eth_type = 34525
+    match.set_eth_type(eth_type)
+    
+    eth_src = "00:00:00:11:23:ae"
+    match.set_eth_src(eth_src)
+    
+    eth_dst = "ff:ff:29:01:19:61"
+    match.set_eth_dst(eth_dst)
+    
+    ipv4_src = "17.1.2.3/8"
+    match.set_ipv4_src(ipv4_src)
+    
+    ipv4_dst = "172.168.5.6/16"
+    match.set_ipv4_dst(ipv4_dst)
+    
+    ipv6_src = "fe80::2acf:e9ff:fe21:6431/128"
+    match.set_ipv6_src(ipv6_src)
+    
+    ipv6_dst = "aabb:1234:2acf:e9ff::fe21:6431/64"
+    match.set_ipv6_dst(ipv6_dst)
+    
+    ip_dscp = 2
+    match.set_ip_dscp(ip_dscp)
+    
+    ip_ecn = 2
+    match.set_ip_ecn(ip_ecn)
+    
+    ip_proto = 6
+    match.set_ip_proto(ip_proto)
+    
+    tcp_src = 25364
+    match.set_tcp_src(tcp_src)
+    
+    tcp_dst = 8080
+    match.set_tcp_dst(tcp_dst)
+    
+    icmpv4_type = 6
+    match.set_icmpv4_type(icmpv4_type)
+    
+    icmpv4_code = 3
+    match.set_icmpv4_code(icmpv4_code)
+    
+    tunnel_id = 2591
+    match.set_tunnel_id(tunnel_id)
+    
+    in_port = 1
+    match.set_in_port(in_port)
+    
+    in_phy_port = 2
+    match.set_in_phy_port(in_phy_port)
+    
+    flow.add_match(match)
+    '''
+    ether_match = EthernetMatch()
+    etype = 34525
+    ether_match.set_ether_type(etype)
+    
+    flow.add_match(ether_match)
+    '''
+
+
+
+
+
     flow_json = flow.to_json()
     print "flow JSON"
     print flow_json
     
+    '''
     flow_payload = flow.get_payload()
     print "flow HTTP payload"
     print flow_payload
+    '''
  
     #------------------------------------------
-    
+    '''
     flow = FlowEntry()
 
     instruction_order = "1"
@@ -727,6 +1446,7 @@ if __name__ == "__main__":
     flow_payload = flow.get_payload()
     print "flow HTTP payload"
     print flow_payload
+    '''
     
 ''' Tmp code - END'''
     
