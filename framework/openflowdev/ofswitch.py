@@ -1525,7 +1525,23 @@ class Match(object):
             self.ethernet_match = EthernetMatch()
         self.ethernet_match.set_dst(eth_dst )       
 #        self.ethernet_match.set_dst(eth_dst)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_vlan_id(self, vlan_id):
+        if(self.vlan_match == None):
+            self.vlan_match = VlanMatch()
+        self.vlan_match.set_vid(vlan_id)
 
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_vlan_pcp(self, vlan_pcp):
+        if(self.vlan_match == None):
+            self.vlan_match = VlanMatch()
+        self.vlan_match.set_pcp(vlan_pcp)
+    
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
@@ -1585,26 +1601,26 @@ class Match(object):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def set_udp_src(self, udp_port):
-        self.udp_source_port = udp_port
+    def set_udp_src_port(self, udp_src_port):
+        self.udp_source_port = udp_src_port
 
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def set_udp_dst(self, udp_port):
-        self.udp_destination_port = udp_port
+    def set_udp_dst_port(self, udp_dst_port):
+        self.udp_destination_port = udp_dst_port
 
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def set_tcp_src(self, tcp_port):
-        self.tcp_source_port = tcp_port
+    def set_tcp_src_port(self, tcp_src_port):
+        self.tcp_source_port = tcp_src_port
 
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def set_tcp_dst(self, tcp_port):
-        self.tcp_destination_port = tcp_port        
+    def set_tcp_dst_port(self, tcp_dst_port):
+        self.tcp_destination_port = tcp_dst_port        
 
     #---------------------------------------------------------------------------
     # 
@@ -1669,26 +1685,45 @@ class Match(object):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def set_arp_src_transport_address(self, ip_addr):
-        self.arp_source_transport_address = ip_addr        
+    def set_arp_src_transport_address(self, arp_src_tp_addr):
+        self.arp_source_transport_address = arp_src_tp_addr       
     
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def set_arp_tgt_transport_address(self, ip_addr):
-        self.arp_target_transport_address = ip_addr
+    def set_arp_tgt_transport_address(self, arp_tgt_tp_addr):
+        self.arp_target_transport_address = arp_tgt_tp_addr
     
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def set_arp_src_hw_address(self, mac_addr):
-        self.arp_source_hardware_address.address = mac_addr
+    def set_arp_src_hw_address(self, arp_src_hw_addr):
+        if(self.arp_source_hardware_address == None):
+            self.arp_source_hardware_address = {}
+        self.arp_source_hardware_address['address'] = arp_src_hw_addr
     
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def set_arp_tgt_hw_address(self, mac_addr):
-        self.arp_target_hardware_address = mac_addr    
+    def set_arp_tgt_hw_address(self, arp_tgt_hw_addr):
+        if(self.arp_target_hardware_address == None):
+            self.arp_target_hardware_address = {}
+        self.arp_target_hardware_address['address'] = arp_tgt_hw_addr    
+        
+    def set_mpls_lable(self, mpls_label):
+        if(self.protocol_match_fields == None):
+            self.protocol_match_fields = ProtocolMatchFields()
+        self.protocol_match_fields.set_mpls_lable(mpls_label)
+    
+    def set_mpls_tc(self, mpls_tc):
+        if(self.protocol_match_fields == None):
+            self.protocol_match_fields = ProtocolMatchFields()
+        self.protocol_match_fields.set_mpls_tc(mpls_tc)
+    
+    def set_mpls_bos(self, mpls_bos):
+        if(self.protocol_match_fields == None):
+            self.protocol_match_fields = ProtocolMatchFields()
+        self.protocol_match_fields.set_mpls_bos(mpls_bos)
     
     #---------------------------------------------------------------------------
     # 
@@ -1748,17 +1783,19 @@ class VlanMatch(Match):
     #---------------------------------------------------------------------------
     def __init__(self):
         ''' VLAN-ID from 802.1Q header '''
-        self.vlan_id = VlanId()
+#        self.vlan_id = VlanId()
+        self.vlan_id = None
         
         ''' VLAN-PCP from 802.1Q header '''
-        self.vlan_pcp = ""
+        self.vlan_pcp = None
         
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def set_vid(self, vid):
-        self.vlan_id = vid
-        self.vlan_id_present = True
+        if(self.vlan_id == None):
+            self.vlan_id = VlanId()            
+        self.vlan_id.set_vid(vid)
     
     #---------------------------------------------------------------------------
     # 
@@ -1777,11 +1814,15 @@ class VlanId(VlanMatch):
     #---------------------------------------------------------------------------
     def __init__(self):
         ''' VLAN-ID from 802.1Q header '''
-        self.vlan_id = ""
+        self.vlan_id = None
         
         ''' Flag that indicates that 'vlan_id' value is set and matching is
             only for packets with VID equal to 'vlan_id' value '''
         self.vlan_id_present = False
+        
+    def set_vid(self, vid):
+        self.vlan_id = vid
+        self.vlan_id_present = True
 
 #-------------------------------------------------------------------------------
 # 
@@ -1889,16 +1930,26 @@ class ProtocolMatchFields(Match):
     #---------------------------------------------------------------------------
     def __init__(self):
         ''' The LABEL in the first MPLS shim header '''
-        self.mpls_label = ""
+        self.mpls_label = None
         
         ''' The TC in the first MPLS shim header '''
-        self.mpls_tc = ""
+        self.mpls_tc = None
         
         ''' The BoS bit (Bottom of Stack bit) in the first MPLS shim header '''
-        self.mpls_bos = ""
+        self.mpls_bos = None
         
         ''' The I-SID in the first PBB service instance tag '''
-        self.pbb = Pbb()
+#        self.pbb = Pbb()
+        self.pbb = None
+        
+    def set_mpls_lable(self, mpls_lable):
+        self.mpls_label = mpls_lable
+    def set_mpls_tc(self, mpls_tc):
+        self.mpls_tc = mpls_tc
+    def set_mpls_bos(self, mpls_bos):
+        self.mpls_bos = mpls_bos
+        
+    
 
 #-------------------------------------------------------------------------------
 # 
@@ -1910,8 +1961,15 @@ class Pbb(ProtocolMatchFields):
     # 
     #---------------------------------------------------------------------------
     def __init__(self):
-        self.pbb_isid = ""
-        self.pbb_mask = ""
+        self.pbb_isid = None
+        self.pbb_mask = None
+
+    def set_pbb_isid(self, pbb_isid):
+        self.pbb_isid = pbb_isid
+    def set_pbb_mask(self, pbb_mask):
+        self.pbb_mask = pbb_mask
+
+
 
 #-------------------------------------------------------------------------------
 # 
@@ -1964,54 +2022,401 @@ class Metadata(Match):
 if __name__ == "__main__":
     print "Start"
     
-    # -- Tunnel ID
+    # --- Tunnel ID
     flow = FlowEntry()
     flow_id = 29
     flow.set_flow_id(flow_id)
     flow.priority = 1020
 
     instruction_order = "1"
-    instruction = Instruction(instruction_order)
-    
+    instruction = Instruction(instruction_order)    
     action_order = "1"
-    action = DropAction(action_order)
-   
+    action = DropAction(action_order)   
     instruction.add_apply_action(action)
-
     flow.add_instruction(instruction)
 
     match = Match()
     tunnel_id = 2591
     match.set_tunnel_id(tunnel_id)
-
     flow.add_match(match)
 
-    #-- Ethernet Type and IP Dst Address
+    # --- Ethernet Type and IP Dst Address
     flow = FlowEntry()
     flow_id = 11
     flow.set_flow_id(flow_id)
     flow.priority = 1000
     
     instruction_order = "0"
-    instruction = Instruction(instruction_order)
-    
-    action_order = "1"
-    action = DropAction(action_order)
-   
+    instruction = Instruction(instruction_order)    
+    action_order = "0"
+    action = DropAction(action_order)   
     instruction.add_apply_action(action)
-
     flow.add_instruction(instruction)
 
     match = Match()
-
     eth_type = 2048
-    match.set_eth_type(eth_type)
-    
+    match.set_eth_type(eth_type)    
     ipv4_dst = "10.11.12.13/24"
     match.set_ipv4_dst(ipv4_dst)
     
     flow.add_match(match)
+    
+    # --- Ethernet Type and IP Src Address
+    flow = FlowEntry()
+    flow_id = 12
+    flow.set_flow_id(flow_id)
+    flow.priority = 1000
+    
+    instruction_order = "0"
+    instruction = Instruction(instruction_order)    
+    action_order = "0"
+    action = DropAction(action_order)    
+    instruction.add_apply_action(action)
+    flow.add_instruction(instruction)
+    
+    match = Match()
+    eth_type = 2048
+    match.set_eth_type(eth_type)     
+    ipv4_src = "10.11.12.13/24"
+    match.set_ipv4_src(ipv4_src)       
+    flow.add_match(match)
 
+    # --- Ethernet Src Address
+    flow = FlowEntry()
+    flow_id = 13
+    flow.set_flow_id(flow_id)
+    flow.priority = 1002
+
+    instruction_order = "0"
+    instruction = Instruction(instruction_order)
+    action_order = "0"
+    action = DropAction(action_order)
+    instruction.add_apply_action(action)
+    flow.add_instruction(instruction)
+
+    match = Match()    
+    eth_src = "00:11:22:33:44:56"
+    match.set_eth_src(eth_src)    
+    flow.add_match(match)
+    
+    # --- Ethernet Src & Dest Addresses, Ethernet Type    
+    flow = FlowEntry()
+    flow_id = 14
+    flow.set_flow_id(flow_id)
+    flow.priority = 1000
+    
+    instruction_order = "0"
+    instruction = Instruction(instruction_order)    
+    action_order = "0"
+    action = DropAction(action_order)   
+    instruction.add_apply_action(action)    
+    flow.add_instruction(instruction)
+
+    match = Match()
+    eth_type = 45
+    match.set_eth_type(eth_type)
+    eth_dst = "ff:ff:ff:ff:ff:ff"
+    match.set_eth_dst(eth_dst)
+    eth_src = "00:00:00:00:23:ae"
+    match.set_eth_src(eth_src)    
+    flow.add_match(match)
+    
+    #--- Ethernet Src & Dest Addresses, IPv4 Src & Dest Addresses, Input Port    
+    flow = FlowEntry()
+    flow_id = 15
+    flow.set_flow_id(flow_id)
+    flow.priority = 1005
+    
+    instruction_order = "0"
+    instruction = Instruction(instruction_order)    
+    action_order = "0"
+    action = DropAction(action_order)   
+    instruction.add_apply_action(action)    
+    flow.add_instruction(instruction)
+    
+    match = Match()
+    eth_type = 34887
+    match.set_eth_type(eth_type)
+    eth_dst = "ff:ff:ff:ff:ff:ff"
+    match.set_eth_dst(eth_dst)
+    eth_src = "00:00:00:11:23:af"
+    match.set_eth_src(eth_src)
+    
+    ipv4_src = "44.1.2.3/24"
+    match.set_ipv4_src(ipv4_src)
+    ipv4_dst = "55.4.5.6/16"
+    match.set_ipv4_dst(ipv4_dst)
+    in_port = 0
+    match.set_in_port(in_port)
+    flow.add_match(match)
+    
+    # --- Ethernet Src & Dest Addresses, IPv4 Src & Dest Addresses, 
+    #     IP Protocol Number, IP DSCP, IP ECN, Input Port
+    #     NOTE: ethernet type MUST be 2048 (0x800) 
+    flow = FlowEntry()
+    flow_id = 16
+    flow.set_flow_id(flow_id)
+    flow.priority = 1007
+
+    instruction_order = "0"
+    instruction = Instruction(instruction_order)
+    action_order = "0"
+    action = DropAction(action_order)
+    instruction.add_apply_action(action)
+    flow.add_instruction(instruction)
+
+    match = Match()    
+    eth_type = 2048
+    match.set_eth_type(eth_type)
+    eth_dst = "ff:ff:ff:ff:ff:aa"
+    match.set_eth_dst(eth_dst)
+    eth_src = "00:00:00:11:23:ae"
+    match.set_eth_src(eth_src)
+    ipv4_src = "77.77.77.77/20"
+    match.set_ipv4_src(ipv4_src)
+    ipv4_dst = "88.88.88.88/16"
+    match.set_ipv4_dst(ipv4_dst)
+    ip_proto = 56
+    match.set_ip_proto(ip_proto)
+    ip_dscp = 15
+    match.set_ip_dscp(ip_dscp)
+    ip_ecn = 1
+    match.set_ip_ecn(ip_ecn)    
+    in_port = 1
+    match.set_in_port(in_port)    
+    flow.add_match(match)
+
+    # --- Ethernet Src & Dest Addresses, IPv4 Src & Dest Addresses,
+    #     TCP Src & Dest Ports, IP DSCP, IP ECN, Input Port
+    #     NOTES: ethernet type MUST be 2048 (0x800)
+    #            IP Protocol Type MUST be 6
+    flow = FlowEntry()
+    flow_id = 17
+    flow.set_flow_id(flow_id)
+    flow.priority = 1008
+
+    instruction_order = "0"
+    instruction = Instruction(instruction_order)
+    action_order = "0"
+    action = DropAction(action_order)
+    instruction.add_apply_action(action)
+    flow.add_instruction(instruction)
+
+    match = Match()    
+    eth_type = 2048
+    match.set_eth_type(eth_type)
+    eth_dst = "ff:ff:29:01:19:61"
+    match.set_eth_dst(eth_dst)
+    eth_src = "00:00:00:11:23:ae"
+    match.set_eth_src(eth_src)
+    ipv4_src = "17.1.2.3/8"
+    match.set_ipv4_src(ipv4_src)
+    ipv4_dst = "172.168.5.6/16"
+    match.set_ipv4_dst(ipv4_dst)
+    ip_proto = 6
+    match.set_ip_proto(ip_proto)
+    ip_dscp = 2
+    match.set_ip_dscp(ip_dscp)
+    ip_ecn = 2
+    match.set_ip_ecn(ip_ecn)    
+    tcp_src_port = 25364
+    match.set_tcp_src_port(tcp_src_port)
+    tcp_dst_port = 8080
+    match.set_tcp_dst_port(tcp_dst_port)
+    in_port = 0
+    match.set_in_port(in_port)    
+    flow.add_match(match)
+    
+    # --- Ethernet Src & Dest Addresses, IPv4 Src & Dest Addresses,
+    #     UDP Src & Dest Ports, IP DSCP, IP ECN, Input Port
+    flow = FlowEntry()
+    flow_id = 18
+    flow.set_flow_id(flow_id)
+    flow.priority = 1009
+    
+    instruction_order = "0"
+    instruction = Instruction(instruction_order)
+    action_order = "0"
+    action = DropAction(action_order)
+    instruction.add_apply_action(action)
+    flow.add_instruction(instruction)
+
+    match = Match()    
+    eth_type = 2048
+    match.set_eth_type(eth_type)
+    eth_dst = "20:14:29:01:19:61"
+    match.set_eth_dst(eth_dst)
+    eth_src = "00:00:00:11:23:ae"
+    match.set_eth_src(eth_src)
+    ipv4_src = "19.1.2.3/10"
+    match.set_ipv4_src(ipv4_src)
+    ipv4_dst = "172.168.5.6/18"
+    match.set_ipv4_dst(ipv4_dst)
+    ip_proto = 17
+    match.set_ip_proto(ip_proto)
+    ip_dscp = 8
+    match.set_ip_dscp(ip_dscp)
+    ip_ecn = 3
+    match.set_ip_ecn(ip_ecn)    
+    udp_src_port = 25364
+    match.set_udp_src_port(udp_src_port)
+    udp_dst_port = 8080
+    match.set_udp_dst_port(udp_dst_port)
+    in_port = 3
+    match.set_in_port(in_port)    
+    flow.add_match(match)
+    
+    # --- Ethernet Src & Dest Addresses, IPv4 Src & Dest Addresses,
+    #     ICMPv4 Type & Code, IP DSCP, IP ECN, Input Port
+    #     NOTES: ethernet type MUST be 2048 (0x800)
+    #            IP Protocol Type MUST be 1
+    flow = FlowEntry()
+    flow_id = 19
+    flow.set_flow_id(flow_id)
+    flow.priority = 1010
+    
+    instruction_order = "0"
+    instruction = Instruction(instruction_order)
+    action_order = "0"
+    action = DropAction(action_order)
+    instruction.add_apply_action(action)
+    flow.add_instruction(instruction)
+
+    match = Match()    
+    eth_type = 2048
+    match.set_eth_type(eth_type)
+    eth_dst = "ff:ff:29:01:19:61"
+    match.set_eth_dst(eth_dst)
+    eth_src = "00:00:00:11:23:ae"
+    match.set_eth_src(eth_src)
+    ipv4_src = "17.1.2.3/8", 
+    match.set_ipv4_src(ipv4_src)
+    ipv4_dst = "172.168.5.6/16"
+    match.set_ipv4_dst(ipv4_dst)
+    ip_proto = 1
+    match.set_ip_proto(ip_proto)
+    ip_dscp = 27
+    match.set_ip_dscp(ip_dscp)
+    ip_ecn = 3
+    match.set_ip_ecn(ip_ecn)    
+    icmpv4_type = 6
+    match.set_icmpv4_type(icmpv4_type)
+    icmpv4_code = 3
+    match.set_icmpv4_code(icmpv4_code)
+    match.set_in_port(in_port)
+    in_port = 10
+    flow.add_match(match)
+
+
+    # --- Ethernet Src & Dest Addresses, ARP Operation,
+    #     ARP Src & Target Transport Addresses, ARP Src & Target Hw Addresses
+    #     NOTE: ethernet-type MUST be 2054 (0x806)
+    flow = FlowEntry()
+    flow_id = 20
+    flow.set_flow_id(flow_id)
+    flow.priority = 1011
+    
+    instruction_order = "0"
+    instruction = Instruction(instruction_order)
+    action_order = "0"
+    action = DropAction(action_order)
+    instruction.add_apply_action(action)
+    flow.add_instruction(instruction)
+
+    match = Match()    
+    eth_type = 2054
+    match.set_eth_type(eth_type)
+    eth_dst = "ff:ff:ff:ff:FF:ff"
+    match.set_eth_dst(eth_dst)
+    eth_src = "00:00:fc:01:23:ae"
+    match.set_eth_src(eth_src)
+    arp_opcode = 1
+    match.set_arp_opcode(arp_opcode)
+    arp_src_tp_addr = "192.168.4.1"
+    match.set_arp_src_transport_address(arp_src_tp_addr)
+    arp_tgt_tp_addr = "10.21.22.23"
+    match.set_arp_tgt_transport_address(arp_tgt_tp_addr)
+    arp_src_hw_addr = "12:34:56:78:98:ab"
+    match.set_arp_src_hw_address(arp_src_hw_addr)
+    arp_tgt_hw_addr = "fe:dc:ba:98:76:54"
+    match.set_arp_tgt_hw_address(arp_tgt_hw_addr)
+    flow.add_match(match)
+
+    # --- Ethernet Src & Dest Addresses, Ethernet Type, VLAN ID, VLAN PCP
+    flow = FlowEntry()
+    flow_id = 21
+    flow.set_flow_id(flow_id)
+    flow.priority = 1012
+    
+    instruction_order = "0"
+    instruction = Instruction(instruction_order)    
+    action_order = "0"
+    action = DropAction(action_order)   
+    instruction.add_apply_action(action)
+    flow.add_instruction(instruction)
+
+    match = Match()
+    eth_type = 2048
+    match.set_eth_type(eth_type)    
+    eth_dst = "ff:ff:29:01:19:61"
+    match.set_eth_dst(eth_dst)
+    eth_src = "00:00:00:11:23:ae"
+    match.set_eth_src(eth_src)    
+    vlan_id = 78
+    match.set_vlan_id(vlan_id)
+    vlan_pcp = 3
+    match.set_vlan_pcp(vlan_pcp)
+    flow.add_match(match)
+
+    # --- Ethernet Src & Dest Addresses, MPLS Label, MPLS TC, MPLS BoS
+    flow = FlowEntry()
+    flow_id = 22
+    flow.set_flow_id(flow_id)
+    flow.priority = 1013
+
+    instruction_order = "1"
+    instruction = Instruction(instruction_order)    
+    action_order = "1"
+    action = DropAction(action_order)   
+    instruction.add_apply_action(action)
+    flow.add_instruction(instruction)
+
+    match = Match()
+    eth_type = 34887
+    match.set_eth_type(eth_type)
+    eth_dst = "ff:ff:29:01:19:61"
+    match.set_eth_dst(eth_dst)
+    eth_src = "00:00:00:11:23:ae"
+    match.set_eth_src(eth_src)
+
+    mpls_label = 567
+    match.set_mpls_lable(mpls_label)
+    mpls_tc = 3
+    match.set_mpls_tc(mpls_tc)
+    mpls_bos = 1
+    match.set_mpls_bos(mpls_bos)
+    flow.add_match(match)
+
+    # --- IPv6 Src & Dest Addresses
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   
     '''
     flow_id = 39
     flow.set_flow_id(flow_id)
