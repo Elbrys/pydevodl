@@ -12,8 +12,7 @@ from framework.common.utils import replace_str_value_in_dict
 from framework.common.utils import find_key_value_in_dict
 from framework.common.utils import find_dict_in_list
 from framework.common.utils import remove_empty_from_dict
-
-
+from framework.common.utils import remove_unset_values_from_nested_dict
     
 #-------------------------------------------------------------------------------
 # 
@@ -569,18 +568,22 @@ class FlowEntry(object):
     # 
     #---------------------------------------------------------------------------
     def __init__(self):
+        ''' Flow identifier in ODL inventory '''
+        self.id = None
+        
         ''' Opaque Controller-issued identifier '''
-        self.cookie = 0
+        self.cookie = None
         
         ''' Mask used to restrict the cookie bits that must match when the command is
             OFPFC_MODIFY* or OFPFC_DELETE*. A value of 0 indicates no restriction '''
-        self.cookie_mask = 0  
+        self.cookie_mask = None  
           
         ''' ID of the table to put the flow in '''
-        self.table_id = ""
+#        self.table_id = None
+        self.table_id = 0
         
         ''' Priority level of flow entry '''
-        self.priority = 0
+        self.priority = None
         
         ''' Idle time before discarding (seconds) '''
         self.idle_timeout = 0
@@ -594,20 +597,20 @@ class FlowEntry(object):
         
         ''' For OFPFC_DELETE* commands, require matching entries to include this as an
             output port. A value of OFPP_ANY indicates no restriction. '''
-        self.out_port = ""
+        self.out_port = None
         
         ''' For OFPFC_DELETE* commands, require matching entries to include this as an
             output group. A value of OFPG_ANY indicates no restriction '''
-        self.out_group = ""
+        self.out_group = None
         
         ''' Bitmap of OFPFF_* flags '''
-        self.flags = ""
+        self.flags = None
         
         ''' This FlowEntry name in the FlowTable (internal Controller's inventory attribute) '''
-        self.flow_name = ""
+        self.flow_name = None
         
         ''' This FlowEntry identifier in the FlowTable (internal Controller's inventory attribute) '''    
-        self.id = ""
+        self.id = None
         
         ''' ??? (internal Controller's inventory attribute) '''
         self.installHw = False
@@ -620,16 +623,16 @@ class FlowEntry(object):
             Upon receipt, the switch must finish processing all previously-received messages, including
             sending corresponding reply or error messages, before executing any messages beyond the
             Barrier Request. '''
-        self.barrier=False
+        self.barrier=None
         
         ''' Buffered packet to apply to, or OFP_NO_BUFFER. Not meaningful for OFPFC_DELETE* '''
-        self.buffer_id = ""
+        self.buffer_id = None
         
         '''  Flow match fields '''
-        self.match = {}
+        self.match = None
 
         ''' Instructions to be executed when a flow matches this entry flow match fields '''
-        self.instructions = {}
+        self.instructions = None
     
     #---------------------------------------------------------------------------
     # 
@@ -642,121 +645,29 @@ class FlowEntry(object):
     # 
     #---------------------------------------------------------------------------
     def get_payload(self):
-        s = self.to_json()
-        
-        s = string.replace(s, 'buffer_id', 'buffer-id')
-        s = string.replace(s, 'flow_name', 'flow-name')
-        s = string.replace(s, 'idle_timeout', 'idle-timeout')
-        s = string.replace(s, 'hard_timeout', "hard-timeout")
-        
-        s = string.replace(s, 'apply_actions', 'apply-actions')
-        
-        s = string.replace(s, 'output_action', 'output-action')
-        s = string.replace(s, 'set_queue_action', 'set-queue-action')
-        s = string.replace(s, 'drop_action', 'drop-action')
-        s = string.replace(s, 'group_action', 'group-action')
-        
-        s = string.replace(s, 'set_vlan_id_action', 'set-vlan-id-action')
-        s = string.replace(s, 'set_vlan_pcp_action', 'set-vlan-pcp-action')
-        s = string.replace(s, 'set_vlan_cfi_action', 'set-vlan-cfi-action')
-        s = string.replace(s, 'strip_vlan_action', 'strip-vlan-action')
-        s = string.replace(s, 'set_dl_src_action', 'set-dl-src-action')
-        s = string.replace(s, 'set_dl_dst_action', 'set-dl-dst-action')
-        s = string.replace(s, 'set_nw_src_action', 'set-nw-src-action')
-        s = string.replace(s, 'set_nw_dst_action', 'set-nw-dst-action')
-        s = string.replace(s, 'set_tp_src_action', 'set-tp-src-action')
-        s = string.replace(s, 'set_tp_dst_action', 'set-tp-dst-action')
-        
-        s = string.replace(s, 'push_vlan_action', 'push-vlan-action')
-        s = string.replace(s, 'pop_vlan_action', 'pop-vlan-action')
-        s = string.replace(s, 'push_mpls_action', 'push-mpls-action')
-        s = string.replace(s, 'pop_mpls_action', 'pop-mpls-action')
-        s = string.replace(s, 'push_pbb_action', 'push-pbb-action')
-        s = string.replace(s, 'pop_pbb_action', 'pop-pbb-action')
-        s = string.replace(s, 'set_mpls_ttl_action', 'set-mpls-ttl-action')
-        s = string.replace(s, 'dec_mpls_ttl', 'dec-mpls-ttl')
-        s = string.replace(s, 'set_nw_ttl_action', 'set-nw-ttl-action')
-        s = string.replace(s, 'dec_nw_ttl', 'dec-nw-ttl')
-        s = string.replace(s, 'copy_ttl_out', 'copy-ttl-out')
-        s = string.replace(s, 'copy_ttl_in', 'copy-ttl-in')
-
-        s = string.replace(s, 'set_field', 'set-field')
-        
-        s = string.replace(s, 'flood_action', 'flood-action')
-        s = string.replace(s, 'flood_all_action', 'flood-all-action')
-        s = string.replace(s, 'hw_path_action', 'hw-path-action')
-        s = string.replace(s, 'sw_path_action', 'sw-path-action')
-        s = string.replace(s, 'loopback_action', 'loopback-action')
-        
-        s = string.replace(s, 'in_port', 'in-port')
-        s = string.replace(s, 'in_phy_port', 'in-phy-port')
-        
-        s = string.replace(s, 'ethernet_match', 'ethernet-match')
-        s = string.replace(s, 'ethernet_destination', 'ethernet-destination')
-        s = string.replace(s, 'ethernet_source', 'ethernet-source')
-        s = string.replace(s, 'ethernet_type', 'ethernet-type')
-        
-        s = string.replace(s, 'ip_match', 'ip-match')
-        s = string.replace(s, 'ip_dscp', 'ip-dscp')
-        s = string.replace(s, 'ip_ecn', 'ip-ecn')
-        s = string.replace(s, 'ip_proto', 'ip-proto')
-
-        s = string.replace(s, 'ipv4_source', 'ipv4-source')
-        s = string.replace(s, 'ipv4_destination', 'ipv4-destination')
-        s = string.replace(s, 'ipv6_source', 'ipv6-source')
-        s = string.replace(s, 'ipv6_destination', 'ipv6-destination')
-        s = string.replace(s, 'ipv6_nd_target', 'ipv6-nd-target')
-        s = string.replace(s, 'ipv6_nd_sll', 'ipv6-nd-sll')
-        s = string.replace(s, 'ipv6_nd_tll', 'ipv6-nd-tll')
-        s = string.replace(s, 'ipv6_label', 'ipv6-label')
-
-        s = string.replace(s, 'ipv6_ext_header', 'ipv6-ext-header')
-        s = string.replace(s, 'ipv6_exthdr', 'ipv6-exthdr')
-        s = string.replace(s, 'ipv6_exthdr_mask', 'ipv6-exthdr-mask')
-  
-        s = string.replace(s, 'protocol_match_fields', 'protocol-match-fields')
-        s = string.replace(s, 'mpls_label', 'mpls-label')
-        s = string.replace(s, 'mpls_tc', 'mpls-tc')
-        s = string.replace(s, 'mpls_bos', 'mpls-bos')
-        s = string.replace(s, 'pbb_isid', 'pbb-isid')
-        s = string.replace(s, 'pbb_mask', 'pbb-mask')
- 
-        s = string.replace(s, 'udp_source_port', 'udp-source-port')
-        s = string.replace(s, 'udp_destination_port', 'udp-destination-port')
-        s = string.replace(s, 'tcp_source_port', 'tcp-source-port')
-        s = string.replace(s, 'tcp_destination_port', 'tcp-destination-port')
-        s = string.replace(s, 'sctp_source_port', 'sctp-source-port')
-        s = string.replace(s, 'sctp_destination_port', 'sctp-destination-port')
-
-        s = string.replace(s, 'icmpv4_type', 'icmpv4-type')
-        s = string.replace(s, 'icmpv4_code', 'icmpv4-code')
-        s = string.replace(s, 'icmpv6_type', 'icmpv6-type')
-        s = string.replace(s, 'icmpv6_code', 'icmpv6-code')
-       
-        s = string.replace(s, 'vlan_match', 'vlan-match')
-        s = string.replace(s, 'vlan_id', 'vlan-id')
-        s = string.replace(s, 'vlan_id_present', 'vlan-id-present')
-        s = string.replace(s, 'vlan_pcp', 'vlan-pcp')
-
-        s = string.replace(s, 'arp_op', 'arp-op')
-        s = string.replace(s, 'arp_source_transport_address', 'arp-source-transport-address')
-        s = string.replace(s, 'arp_target_transport_address', 'arp-target-transport-address')
-        s = string.replace(s, 'arp_source_hardware_address', 'arp-source-hardware-address')
-        s = string.replace(s, 'arp_target_hardware_address', 'arp-target-hardware-address')
-        
-        s = string.replace(s, 'tunnel_id', 'tunnel-id')
-
-        s = string.replace(s, 'metadata_mask', 'metadata-mask')
-        
+        s = self.to_json()        
+        s = string.replace(s, '_', '-')
+        # Following are exceptions from the common ODL rules for having all
+        # multipart keywords in YANG modules being hash separated
+        s = string.replace(s, 'table-id', 'table_id')
         d1 = json.loads(s)
-        d2 = remove_empty_from_dict(d1)
+        d2 = remove_unset_values_from_nested_dict(d1)
+#        d2 = d1
         payload = {self._mn : d2}
         return json.dumps(payload, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+ 
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_flow_id(self, flow_id):
+        self.id = flow_id
     
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def add_instruction(self, instruction):
+        if(self.instructions == None):
+            self.instructions = {}
         self.instructions.update({'instruction':instruction})
 
     #---------------------------------------------------------------------------
@@ -764,15 +675,9 @@ class FlowEntry(object):
     #---------------------------------------------------------------------------
     def add_match(self, match):
         print type(match)
+        if(self.match == None):
+            self.match = {}
         self.match.update(match.__dict__)
-#        self.match.update(match)
-        '''
-        key = match.get_key()
-        if (key != None):
-            self.match.update({key:match})
-        else:
-            self.match.update({match})
-        '''
 
 #-------------------------------------------------------------------------------
 # 
@@ -1383,8 +1288,6 @@ class SetFieldAction(Action):
     def __init__(self, order=0):
         super(SetFieldAction, self).__init__(order)
         self.set_field = {'vlan-match': None}
-        
-        
         self.vlan_match = VlanMatch()
 #        self.protocol_match_fields = ProtocolMatchFields()
     
@@ -1469,23 +1372,24 @@ class Match(object):
     def __init__(self):
         ''' Ingress port. Numerical representation of in-coming port, starting at 1
             (may be a physical or switch-defined logical port) '''
-        self.in_port = ""
+        self.in_port = None
         
         ''' Physical port (in 'ofp_packet_in messages', underlying physical port when
             packet received on a logical port) '''
-        self.in_phy_port = ""
+        self.in_phy_port = None
         
         ''' Ethernet match fields: 
             - ethernet destination MAC address
             - ethernet source MAC address
             - ethernet type of the OpenFlow packet payload (after VLAN tags) '''
-        self.ethernet_match = EthernetMatch()
+#        self.ethernet_match = EthernetMatch()
+        self.ethernet_match = None
         
         ''' IPv4 source address (can use subnet mask) '''
-        self.ipv4_source = ""
+        self.ipv4_source = None
         
         ''' IPv4 destination address (can use subnet mask) '''
-        self.ipv4_destination = ""
+        self.ipv4_destination = None
         
         ''' IP match fields:
             - Differentiated Service Code Point (DSCP). Part of the IPv4 ToS field or
@@ -1493,112 +1397,133 @@ class Match(object):
             - ECN bits of the IP header. Part of the IPv4 ToS field or
               the IPv6 Traffic Class field 
             - IPv4 or IPv6 protocol number '''
-        self.ip_match = IpMatch()
+#        self.ip_match = IpMatch()
+        self.ip_match = None
         
         ''' IPv6 source address (can use subnet mask) '''
-        self.ipv6_source = ""
+        self.ipv6_source = None
         
         ''' IPv6 destination address (can use subnet mask) '''
-        self.ipv6_destination = ""
+        self.ipv6_destination = None
         
         ''' The target address in an IPv6 Neighbor Discovery message '''
-        self.ipv6_nd_target = ""
+        self.ipv6_nd_target = None
         
         ''' The source link-layer address option in an IPv6 Neighbor Discovery message '''
-        self.ipv6_nd_sll = ""
+        self.ipv6_nd_sll = None
         
         ''' The target link-layer address option in an IPv6 Neighbor Discovery message '''
-        self.ipv6_nd_tll = ""
+        self.ipv6_nd_tll = None
         
         ''' IPv6 flow label '''
-        self.ipv6_label = Ipv6Label()
+#        self.ipv6_label = Ipv6Label()
+        self.ipv6_label = None
         
         ''' IPv6 Extension Header pseudo-field '''
-        self.ipv6_ext_header = Ipv6ExtHdr()
+#        self.ipv6_ext_header = Ipv6ExtHdr()
+        self.ipv6_ext_header = None
         
         ''' Protocol match fields:
            - The LABEL in the first MPLS shim header
            - The TC in the first MPLS shim header
            - The BoS bit (Bottom of Stack bit) in the first MPLS shim header
            - The I-SID in the first PBB service instance tag '''
-        self.protocol_match_fields = ProtocolMatchFields()
+#        self.protocol_match_fields = ProtocolMatchFields()
+        self.protocol_match_fields = None
         
         ''' UDP source port '''
-        self.udp_source_port = ""
+        self.udp_source_port = None
         
         ''' UDP destination port '''
-        self.udp_destination_port = ""
+        self.udp_destination_port = None
         
         ''' TCP source port '''
-        self.tcp_source_port = ""
+        self.tcp_source_port = None
         
         ''' TCP destination port '''
-        self.tcp_destination_port = ""
+        self.tcp_destination_port = None
         
         ''' SCTP source port '''
-        self.sctp_source_port = ""
+        self.sctp_source_port = None
         
         ''' SCTP destination port '''
-        self.sctp_destination_port = ""
+        self.sctp_destination_port = None
         
+        ''' ICMPv4 match fields:
+            - ICMP type 
+            - ICMP code '''
+        self.icmpv4_match = None
         ''' ICMP type '''
-        self.icmpv4_type = ""
+#        self.icmpv4_type = None
         
         ''' ICMP code'''
-        self.icmpv4_code = ""
+#        self.icmpv4_code = None
+        
+        
         
         ''' ICMPv6 type '''
-        self.icmpv6_type = ""
+        self.icmpv6_type = None
         
         ''' ICMPv6 code '''
-        self.icmpv6_code = ""        
+        self.icmpv6_code = None        
         
         ''' VLAN match fields:
             - VLAN-ID from 802.1Q header (the CFI bit indicate the presence of a valid VLAN-ID)
             - VLAN-PCP from 802.1Q header
         '''
-        self.vlan_match = VlanMatch()
+#        self.vlan_match = VlanMatch()
+        self.vlan_match = None
                 
         ''' ARP opcode '''
-        self.arp_op = ""
+        self.arp_op = None
         
         ''' Source IPv4 address in the ARP payload (can use subnet mask) '''
-        self.arp_source_transport_address = ""
+        self.arp_source_transport_address = None
         
         ''' Target IPv4 address in the ARP payload (can use subnet mask) '''
-        self.arp_target_transport_address = ""
+        self.arp_target_transport_address = None
         
         ''' Source Ethernet address in the ARP payload '''
-        self.arp_source_hardware_address = ArpSrcHwAddrMatch()
+#        self.arp_source_hardware_address = ArpSrcHwAddrMatch()
+        self.arp_source_hardware_address = None
         
         ''' Target Ethernet address in the ARP payload '''
-        self.arp_target_hardware_address = ArpTgtHwAddrMatch()
+#        self.arp_target_hardware_address = ArpTgtHwAddrMatch()
+        self.arp_target_hardware_address = None
         
         ''' Metadata associated with a logical port '''
-        self.tunnel = Tunnel()
+#        self.tunnel = Tunnel()
+        self.tunnel = None
 
         ''' Table metadata (used to pass information between tables) '''
-        self.metadata = Metadata()
+#        self.metadata = Metadata()
+        self.metadata = None
     
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def set_eth_type(self, eth_type):
-        self.ethernet_match.ethernet_type = eth_type
+        if(self.ethernet_match == None):
+            self.ethernet_match = EthernetMatch()
+        self.ethernet_match.set_type(eth_type)
 #        self.ethernet_match.set_type(eth_type)
 
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def set_eth_src(self, eth_src):
-        self.ethernet_match.ethernet_source = eth_src
+        if(self.ethernet_match == None):
+            self.ethernet_match = EthernetMatch()
+        self.ethernet_match.set_src(eth_src)
 #        self.ethernet_match.set_src(eth_src)
 
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def set_eth_dst(self, eth_dst):
-        self.ethernet_match.ethernet_destination = eth_dst        
+        if(self.ethernet_match == None):
+            self.ethernet_match = EthernetMatch()
+        self.ethernet_match.set_dst(eth_dst )       
 #        self.ethernet_match.set_dst(eth_dst)
 
     #---------------------------------------------------------------------------
@@ -1629,18 +1554,24 @@ class Match(object):
     # 
     #---------------------------------------------------------------------------
     def set_ip_dscp(self, ip_dscp):
+        if(self.ip_match == None):
+            self.ip_match = IpMatch()
         self.ip_match.ip_dscp = ip_dscp
 
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def set_ip_ecn(self, ip_ecn):
+        if(self.ip_match == None):
+            self.ip_match = IpMatch()
         self.ip_match.ip_ecn = ip_ecn
 
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def set_ip_proto(self, ip_proto):
+        if(self.ip_match == None):
+            self.ip_match = IpMatch()
         self.ip_match.ip_protocol = ip_proto
 
     #---------------------------------------------------------------------------
@@ -1691,13 +1622,19 @@ class Match(object):
     # 
     #---------------------------------------------------------------------------
     def set_icmpv4_type(self, icmpv4_type):
-        self.icmpv4_type = icmpv4_type
+        if(self.icmpv4_match == None):
+            self.icmpv4_match = IcmpMatch()
+        self.icmpv4_match.set_type(icmpv4_type)
+#        self.icmpv4_type = icmpv4_type
 
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def set_icmpv4_code(self, icmpv4_code):
-        self.icmpv4_code = icmpv4_code        
+        if(self.icmpv4_match == None):
+            self.icmpv4_match = IcmpMatch()
+        self.icmpv4_match.set_code(icmpv4_code)
+#        self.icmpv4_code = icmpv4_code        
     
     #---------------------------------------------------------------------------
     # 
@@ -1757,6 +1694,8 @@ class Match(object):
     # 
     #---------------------------------------------------------------------------
     def set_tunnel_id(self, tunnel_id):
+        if(self.tunnel == None):
+            self.tunnel = Tunnel()
         self.tunnel.tunnel_id = tunnel_id
     
 #    def __getattr__(self, attr):
@@ -1771,27 +1710,33 @@ class EthernetMatch(Match):
     # 
     #---------------------------------------------------------------------------
     def __init__(self):
-        self.ethernet_type = ""
-        self.ethernet_source = ""
-        self.ethernet_destination = ""
+        self.ethernet_type = None
+        self.ethernet_source = None
+        self.ethernet_destination = None
     
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def set_type(self, ether_type):
-        self.ethernet_type = ether_type
+        if(self.ethernet_type == None):
+            self.ethernet_type = {}
+        self.ethernet_type['type'] = ether_type
         
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def set_src(self, ether_src):
-        self.ethernet_source = ether_src
+        if(self.ethernet_source == None):
+            self.ethernet_source = {}
+        self.ethernet_source['address'] = ether_src
     
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def set_dst(self, ether_dst):
-        self.ethernet_destination = ether_dst
+        if(self.ethernet_destination == None):
+            self.ethernet_destination = {}
+        self.ethernet_destination['address'] = ether_dst
     
 #-------------------------------------------------------------------------------
 # 
@@ -1841,6 +1786,33 @@ class VlanId(VlanMatch):
 #-------------------------------------------------------------------------------
 # 
 #-------------------------------------------------------------------------------
+class IcmpMatch(Match):
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init__(self):
+        ''' ICMP type '''
+        self.icmpv4_type = None
+        
+        ''' ICMP code '''
+        self.icmpv4_code = None
+
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_type(self, icmp_type):
+        self.icmpv4_type = icmp_type
+        
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_code(self, icmp_code):
+        self.icmpv4_code = icmp_code
+
+#-------------------------------------------------------------------------------
+# 
+#-------------------------------------------------------------------------------
 class IpMatch(Match):
     
     #---------------------------------------------------------------------------
@@ -1849,13 +1821,13 @@ class IpMatch(Match):
     def __init__(self):
 #        self.ip_protocol = ""
         ''' "IP DSCP (6 bits in ToS field) '''
-        self.ip_dscp = ""
+        self.ip_dscp = None
         
         ''' IP ECN (2 bits in ToS field) '''
-        self.ip_ecn = ""
+        self.ip_ecn = None
         
         ''' IP protocol (IPv4 or IPv6 Protocol Number)'''
-        self.ip_proto = ""
+        self.ip_proto = None
 
 #-------------------------------------------------------------------------------
 # 
@@ -1992,6 +1964,30 @@ class Metadata(Match):
 if __name__ == "__main__":
     print "Start"
     flow = FlowEntry()
+    flow_id = 29
+    flow.set_flow_id(flow_id)
+
+    flow.priority = 1020
+
+    instruction_order = "1"
+    instruction = Instruction(instruction_order)
+    
+    action_order = "1"
+    action = DropAction(action_order)
+   
+    instruction.add_apply_action(action)
+
+    flow.add_instruction(instruction)
+
+    match = Match()
+    tunnel_id = 2591
+    match.set_tunnel_id(tunnel_id)
+
+    flow.add_match(match)
+
+    '''
+    flow_id = 39
+    flow.set_flow_id(flow_id)
     
     instruction_order = "1"
     instruction = Instruction(instruction_order)
@@ -2058,10 +2054,13 @@ if __name__ == "__main__":
     match.set_in_phy_port(in_phy_port)
     
     flow.add_match(match)
-
+    '''
+    
+    '''
     flow_json = flow.to_json()
     print "flow JSON"
     print flow_json
+    '''
     
     flow_payload = flow.get_payload()
     print "flow HTTP payload"

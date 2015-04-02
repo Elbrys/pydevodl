@@ -8,14 +8,95 @@ import time
 import string
 import yaml
 
+debug_count = 0
 
 def remove_empty_from_dict(d):
     if type(d) is dict:
         return dict((k, remove_empty_from_dict(v)) for k, v in d.iteritems() if v and remove_empty_from_dict(v))
+#        return dict((k, v) for k, v in d.iteritems() if v and remove_empty_from_dict(v))
     elif type(d) is list:
         return [remove_empty_from_dict(v) for v in d if v and remove_empty_from_dict(v)]
+#        return [v for v in d if v and remove_empty_from_dict(v)]
     else:
         return d
+
+def remove_unset_values_from_nested_dict(d):
+    global debug_count
+    res = {}
+    debug_count +=1
+    print ("1) +++ count=%d, res=%s" % (debug_count, d))
+    for k, v in d.iteritems():
+        print ("2) +++ k=%s,v=%s" % (k,v))
+        if isinstance(v, dict):
+            r1 = remove_unset_values_from_nested_dict(v)
+            res[k] = r1
+        elif v != None:
+            res[k] = v
+    
+    return res
+    '''
+    print "<<<<<<<"
+    print  d
+    print ">>>>>>>"
+    if type(d) is dict:
+        res = {}
+        for k, v in d.iteritems():
+            print ("2) +++ k=%s, v=%s" % (k,v))
+            if (v != None):
+                res[k] = v
+            remove_unset_values_from_dict(k)                    
+        print ("3) +++ res=%s" % res)
+        return res
+    elif type(d) is list:
+        res = []
+        for v in d:
+            if (v != None):
+                res.append(v)
+                remove_unset_values_from_dict(v)
+        return res
+    else:
+        print ("4) +++ res=%s" % d)
+        return d
+    '''
+
+'''
+def remove_unset_values_from_dict(d):
+    print "///////////////////////////////"
+    print d
+    print "///////////////////////////////"
+    if type(d) is dict:
+        d1 = {}
+        for k, v in d.iteritems():
+#            print type(v)
+            print "ahhha!!!!" if v == None else False
+            print ("t=%s, k=%s, v=%s" % (type(v), k,v))
+#            print v
+            res = False
+            if v != None:
+                a1 = remove_empty_from_dict(v)
+                print "a1=%s" % a1
+                if a1 != None:
+                    res = True
+            print "res=%s" % res
+            if res:
+                print "++++++++++++++++"
+                print v
+                print "++++++++++++++++"
+#                d1[k] = remove_empty_from_dict(v)
+                d1[k] = v
+        return d1
+#                return dict((k, remove_empty_from_dict(v)))
+#        return dict((k, remove_empty_from_dict(v)) for k, v in d.iteritems() if v and remove_empty_from_dict(v))
+    elif type(d) is list:
+        print "IIIIIIIIIIIIIIIIIII"
+        return [remove_empty_from_dict(v) for v in d if v and remove_empty_from_dict(v)]
+    else:
+        print "<<<<<<<<<<<<<<<<<<<"
+        print d
+        print ">>>>>>>>>>>>>>>>>>>"
+        return d
+'''
+
 
 def load_dict_from_file(f, d):
     try:
@@ -51,8 +132,6 @@ def find_key_values_in_dict(d, key):
     
     return values
 
-
-
 def find_key_value_in_dict(d, key):
     """
     Searches a dictionary (with nested lists and dictionaries)
@@ -78,60 +157,24 @@ def find_dict_in_list(l, key):
     for i in l:
         if (type(i) is dict):
             for k, v in i.items():
-#                print "<<<<<<<<<<<<<<<"
-#                print k
-#                print key
-#                print ">>>>>>>>>>>>>>>"
                 if (k == key):
-#                    print "##############################"
                     return i
     
     return None
-    '''
-    try:
-        res = l.index(item)
-        print "+++"
-        print res
-    except ValueError:
-        print "---"
-        pass
-    '''
-    
-#    return res
-    '''
-    print "-------"
-    for i in l:
-        print i
-        print type(i)
-        print item
-        print type(item)
-        if (i == item):
-            return item
-    print "-------"
-        
-    return None
-    '''
-
-
-
 
 def replace_str_value_in_dict(d, old, new):
-#    print "! type=%s %s" % (type(d), d)
     if type(d) is dict:
         return dict((k, replace_str_value_in_dict(v, old, new)) for k, v in d.iteritems() if v and replace_str_value_in_dict(v, old, new))
     elif type(d) is list:
         return [replace_str_value_in_dict(v, old, new) for v in d if v and replace_str_value_in_dict(v, old, new)]
     elif type(d) is unicode:
-#        print "6.1 %s => %s ; %s" % (d, old, new)
         d = string.replace(d, unicode(old), unicode(new))
-#        print "6.2 %s => %s ; %s" % (d, old, new)
         return d        
     elif type(d) is str:
-#        print "777777777777"
         d = string.replace(d, old, new)
         return d
     else:
-        return d
+        return d    
 
 def progress_wait_secs(msg=None, waitTime=None, sym="."):
     if (waitTime != None):
@@ -145,3 +188,26 @@ def progress_wait_secs(msg=None, waitTime=None, sym="."):
             sys.stdout.flush() #<- makes python print it anyway
             time.sleep(1)
         sys.stdout.write ("\n")
+
+'''        
+def replace_underscores_with_dashes_in_dict(d):
+    d1 = {}
+    for k, v in d.iteritems():
+        print type(k)
+        if (type(k) is str):
+            print "1)******"
+            k1 = k.replace('_', '-')
+        else:
+            k1 = k
+        
+        print type(v)
+        if (type(v) is str):
+            print "1)******"
+            v1 = v.replace('_','-')
+        else:
+            v1 = v
+            
+        d1[k1] = v1
+
+    return d1
+'''
