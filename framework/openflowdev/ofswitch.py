@@ -1963,10 +1963,11 @@ class Metadata(Match):
 ''' Tmp code - START '''
 if __name__ == "__main__":
     print "Start"
+    
+    # -- Tunnel ID
     flow = FlowEntry()
     flow_id = 29
     flow.set_flow_id(flow_id)
-
     flow.priority = 1020
 
     instruction_order = "1"
@@ -1983,6 +1984,32 @@ if __name__ == "__main__":
     tunnel_id = 2591
     match.set_tunnel_id(tunnel_id)
 
+    flow.add_match(match)
+
+    #-- Ethernet Type and IP Dst Address
+    flow = FlowEntry()
+    flow_id = 11
+    flow.set_flow_id(flow_id)
+    flow.priority = 1000
+    
+    instruction_order = "0"
+    instruction = Instruction(instruction_order)
+    
+    action_order = "1"
+    action = DropAction(action_order)
+   
+    instruction.add_apply_action(action)
+
+    flow.add_instruction(instruction)
+
+    match = Match()
+
+    eth_type = 2048
+    match.set_eth_type(eth_type)
+    
+    ipv4_dst = "10.11.12.13/24"
+    match.set_ipv4_dst(ipv4_dst)
+    
     flow.add_match(match)
 
     '''
