@@ -44,16 +44,19 @@ if __name__ == "__main__":
     ofswitch = OFSwitch(ctrl, node)
 
     # OpenFlow flow match attributes
-    eth_type = 2048
-    ipv4_dst = "10.11.12.13/24"
-        
-    print ("<<< 'Controller': %s, 'OpenFlow' switch: %s" % (ctrlIpAddr, node))
+    eth_type = 45
+    eth_src = "00:00:00:00:23:ae"   
+    eth_dst = "ff:ff:ff:ff:ff:ff"
+            
+    print ("<<< 'Controller': %s, 'OpenFlow' switch: '%s'" % (ctrlIpAddr, node))
 
     print "\n"
     print ("<<< Set OpenFlow flow on the Controller")
     print ("        Match:  Ethernet Type (%s)\n"
-           "                IPv4 Destination Address (%s)" % (hex(eth_type), ipv4_dst))
+           "                Ethernet Source address (%s)\n"
+           "                Ethernet Destination address (%s)" % (hex(eth_type), eth_src, eth_dst))
     print ("        Action: Drop")
+
 
     time.sleep(rundelay)
     
@@ -61,21 +64,23 @@ if __name__ == "__main__":
     flow_entry = FlowEntry()
     table_id = 0
     flow_entry.set_flow_table_id(table_id)
-    flow_id = 11
+    flow_id = 14
     flow_entry.set_flow_id(flow_id)
     flow_entry.set_flow_priority(flow_priority = 1000)
     
     instruction = Instruction(instruction_order = 0)    
     action = DropAction(action_order = 0)   
-    instruction.add_apply_action(action)
+    instruction.add_apply_action(action)    
     flow_entry.add_instruction(instruction)
     
-    # --- Ethernet Type and IP Dst Address
+    # --- Ethernet Type, Ethernet Src & Dest Addresses   
     match = Match()
-    match.set_eth_type(eth_type)    
-    match.set_ipv4_dst(ipv4_dst)
+    match.set_eth_type(eth_type)
+    match.set_eth_src(eth_src)    
+    match.set_eth_dst(eth_dst)
     flow_entry.add_match(match)
-
+    
+    
     print ("\n")
     print ("<<< Flow to send:")
     print flow_entry.get_payload()

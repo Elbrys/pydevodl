@@ -40,22 +40,19 @@ if __name__ == "__main__":
     rundelay = 5
 
     ctrl = Controller(ctrlIpAddr, ctrlPortNum, ctrlUname, ctrlPswd)
-    ofswitch = "openflow:1"
-    ofswitch = OFSwitch(ctrl, ofswitch)
+    node = "openflow:1" # (name:DPID)
+    ofswitch = OFSwitch(ctrl, node)
 
-    # OpenFlow flow attributes
-    table_id = 0
-    flow_id = 12
-    flow_priority = 1000
+    # OpenFlow flow match attributes
     eth_type = 2048
     ipv4_src = "10.11.12.13/24"
         
             
-    print ("<<< 'Controller': %s, OpenFlow switch (name:DPID)'%s'" % (ctrlIpAddr, ofswitch))
+    print ("<<< 'Controller': %s, 'OpenFlow' switch: %s" % (ctrlIpAddr, node))
 
     print "\n"
-    print ("<<< Set OpenFlow flow on the Controler")
-    print ("        Match:  Ethernet Type (%s),\n"
+    print ("<<< Set OpenFlow flow on the Controller")
+    print ("        Match:  Ethernet Type (%s)\n"
            "                IPv4 Source Address (%s)" % (hex(eth_type), ipv4_src))
     print ("        Action: Drop")
 
@@ -63,14 +60,18 @@ if __name__ == "__main__":
     
     
     flow_entry = FlowEntry()
+    table_id = 0
+    flow_entry.set_flow_table_id(table_id)
+    flow_id = 12
     flow_entry.set_flow_id(flow_id)
-    flow_entry.set_flow_priority(flow_priority)
+    flow_entry.set_flow_priority(flow_priority = 1000)
     
     instruction = Instruction(instruction_order = 0)    
     action = DropAction(action_order = 0)    
     instruction.add_apply_action(action)
     flow_entry.add_instruction(instruction)
     
+    # --- Ethernet Type and IP Src Address
     match = Match()
     match.set_eth_type(eth_type)     
     match.set_ipv4_src(ipv4_src)       

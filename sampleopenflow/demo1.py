@@ -48,7 +48,6 @@ if __name__ == "__main__":
         exit(0)
     
     
-    
     print ("\n")
     result = ofswitch.get_features_info()
     status = result[0]
@@ -60,8 +59,6 @@ if __name__ == "__main__":
         print ("\n")
         print ("!!!Demo terminated, reason: %s" % status.brief().lower())
         exit(0)
-    
-    
 
     
     print ("\n")
@@ -118,18 +115,6 @@ if __name__ == "__main__":
         print ("\n")
         print ("!!!Demo terminated, reason: %s" % status.brief().lower())
         exit(0)
-        
-
-
-
-
-
-
-
-
-
-
-
 
     print ("\n")
     tableid = 0
@@ -143,9 +128,6 @@ if __name__ == "__main__":
         print ("\n")
         print ("!!!Demo terminated, reason: %s" % status.brief().lower())
         exit(0)
-
-
-
 
     print ("\n")
     tableid = 0
@@ -161,4 +143,4 @@ if __name__ == "__main__":
         print ("\n")
         print ("!!!Demo terminated, reason: %s" % status.brief().lower())
         exit(0)
-        
+
