@@ -1130,15 +1130,18 @@ class PushMplsHeaderAction(Action):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def __init__(self, order=0, ethernet_type=None):
-        super(PushMplsHeaderAction, self).__init__(order)
+    def __init__(self, action_order=0, ethernet_type=None):
+        super(PushMplsHeaderAction, self).__init__(action_order)
         self.push_mpls_action = {'ethernet-type': ethernet_type}
         
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def set_eth_type(self, ethernet_type):
-        self.push_mpls_action['ethernet-type'] = ethernet_type
+    def set_eth_type(self, eth_type):
+        self.push_mpls_action['ethernet-type'] = eth_type
+        
+#    def set_mpls_label(sels, mpls_lable):
+        
     
 #-------------------------------------------------------------------------------
 # TBD
@@ -1309,7 +1312,7 @@ class SetFieldAction(Action):
     #---------------------------------------------------------------------------
     def __init__(self, action_order=0):
         super(SetFieldAction, self).__init__(action_order)
-        self.set_field = {'vlan-match': None}
+        self.set_field = {'vlan-match': None, 'protocol-match-fields' :None}
         
     def set_vlan_id(self, vid):
         if(self.set_field['vlan-match'] == None):
@@ -1318,7 +1321,13 @@ class SetFieldAction(Action):
 #        vlan_match = VlanMatch()
 #        vlan_match.set_vid(vid)
 #        self.set_field['vlan-match'] = vlan_match.__dict__
-    
+
+
+    def set_mpls_label(self, mpls_label):
+        if(self.set_field['protocol-match-fields'] == None):
+            self.set_field['protocol-match-fields'] = ProtocolMatchFields()
+        self.set_field['protocol-match-fields'].set_mpls_lable(mpls_label)
+ 
 #-------------------------------------------------------------------------------
 # TBD
 #-------------------------------------------------------------------------------
@@ -2707,7 +2716,7 @@ if __name__ == "__main__":
     #      33024(0x8100) -> ethernet type = VLAN tagged frame
     #      34984(0x88A8) -> ethernet type = QINQ VLAN tagged frame    
     flow = FlowEntry()
-    flow.set_flow_name(flow_name = "vlan_flow")
+    flow.set_flow_name(flow_name = "push_vlan_flow")
     flow.set_flow_id(flow_id = 32)
     flow.set_flow_priority(priority = 1023)
     flow.set_flow_cookie(cookie = 401)
@@ -2738,87 +2747,66 @@ if __name__ == "__main__":
     flow.add_match(match)
    
    
+    # --- Push MPLS
+    # ??? Controller accepts the flow but no flow added on mininet simulated ofswitch
+    flow = FlowEntry()
+    flow.set_flow_name(flow_name = "push_mpls_flow")
+    flow.set_flow_id(flow_id = 33)
+    flow.set_flow_priority(priority = 1024)
+    flow.set_flow_cookie(cookie = 401)
+    flow.set_flow_cookie_mask(cookie_mask = 255)
    
-   
-   
-   
-   
-    '''
-    flow_id = 39
-    flow.set_flow_id(flow_id)
-    
-    instruction_order = "1"
+    instruction_order = 3
     instruction = Instruction(instruction_order)
 
-    action_order = "1"
-    action = DropAction(action_order)
+    action = PushMplsHeaderAction(action_order = 0)
+    action.set_eth_type(eth_type = 34887)
+    instruction.add_apply_action(action)    
     
+    action = SetFieldAction(action_order = 1)
+    action.set_mpls_label(mpls_label = 27)
+    instruction.add_apply_action(action)    
+
+    action = OutputAction(action_order = 2, port = 2)
     instruction.add_apply_action(action)
+    flow.add_instruction(instruction)
     
     flow.add_instruction(instruction)
+   
+    match = Match()    
+    match.set_eth_type(eth_type = 2048)
+    match.set_in_port(in_port = 1)
+    match.set_ipv4_dst(ipv4_dst = "10.0.0.4/32")
+    flow.add_match(match)
 
     
-    match = Match()
     
-    eth_type = 34525
-    match.set_eth_type(eth_type)
+    # --- Swap MPLS   
+   
+   
+    # --- Pop MPLS
     
-    eth_src = "00:00:00:11:23:ae"
-    match.set_eth_src(eth_src)
+    # --- Output to TABLE
     
-    eth_dst = "ff:ff:29:01:19:61"
-    match.set_eth_dst(eth_dst)
+    # --- Output to INPORT
     
-    ipv4_src = "17.1.2.3/8"
-    match.set_ipv4_src(ipv4_src)
+    # --- Output to Physical Port Number
     
-    ipv4_dst = "172.168.5.6/16"
-    match.set_ipv4_dst(ipv4_dst)
+    # --- Output to LOCAL
     
-    ipv6_src = "fe80::2acf:e9ff:fe21:6431/128"
-    match.set_ipv6_src(ipv6_src)
+    # --- Output to NORMAL
     
-    ipv6_dst = "aabb:1234:2acf:e9ff::fe21:6431/64"
-    match.set_ipv6_dst(ipv6_dst)
     
-    ip_dscp = 2
-    match.set_ip_dscp(ip_dscp)
+    # --- Output to FLOOD
     
-    ip_ecn = 2
-    match.set_ip_ecn(ip_ecn)
+    # --- Output to ALL
     
-    ip_proto = 6
-    match.set_ip_proto(ip_proto)
+    # --- Output to CONTROLLER
     
-    tcp_src = 25364
-    match.set_tcp_src(tcp_src)
+    # --- Output to ANY
     
-    tcp_dst = 8080
-    match.set_tcp_dst(tcp_dst)
     
-    icmpv4_type = 6
-    match.set_icmpv4_type(icmpv4_type)
     
-    icmpv4_code = 3
-    match.set_icmpv4_code(icmpv4_code)
-    
-    tunnel_id = 2591
-    match.set_tunnel_id(tunnel_id)
-    
-    in_port = 1
-    match.set_in_port(in_port)
-    
-    in_phy_port = 2
-    match.set_in_phy_port(in_phy_port)
-    
-    flow.add_match(match)
-    '''
-    
-    '''
-    flow_json = flow.to_json()
-    print "flow JSON"
-    print flow_json
-    '''
     
     flow_payload = flow.get_payload()
     print "flow HTTP payload"
