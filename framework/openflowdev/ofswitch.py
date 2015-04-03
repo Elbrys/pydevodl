@@ -30,14 +30,14 @@ class OFSwitch(OpenflowNode):
         super(OFSwitch, self).__init__(ctrl, name)
         self.dpid = dpid
         self.ports=[]
-
+    
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def to_string(self):
         """Returns string representation of this object."""
         return str(vars(self))
-
+    
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
@@ -96,8 +96,7 @@ class OFSwitch(OpenflowNode):
             status.set_status(STATUS.HTTP_ERROR, resp)
         
         return (status, info)
-        
-        
+    
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
@@ -127,7 +126,7 @@ class OFSwitch(OpenflowNode):
             status.set_status(STATUS.HTTP_ERROR, resp)
         
         return (status, info)
-
+    
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
@@ -202,7 +201,7 @@ class OFSwitch(OpenflowNode):
             status.set_status(STATUS.HTTP_ERROR, resp)
         
         return (status, info)
-        
+    
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
@@ -454,65 +453,12 @@ class OFSwitch(OpenflowNode):
     #---------------------------------------------------------------------------
     def __getPriorityKey(self, item):
         return item['priority']
-    
-    '''
-    #---------------------------------------------------------------------------
-    # 
-    #---------------------------------------------------------------------------
-    def get_connector_info(self):        
-        status = OperStatus()
-        info = {}
-        ctrl = self.ctrl
-        myname = self.name
-        url = ctrl.get_node_operational_url(myname)
-        
-        resp = ctrl.http_get_request(url, data=None, headers=None)
-        if(resp == None):
-            status.set_status(STATUS.CONN_ERROR)
-        elif(resp.content == None):
-            status.set_status(STATUS.CTRL_INTERNAL_ERROR)
-        elif (resp.status_code == 200):
-            dictionary = json.loads(resp.content)
-            p2 = 'node-connector'
-            vlist = find_key_values_in_dict(dictionary, p2)
-            if (len(vlist) != 0 and (type(vlist[0]) is list)):
-#                p3 = 'flow-node-inventory:flow-feature-capability-'
-#                info = replace_str_in_dict(vlist[0], p3, '')
-                print "+++++++++++++++"
-#                print vlist[0]
-#                print json.dumps(vlist[0], indent=4)
-                print vlist[0]
-                for item in vlist[0]:
-#                    print type(item)
-#                    print item
-#                    print ",,,",
-                    print ("   number: %s " % item['flow-node-inventory:port-number'])
-                    print ("   name: %s " % item['flow-node-inventory:name'])
-                    print ("   hardware address: %s " % item['flow-node-inventory:hardware-address'])
-                    print ("   current feature: %s " % item['flow-node-inventory:current-feature'])
-                    print ("------------------------------------------")
-#                    print item['stp-status-aware-node-connector:status']
-                    
-#                    if type(item) is dict:
-#                        print ",,,",
-#                        print item
-#                    print type(item)
-                    
-                status.set_status(STATUS.OK)
-            else:
-                print "---------------"
-                status.set_status(STATUS.DATA_NOT_FOUND)
-        else:
-            status.set_status(STATUS.HTTP_ERROR, resp)
-        
-        return (status, info)                        
-    '''
 
 #---------------------------------------------------------------------------
 # 
 #---------------------------------------------------------------------------
 class ActionOutput():
-
+    ''' OpenFlow 'Output' action type '''
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
@@ -520,7 +466,7 @@ class ActionOutput():
         self.type = 'output'
         self.order = order
         self.action = {'port': port, 'max-len': length}
-                
+    
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
@@ -543,7 +489,7 @@ class ActionOutput():
             self.action = {'port': None, 'max-len': None}
             self.action['port'] = find_key_value_in_dict(data, 'output-node-connector')
             self.action['max-len'] = find_key_value_in_dict(data, 'max-length')
-
+    
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
@@ -710,7 +656,6 @@ class FlowEntry(object):
     # 
     #---------------------------------------------------------------------------
     def add_match(self, match):
-        print type(match)
         if(self.match == None):
             self.match = {}
         self.match.update(match.__dict__)
