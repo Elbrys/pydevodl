@@ -20,6 +20,86 @@ def remove_empty_from_dict(d):
     else:
         return d
 
+
+def stripNone(data):
+#    print "0)data=%s" % data
+    if isinstance(data, dict):
+#        print "1)data=%s" % data
+        res = {k:stripNone(v) for k, v in data.items() if k != None and v != None}
+#        print "1.1)res=%s" % res
+        return res
+#        return {k:stripNone(v) for k, v in data.items() if k != None and v != None}
+    elif isinstance(data, list):
+#        print "2)data=%s" % data
+        res = [stripNone(item) for item in data if item != None]
+#        print "2.1)res=%s" % res
+        return res
+#        return [stripNone(item) for item in data if item != None]
+    elif isinstance(data, tuple):
+#        print "3)data=%s" % data
+        res = tuple(stripNone(item) for item in data if item != None)
+#        print "3.1)res=%s" % res
+        return res
+#        return tuple(stripNone(item) for item in data if item != None)
+    elif isinstance(data, set):
+#        print "4)data=%s" % data
+        res = {stripNone(item) for item in data if item != None}
+#        print "4.1)res=%s" % res
+        return res
+#        return {stripNone(item) for item in data if item != None}
+    else:
+#        print "5)data=%s" % data
+        return data
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+'''
+def debugkv(k, v):
+    print "<<<<<<"
+    print ("k=%s, v=%s" % (k, v))
+    if v == None:
+        print ("None: k=%s, v=%s" % (k, v))
+        print ">>>>>>"
+        return False
+    else:
+        print ">>>>>>"
+        return True
+def debugv(v):
+    print "<<<<<<"
+    print ("k=NA, v=%s" % (v))
+    print ">>>>>>"
+    if v == None:
+        return False
+    else:
+        return True
+'''
+
+'''
+def remove_unset_values_from_nested_dict(d):
+    if type(d) is dict:
+        return dict((k, remove_unset_values_from_nested_dict(v)) for k, v in d.iteritems() if debugkv(k,v) and remove_unset_values_from_nested_dict(v))
+#        return dict((k, v) for k, v in d.iteritems() if v and remove_empty_from_dict(v))
+    elif type(d) is list:
+        return [remove_unset_values_from_nested_dict(v) for v in d if debugv(v) and remove_unset_values_from_nested_dict(v)]
+#        return [v for v in d if v and remove_empty_from_dict(v)]
+    else:
+        return d
+'''
+
+
+
+''' Keep!!!
 def remove_unset_values_from_nested_dict(d):
     global debug_count
     res = {}
@@ -34,7 +114,9 @@ def remove_unset_values_from_nested_dict(d):
             res[k] = v
     
     return res
-    '''
+'''
+
+'''
     print "<<<<<<<"
     print  d
     print ">>>>>>>"
@@ -57,7 +139,7 @@ def remove_unset_values_from_nested_dict(d):
     else:
         print ("4) +++ res=%s" % d)
         return d
-    '''
+'''
 
 '''
 def remove_unset_values_from_dict(d):

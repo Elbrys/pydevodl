@@ -12,7 +12,8 @@ from framework.common.utils import replace_str_value_in_dict
 from framework.common.utils import find_key_value_in_dict
 from framework.common.utils import find_dict_in_list
 from framework.common.utils import remove_empty_from_dict
-from framework.common.utils import remove_unset_values_from_nested_dict
+#from framework.common.utils import remove_unset_values_from_nested_dict
+from framework.common.utils import stripNone
     
 #-------------------------------------------------------------------------------
 # 
@@ -651,7 +652,8 @@ class FlowEntry(object):
         # multipart keywords in YANG modules being hash separated
         s = string.replace(s, 'table-id', 'table_id')
         d1 = json.loads(s)
-        d2 = remove_unset_values_from_nested_dict(d1)
+#        d2 = remove_unset_values_from_nested_dict(d1)
+        d2 = stripNone(d1)
 #        d2 = d1
         payload = {self._mn : d2}
         return json.dumps(payload, default=lambda o: o.__dict__, sort_keys=True, indent=4)
@@ -661,6 +663,19 @@ class FlowEntry(object):
     #---------------------------------------------------------------------------
     def set_flow_id(self, flow_id):
         self.id = flow_id
+        
+    def set_flow_priority(self, priority):
+        self.priority = priority
+        
+    def set_flow_hard_timeout(self, hard_timeout):
+        self.hard_timeout = hard_timeout
+    
+    def set_flow_idle_timeout(self, idle_timeout):
+        self.idle_timeout = idle_timeout
+    
+    def set_flow_cookie(self, cookie):
+        self.cookie = cookie
+    
     
     #---------------------------------------------------------------------------
     # 
@@ -708,7 +723,7 @@ class Instruction():
 #  TBD      self.goto_table = {}
 #  TBD      self.write_metadata = {}
 #  TBD      self.write_actions = {}
-        self.apply_actions = {}
+        self.apply_actions = {'action': []}
 #  TBD      self.clear_actions = {}
 #  TBD      self.meter = {}
 
@@ -724,7 +739,9 @@ class Instruction():
     # 
     #---------------------------------------------------------------------------
     def add_apply_action(self, action):
-        self.apply_actions.update({'action':action})
+        self.apply_actions['action'].append(action)
+        pass
+#        self.apply_actions.update({'action':action})
 
 #-------------------------------------------------------------------------------
 # 
@@ -752,8 +769,8 @@ class OutputAction(Action):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def __init__(self, order=0, port=0, max_len=0):
-        super(OutputAction, self).__init__(order)
+    def __init__(self, action_order=0, port=None, max_len=None):
+        super(OutputAction, self).__init__(action_order)
         self.output_action = {'output-node-connector' : port, 'max-length' : max_len }
 
     #---------------------------------------------------------------------------
@@ -1047,15 +1064,15 @@ class PushVlanHeaderAction(Action):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def __init__(self, order=0, eth_type=None, tag=None, pcp=None, cfi=None, vid=None):
-        super(PushVlanHeaderAction, self).__init__(order)
+    def __init__(self, action_order=0, eth_type=None, tag=None, pcp=None, cfi=None, vid=None):
+        super(PushVlanHeaderAction, self).__init__(action_order)
         self.push_vlan_action = {'ethernet-type': eth_type, 'tag': tag, 'pcp': pcp, 'cfi': cfi, 'vlan-id': vid }
     
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def set_eth_type(self, eth_type):
-        self.output_action['ethernet-type'] = eth_type
+        self.push_vlan_action['ethernet-type'] = eth_type
 
     #---------------------------------------------------------------------------
     # 
@@ -1453,19 +1470,18 @@ class Match(object):
             - ICMP type 
             - ICMP code '''
         self.icmpv4_match = None
-        ''' ICMP type '''
-#        self.icmpv4_type = None
         
-        ''' ICMP code'''
-#        self.icmpv4_code = None
-        
-        
+        ''' ICMPv6 match fields
+            - ICMPv6 type 
+            - ICMPv6 code '''
+        self.icmpv6_match = None
         
         ''' ICMPv6 type '''
-        self.icmpv6_type = None
+#        self.icmpv6_type = None
         
         ''' ICMPv6 code '''
-        self.icmpv6_code = None        
+#        self.icmpv6_code = None        
+        
         
         ''' VLAN match fields:
             - VLAN-ID from 802.1Q header (the CFI bit indicate the presence of a valid VLAN-ID)
@@ -1569,6 +1585,22 @@ class Match(object):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
+    def set_ipv6_flabel(self, ipv6_flabel):
+        if(self.ipv6_label == None):
+            self.ipv6_label = Ipv6Label()
+        self.ipv6_label.set_flabel(ipv6_flabel)
+    
+     #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_ipv6_exh_hdr(self, ipv6_exthdr):
+        if(self.ipv6_ext_header == None):
+            self.ipv6_ext_header = Ipv6ExtHdr()
+        self.ipv6_ext_header.set_exthdr(ipv6_exthdr)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def set_ip_dscp(self, ip_dscp):
         if(self.ip_match == None):
             self.ip_match = IpMatch()
@@ -1656,13 +1688,19 @@ class Match(object):
     # 
     #---------------------------------------------------------------------------
     def set_icmpv6_type(self, icmpv6_type):
-        self.icmpv6_type = icmpv6_type
+        if(self.icmpv6_match == None):
+            self.icmpv6_match = IcmpV6Match()
+        self.icmpv6_match.set_type(icmpv6_type)
+#        self.icmpv6_type = icmpv6_type
     
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def set_icmpv6_code(self, icmpv6_code):
-        self.icmpv6_code = icmpv6_code        
+        if(self.icmpv6_match == None):
+            self.icmpv6_match = IcmpV6Match()
+        self.icmpv6_match.set_code(icmpv6_code)
+#        self.icmpv6_code = icmpv6_code        
     
     #---------------------------------------------------------------------------
     # 
@@ -1733,6 +1771,23 @@ class Match(object):
             self.tunnel = Tunnel()
         self.tunnel.tunnel_id = tunnel_id
     
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_metadata(self, metadata):
+        if(self.metadata == None):
+            self.metadata = Metadata()
+        self.metadata.set_metadata(metadata)
+     
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_metadata_mask(self, metadata_mask):
+        if(self.metadata == None):
+            self.metadata = Metadata()
+        self.metadata.set_metadata_mask(metadata_mask)
+    
+
 #    def __getattr__(self, attr):
 #         return self[attr]
         
@@ -1850,6 +1905,40 @@ class IcmpMatch(Match):
     #---------------------------------------------------------------------------
     def set_code(self, icmp_code):
         self.icmpv4_code = icmp_code
+
+
+#-------------------------------------------------------------------------------
+# 
+#-------------------------------------------------------------------------------
+class IcmpV6Match(Match):
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init__(self):
+        ''' ICMPv6 type '''
+        self.icmpv6_type = None
+        
+        ''' ICMPv6 code '''
+        self.icmpv6_code = None
+
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_type(self, icmpv6_type):
+        self.icmpv6_type = icmpv6_type
+        
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_code(self, icmpv6_code):
+        self.icmpv6_code = icmpv6_code
+
+
+
+
+
+
 
 #-------------------------------------------------------------------------------
 # 
@@ -2014,32 +2103,18 @@ class Metadata(Match):
     # 
     #---------------------------------------------------------------------------
     def __init__(self):
-        self.metadata = ""
-        self.metadata_mask = ""
+        self.metadata = None
+        self.metadata_mask = None
+    def set_metadata(self, metadata):
+        self.metadata = metadata
+    def set_metadata_mask(self, metadata_mask):
+        self.metadata_mask = metadata_mask
 
 
 ''' Tmp code - START '''
 if __name__ == "__main__":
     print "Start"
     
-    # --- Tunnel ID
-    flow = FlowEntry()
-    flow_id = 29
-    flow.set_flow_id(flow_id)
-    flow.priority = 1020
-
-    instruction_order = "1"
-    instruction = Instruction(instruction_order)    
-    action_order = "1"
-    action = DropAction(action_order)   
-    instruction.add_apply_action(action)
-    flow.add_instruction(instruction)
-
-    match = Match()
-    tunnel_id = 2591
-    match.set_tunnel_id(tunnel_id)
-    flow.add_match(match)
-
     # --- Ethernet Type and IP Dst Address
     flow = FlowEntry()
     flow_id = 11
@@ -2398,24 +2473,257 @@ if __name__ == "__main__":
     flow.add_match(match)
 
     # --- IPv6 Src & Dest Addresses
+    #     NOTE: ethernet type MUST be 34525 (0x86DD)
+    flow = FlowEntry()
+    flow_id = 23
+    flow.set_flow_id(flow_id)
+    flow.priority = 1014
+
+    instruction_order = "0"
+    instruction = Instruction(instruction_order)
+    action_order = "0"
+    action = DropAction(action_order)
+    instruction.add_apply_action(action)
+    flow.add_instruction(instruction)
+
+    match = Match()    
+    eth_type = 34525    
+    match.set_eth_type(eth_type)
+    ipv6_src = "fe80::2acf:e9ff:fe21:6431/128"
+    match.set_ipv6_src(ipv6_src)
+    ipv6_dst = "aabb:1234:2acf:e9ff::fe21:6431/64"
+    match.set_ipv6_dst(ipv6_dst)
+    flow.add_match(match)
+
+    #TBD --- Metadata
+
+    #TBD --- Metadata, Metadata Mask
+
+    # --- IPv6 Src & Dest Addresses, Metadata, IP DSCP, IP ECN, UDP Src & Dest Ports
+    #     NOTE: ethernet type MUST be 34525 (0x86DD)
+    flow = FlowEntry()
+    flow_id = 26
+    flow.set_flow_id(flow_id)
+    flow.priority = 1017
     
+    instruction_order = "0"
+    instruction = Instruction(instruction_order)
+    action_order = "0"
+    action = DropAction(action_order)
+    instruction.add_apply_action(action)
+    flow.add_instruction(instruction)
+    
+    match = Match()    
+    eth_type = 34525    
+    match.set_eth_type(eth_type)
+    ipv6_src = "1234:5678:9abc:def0:fdcd:a987:6543:210f/76"
+    match.set_ipv6_src(ipv6_src)
+    ipv6_dst = "fe80::2acf:e9ff:fe21:6431/128"
+    match.set_ipv6_dst(ipv6_dst)
+    metadata = "12345"
+    match.set_metadata(metadata)    
+    ip_proto = 17
+    match.set_ip_proto(ip_proto)
+    ip_dscp = 8
+    match.set_ip_dscp(ip_dscp)
+    ip_ecn = 3
+    match.set_ip_ecn(ip_ecn)    
+    udp_src_port = 25364
+    match.set_udp_src_port(udp_src_port)
+    udp_dst_port = 8080
+    match.set_udp_dst_port(udp_dst_port)
+    flow.add_match(match)
 
+    # --- IPv6 Src & Dest Addresses, Metadata, IP DSCP, IP ECN, TCP Src & Dest Ports
+    #     NOTES: ethernet type MUST be 34525 (0x86DD)
+    #            IP Protocol MUST be 6
+    flow = FlowEntry()
+    flow_id = 27
+    flow.set_flow_id(flow_id)
+    flow.priority = 1018
+    
+    instruction_order = "0"
+    instruction = Instruction(instruction_order)    
+    action_order = "0"
+    action = DropAction(action_order)   
+    instruction.add_apply_action(action)    
+    flow.add_instruction(instruction)
 
+    match = Match()
+    eth_type = 34525    
+    match.set_eth_type(eth_type)
+    ipv6_src = "1234:5678:9ABC:DEF0:FDCD:A987:6543:210F/76" 
+    match.set_ipv6_src(ipv6_src)
+    ipv6_dst = "fe80:2acf:e9ff:fe21::6431/94"
+    match.set_ipv6_dst(ipv6_dst)
+    metadata = "12345"
+    match.set_metadata(metadata)    
+    ip_proto = 6
+    match.set_ip_proto(ip_proto)
+    ip_dscp = 60
+    match.set_ip_dscp(ip_dscp)
+    ip_ecn = 3
+    match.set_ip_ecn(ip_ecn)
+    tcp_src_port = 183
+    match.set_tcp_src_port(tcp_src_port)
+    tcp_dst_port = 8080
+    match.set_tcp_dst_port(tcp_dst_port)
+    flow.add_match(match)
 
+    # --- IPv6 Src & Dest Addresses, Metadata, IP DSCP, IP ECN, TCP Src & Dest Ports, IPv6 Label
+    #     NOTES: ethernet type MUST be 34525 (0x86DD)
+    #            IP Protocol MUST be 6
+    flow = FlowEntry()
+    flow.set_flow_id(flow_id = 28)
+    flow.set_flow_priority(priority = 1019)
+    flow.set_flow_cookie(cookie = 23)
+    flow.set_flow_hard_timeout(hard_timeout = 1200)
+    flow.set_flow_idle_timeout(idle_timeout = 3400)
+    
+    instruction_order = "0"
+    instruction = Instruction(instruction_order)    
+    action_order = "0"
+    action = DropAction(action_order)   
+    instruction.add_apply_action(action)    
+    flow.add_instruction(instruction)
 
+    match = Match()
+    eth_type = 34525
+    match.set_eth_type(eth_type)
+    ipv6_src = "1234:5678:9ABC:DEF0:FDCD:A987:6543:210F/76"
+    match.set_ipv6_src(ipv6_src)
+    ipv6_dst = "fe80:2acf:e9ff:fe21::6431/94"
+    match.set_ipv6_dst(ipv6_dst)
+    metadata = "12345"
+    match.set_metadata(metadata)    
+    ipv6_flabel = 33
+    match.set_ipv6_flabel(ipv6_flabel)   
+    ip_proto = 6
+    match.set_ip_proto(ip_proto)
+    ip_dscp = 60
+    match.set_ip_dscp(ip_dscp)
+    ip_ecn = 3
+    match.set_ip_ecn(ip_ecn)
+    tcp_src_port = 183
+    match.set_tcp_src_port(tcp_src_port)
+    tcp_dst_port = 8080
+    match.set_tcp_dst_port(tcp_dst_port)
+    flow.add_match(match)
+   
+    # --- Tunnel ID
+    flow = FlowEntry()
+    flow_id = 29
+    flow.set_flow_id(flow_id)
+    flow.priority = 1020
 
+    instruction_order = "1"
+    instruction = Instruction(instruction_order)    
+    action_order = "1"
+    action = DropAction(action_order)   
+    instruction.add_apply_action(action)
+    flow.add_instruction(instruction)
 
+    match = Match()
+    tunnel_id = 2591
+    match.set_tunnel_id(tunnel_id)
+    flow.add_match(match)
 
+    # --- IPv6 Src & Dest Addresses, Metadata, IP DSCP, IP ECN, ICMPv6 Type & Code, IPv6 Label
+    #     NOTES: ethernet type MUST be 34525 (0x86DD)
+    #            IP Protocol MUST be 58
+    flow = FlowEntry()
+    flow.set_flow_id(flow_id = 30)
+    flow.set_flow_priority(priority = 1021)
+    flow.set_flow_cookie(cookie = 25)
+    flow.set_flow_hard_timeout(hard_timeout = 1200)
+    flow.set_flow_idle_timeout(idle_timeout = 3400)
+    
+    instruction_order = "0"
+    instruction = Instruction(instruction_order)
+    action_order = "0"
+    action = DropAction(action_order)
+    instruction.add_apply_action(action)
+    flow.add_instruction(instruction)
 
+    match = Match()    
+    match.set_eth_type(eth_type = 34525)
+    match.set_ipv6_src(ipv6_src = "1234:5678:9ABC:DEF0:FDCD:A987:6543:210F/76")
+    match.set_ipv6_dst(ipv6_dst = "fe80:2acf:e9ff:fe21::6431/94")
+    metadata = "12345"
+    match.set_metadata(metadata)    
+    match.set_ipv6_flabel(ipv6_flabel = 33)
+    match.set_ip_proto(ip_proto = 58)
+    match.set_ip_dscp(ip_dscp = 60)
+    match.set_ip_ecn(ip_ecn = 3)   
+    match.set_icmpv6_type(icmpv6_type = 6)
+    match.set_icmpv6_code(icmpv6_code = 3)
+    flow.add_match(match)
 
+    # --- IPv6 Src & Dest Addresses, Metadata, IP DSCP, IP ECN, TCP Src & Dst Ports,
+    #     IPv6 Label, IPv6 Ext Header
+    #     NOTES: ethernet type MUST be 34525 (0x86DD)
+    #            IP Protocol MUST be 58
+    flow = FlowEntry()
+    flow.set_flow_id(flow_id = 31)
+    flow.set_flow_priority(priority = 1022)
+    flow.set_flow_cookie(cookie = 27)
+    flow.set_flow_hard_timeout(hard_timeout = 1234)
+    flow.set_flow_idle_timeout(idle_timeout = 3456)
+    
+    instruction_order = 0
+    instruction = Instruction(instruction_order)
+    action_order = 0
+    action = DropAction(action_order)
+    instruction.add_apply_action(action)
+    flow.add_instruction(instruction)
 
+    match = Match()    
+    match.set_eth_type(eth_type = 34525)
+    match.set_ipv6_src(ipv6_src = "1234:5678:9ABC:DEF0:FDCD:A987:6543:210F/76")
+    match.set_ipv6_dst(ipv6_dst = "fe80:2acf:e9ff:fe21::6431/94")
+    metadata = "12345"
+    match.set_metadata(metadata)    
+    match.set_ipv6_flabel(ipv6_flabel = 33)
+    match.set_ipv6_exh_hdr(ipv6_exthdr = 0)  
+    match.set_ip_proto(ip_proto = 6)
+    match.set_ip_dscp(ip_dscp = 60)
+    match.set_ip_ecn(ip_ecn = 3)   
+    match.set_tcp_src_port(tcp_src_port = 183)
+    match.set_tcp_dst_port(tcp_dst_port = 8080)
+    flow.add_match(match)
 
+    flow_payload = flow.get_payload()
+    print "flow HTTP payload"
+    print flow_payload
 
-
-
-
-
-
+    # --- Push VLAN
+    # NOTES:
+    #      33024(0x8100) -> ethernet type = VLAN tagged frame
+    #      34984(0x88A8) -> ethernet type = QINQ VLAN tagged frame    
+    flow = FlowEntry()
+    flow.set_flow_id(flow_id = 32)
+    flow.set_flow_priority(priority = 1023)
+   
+    instruction_order = 0
+    instruction = Instruction(instruction_order)
+    action = PushVlanHeaderAction(action_order = 0)
+    action.set_eth_type(eth_type = 33024)
+    instruction.add_apply_action(action)
+    
+    action = OutputAction(action_order = 2, port = 5)
+    instruction.add_apply_action(action)
+    
+    
+    flow.add_instruction(instruction)
+  
+   
+   
+   
+   
+   
+   
+   
+   
    
     '''
     flow_id = 39
