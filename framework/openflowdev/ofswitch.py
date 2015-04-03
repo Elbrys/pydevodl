@@ -172,6 +172,35 @@ class OFSwitch(OpenflowNode):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
+    def add_modify_flow(self, flow_entry):
+        status = OperStatus()
+        templateUrlExt = "/table/{}/flow/{}"
+        headers = {'content-type': 'application/yang.data+json'}
+        if isinstance(flow_entry, FlowEntry):
+            ctrl = self.ctrl
+            url = ctrl.get_node_config_url(self.name)
+            urlext = templateUrlExt.format(flow_entry.get_flow_table_id(),
+                                           flow_entry.get_flow_id())
+            url += urlext
+#            print url
+            payload = flow_entry.get_payload()
+#            print payload 
+            resp = ctrl.http_put_request(url, payload, headers)
+#            print resp
+            if(resp == None):
+                status.set_status(STATUS.CONN_ERROR)
+            elif(resp.content == None):
+                status.set_status(STATUS.CTRL_INTERNAL_ERROR)
+            elif (resp.status_code == 200):
+                status.set_status(STATUS.OK)
+        else:
+            print "Error !!!"
+            status.set_status(STATUS.MALFORM_DATA)
+        return (status, None)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def get_port_info(self, portnum):
         status = OperStatus()
         info = {}
@@ -278,6 +307,30 @@ class OFSwitch(OpenflowNode):
             flows = result[1]
         
         return (status, flows)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_configured_flow(self, table_id, flow_id):
+        status = OperStatus()
+        flow = {}
+        templateUrlExt = "/table/{}/flow/{}"
+        ctrl = self.ctrl
+        url = ctrl.get_node_config_url(self.name)
+        urlext = templateUrlExt.format(table_id, flow_id)
+        url += urlext
+        resp = ctrl.http_get_request(url, data=None, headers=None)
+        if(resp == None):
+            status.set_status(STATUS.CONN_ERROR)
+        elif(resp.content == None):
+            status.set_status(STATUS.CTRL_INTERNAL_ERROR)
+        elif (resp.status_code == 200):
+#            print resp.content
+            flow = json.loads(resp.content)
+            status.set_status(STATUS.OK)
+        else:
+            status.set_status(STATUS.HTTP_ERROR, resp)
+        return (status, flow)
     
     #---------------------------------------------------------------------------
     # 
@@ -569,7 +622,7 @@ class FlowEntry(object):
             Upon receipt, the switch must finish processing all previously-received messages, including
             sending corresponding reply or error messages, before executing any messages beyond the
             Barrier Request. '''
-        self.barrier=None
+        self.barrier=False
         
         ''' Buffered packet to apply to, or OFP_NO_BUFFER. Not meaningful for OFPFC_DELETE* '''
         self.buffer_id = None
@@ -605,6 +658,18 @@ class FlowEntry(object):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
+    def set_flow_table_id(self, table_id):
+        self.table_id = table_id
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_flow_table_id(self):
+        return self.table_id
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def set_flow_name(self, flow_name):
         self.flow_name = flow_name
     
@@ -613,6 +678,12 @@ class FlowEntry(object):
     #---------------------------------------------------------------------------
     def set_flow_id(self, flow_id):
         self.id = flow_id
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_flow_id(self):
+        return self.id
     
     #---------------------------------------------------------------------------
     # 
