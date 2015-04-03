@@ -22,163 +22,20 @@ def remove_empty_from_dict(d):
 
 
 def stripNone(data):
-#    print "0)data=%s" % data
     if isinstance(data, dict):
-#        print "1)data=%s" % data
         res = {k:stripNone(v) for k, v in data.items() if k != None and v != None}
-#        print "1.1)res=%s" % res
         return res
-#        return {k:stripNone(v) for k, v in data.items() if k != None and v != None}
     elif isinstance(data, list):
-#        print "2)data=%s" % data
         res = [stripNone(item) for item in data if item != None]
-#        print "2.1)res=%s" % res
         return res
-#        return [stripNone(item) for item in data if item != None]
     elif isinstance(data, tuple):
-#        print "3)data=%s" % data
         res = tuple(stripNone(item) for item in data if item != None)
-#        print "3.1)res=%s" % res
         return res
-#        return tuple(stripNone(item) for item in data if item != None)
     elif isinstance(data, set):
-#        print "4)data=%s" % data
         res = {stripNone(item) for item in data if item != None}
-#        print "4.1)res=%s" % res
         return res
-#        return {stripNone(item) for item in data if item != None}
     else:
-#        print "5)data=%s" % data
         return data
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-'''
-def debugkv(k, v):
-    print "<<<<<<"
-    print ("k=%s, v=%s" % (k, v))
-    if v == None:
-        print ("None: k=%s, v=%s" % (k, v))
-        print ">>>>>>"
-        return False
-    else:
-        print ">>>>>>"
-        return True
-def debugv(v):
-    print "<<<<<<"
-    print ("k=NA, v=%s" % (v))
-    print ">>>>>>"
-    if v == None:
-        return False
-    else:
-        return True
-'''
-
-'''
-def remove_unset_values_from_nested_dict(d):
-    if type(d) is dict:
-        return dict((k, remove_unset_values_from_nested_dict(v)) for k, v in d.iteritems() if debugkv(k,v) and remove_unset_values_from_nested_dict(v))
-#        return dict((k, v) for k, v in d.iteritems() if v and remove_empty_from_dict(v))
-    elif type(d) is list:
-        return [remove_unset_values_from_nested_dict(v) for v in d if debugv(v) and remove_unset_values_from_nested_dict(v)]
-#        return [v for v in d if v and remove_empty_from_dict(v)]
-    else:
-        return d
-'''
-
-
-
-''' Keep!!!
-def remove_unset_values_from_nested_dict(d):
-    global debug_count
-    res = {}
-    debug_count +=1
-    print ("1) +++ count=%d, res=%s" % (debug_count, d))
-    for k, v in d.iteritems():
-        print ("2) +++ k=%s,v=%s" % (k,v))
-        if isinstance(v, dict):
-            r1 = remove_unset_values_from_nested_dict(v)
-            res[k] = r1
-        elif v != None:
-            res[k] = v
-    
-    return res
-'''
-
-'''
-    print "<<<<<<<"
-    print  d
-    print ">>>>>>>"
-    if type(d) is dict:
-        res = {}
-        for k, v in d.iteritems():
-            print ("2) +++ k=%s, v=%s" % (k,v))
-            if (v != None):
-                res[k] = v
-            remove_unset_values_from_dict(k)                    
-        print ("3) +++ res=%s" % res)
-        return res
-    elif type(d) is list:
-        res = []
-        for v in d:
-            if (v != None):
-                res.append(v)
-                remove_unset_values_from_dict(v)
-        return res
-    else:
-        print ("4) +++ res=%s" % d)
-        return d
-'''
-
-'''
-def remove_unset_values_from_dict(d):
-    print "///////////////////////////////"
-    print d
-    print "///////////////////////////////"
-    if type(d) is dict:
-        d1 = {}
-        for k, v in d.iteritems():
-#            print type(v)
-            print "ahhha!!!!" if v == None else False
-            print ("t=%s, k=%s, v=%s" % (type(v), k,v))
-#            print v
-            res = False
-            if v != None:
-                a1 = remove_empty_from_dict(v)
-                print "a1=%s" % a1
-                if a1 != None:
-                    res = True
-            print "res=%s" % res
-            if res:
-                print "++++++++++++++++"
-                print v
-                print "++++++++++++++++"
-#                d1[k] = remove_empty_from_dict(v)
-                d1[k] = v
-        return d1
-#                return dict((k, remove_empty_from_dict(v)))
-#        return dict((k, remove_empty_from_dict(v)) for k, v in d.iteritems() if v and remove_empty_from_dict(v))
-    elif type(d) is list:
-        print "IIIIIIIIIIIIIIIIIII"
-        return [remove_empty_from_dict(v) for v in d if v and remove_empty_from_dict(v)]
-    else:
-        print "<<<<<<<<<<<<<<<<<<<"
-        print d
-        print ">>>>>>>>>>>>>>>>>>>"
-        return d
-'''
-
 
 def load_dict_from_file(f, d):
     try:

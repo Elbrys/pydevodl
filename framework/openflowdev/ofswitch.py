@@ -649,15 +649,17 @@ class FlowEntry(object):
         s = self.to_json()        
         s = string.replace(s, '_', '-')
         # Following are exceptions from the common ODL rules for having all
-        # multipart keywords in YANG modules being hash separated
+        # multi-part keywords in YANG modules being hash separated
         s = string.replace(s, 'table-id', 'table_id')
+        s = string.replace(s, 'cookie-mask', 'cookie_mask')
         d1 = json.loads(s)
-#        d2 = remove_unset_values_from_nested_dict(d1)
         d2 = stripNone(d1)
-#        d2 = d1
         payload = {self._mn : d2}
         return json.dumps(payload, default=lambda o: o.__dict__, sort_keys=True, indent=4)
  
+    def set_flow_name(self, flow_name):
+        self.flow_name = flow_name
+    
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
@@ -676,6 +678,8 @@ class FlowEntry(object):
     def set_flow_cookie(self, cookie):
         self.cookie = cookie
     
+    def set_flow_cookie_mask(self, cookie_mask):
+        self.cookie_mask = cookie_mask
     
     #---------------------------------------------------------------------------
     # 
@@ -1299,19 +1303,21 @@ class SetFieldAction(Action):
         always be applied to the outermost-possible header (e.g. a 'Set VLAN ID'
         action always sets the ID of the outermost VLAN tag), unless the field
         type specifies otherwise. '''
+
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def __init__(self, order=0):
-        super(SetFieldAction, self).__init__(order)
+    def __init__(self, action_order=0):
+        super(SetFieldAction, self).__init__(action_order)
         self.set_field = {'vlan-match': None}
-        self.vlan_match = VlanMatch()
-#        self.protocol_match_fields = ProtocolMatchFields()
-    
+        
     def set_vlan_id(self, vid):
-        vlan_match = VlanMatch()
-        vlan_match.set_vid(vid)
-        self.set_field['vlan-match'] = vlan_match.__dict__
+        if(self.set_field['vlan-match'] == None):
+            self.set_field['vlan-match'] = VlanMatch()
+        self.set_field['vlan-match'].set_vid(vid)
+#        vlan_match = VlanMatch()
+#        vlan_match.set_vid(vid)
+#        self.set_field['vlan-match'] = vlan_match.__dict__
     
 #-------------------------------------------------------------------------------
 # TBD
@@ -2701,23 +2707,35 @@ if __name__ == "__main__":
     #      33024(0x8100) -> ethernet type = VLAN tagged frame
     #      34984(0x88A8) -> ethernet type = QINQ VLAN tagged frame    
     flow = FlowEntry()
+    flow.set_flow_name(flow_name = "vlan_flow")
     flow.set_flow_id(flow_id = 32)
     flow.set_flow_priority(priority = 1023)
+    flow.set_flow_cookie(cookie = 401)
+    flow.set_flow_cookie_mask(cookie_mask = 255)
+    flow.set_flow_hard_timeout(hard_timeout = 1200)
+    flow.set_flow_idle_timeout(idle_timeout = 3400)
    
     instruction_order = 0
     instruction = Instruction(instruction_order)
+
     action = PushVlanHeaderAction(action_order = 0)
     action.set_eth_type(eth_type = 33024)
-    instruction.add_apply_action(action)
-    
+    instruction.add_apply_action(action)    
+
+    action = SetFieldAction(action_order = 1)
+    action.set_vlan_id(vid = 79)
+    instruction.add_apply_action(action)    
+
     action = OutputAction(action_order = 2, port = 5)
     instruction.add_apply_action(action)
-    
-    
     flow.add_instruction(instruction)
   
-   
-   
+    match = Match()    
+    match.set_eth_type(eth_type = 2048)
+    match.set_eth_dst(eth_dst = "FF:FF:29:01:19:61")
+    match.set_eth_src(eth_src = "00:00:00:11:23:AE")
+    match.set_in_port(in_port = 1)
+    flow.add_match(match)
    
    
    
