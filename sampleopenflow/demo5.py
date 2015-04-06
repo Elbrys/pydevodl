@@ -10,7 +10,7 @@ from framework.controller.controller import Controller
 from framework.openflowdev.ofswitch import OFSwitch
 from framework.openflowdev.ofswitch import FlowEntry
 from framework.openflowdev.ofswitch import Instruction
-from framework.openflowdev.ofswitch import OutputAction
+from framework.openflowdev.ofswitch import DropAction
 from framework.openflowdev.ofswitch import Match
 
 from framework.common.status import STATUS
@@ -45,55 +45,39 @@ if __name__ == "__main__":
 
     # OpenFlow flow match attributes
     eth_type = 2048
-    eth_src = "00:1c:01:00:23:aa"   
-    eth_dst = "00:02:02:60:ff:fe"
-    ipv4_src = "44.44.44.1/24"
-    ipv4_dst = "55.55.55.1/16"
-    input_port = 1
-         
-    print ("<<< 'Controller': %s, 'OpenFlow' switch: '%s'" % (ctrlIpAddr, node))
+    ipv4_src = "10.11.12.13/24"
+        
+            
+    print ("<<< 'Controller': %s, 'OpenFlow' switch: %s" % (ctrlIpAddr, node))
 
     print "\n"
     print ("<<< Set OpenFlow flow on the Controller")
     print ("        Match:  Ethernet Type (%s)\n"
-           "                Ethernet Source address (%s)\n"
-           "                Ethernet Destination address (%s)\n" 
-           "                IPv4 Source address (%s)\n"
-           "                IPv4 Destination address (%s)\n" 
-           "                input port (%s)\n"               % (hex(eth_type), eth_src, 
-                                                                eth_dst, ipv4_src, ipv4_dst,
-                                                                input_port))
-    print ("        Action: Output (CONTROLLER)")
-
+           "                IPv4 Source Address (%s)" % (hex(eth_type), ipv4_src))
+    print ("        Action: Drop")
 
     time.sleep(rundelay)
-
+    
     
     flow_entry = FlowEntry()
     table_id = 0
     flow_entry.set_flow_table_id(table_id)
-    flow_id = 15
+    flow_id = 12
     flow_entry.set_flow_id(flow_id)
-    flow_entry.set_flow_priority(flow_priority = 1005)
+    flow_entry.set_flow_priority(flow_priority = 1000)
     
-    instruction = Instruction(instruction_order = 0)
-    action = OutputAction(action_order = 0, port = "CONTROLLER", max_len=60)
-    instruction.add_apply_action(action)    
+    instruction = Instruction(instruction_order = 0)    
+    action = DropAction(action_order = 0)    
+    instruction.add_apply_action(action)
     flow_entry.add_instruction(instruction)
     
-    
-    #--- Ethernet Type, Ethernet Src & Dest Addresses, 
-    #    IPv4 Src & Dest Addresses, Input Port    
+    # --- Ethernet Type and IP Src Address
     match = Match()
-    match.set_eth_type(eth_type)
-    match.set_eth_dst(eth_dst)
-    match.set_eth_src(eth_src)    
-    match.set_ipv4_src(ipv4_src)
-    match.set_ipv4_dst(ipv4_dst)
-    match.set_in_port(input_port)
+    match.set_eth_type(eth_type)     
+    match.set_ipv4_src(ipv4_src)       
     flow_entry.add_match(match)
-    
-    
+
+
     print ("\n")
     print ("<<< Flow to send:")
     print flow_entry.get_payload()

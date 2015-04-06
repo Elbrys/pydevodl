@@ -92,13 +92,15 @@ def find_key_value_in_dict(d, key):
     
     return None
 
-def find_dict_in_list(l, key):
-    for i in l:
-        if (type(i) is dict):
-            for k, v in i.items():
-                if (k == key):
-                    return i
-    
+
+def find_dict_in_list(slist, key):
+    for item in slist:
+        if (type(item) is dict and item.has_key(key)):
+            return item
+#            for k, v in item.items():
+#                if (k == key):
+#                    return {k, v}
+#            return dict((k,v) for k,v in item.items() if k == key)    
     return None
 
 def replace_str_value_in_dict(d, old, new):

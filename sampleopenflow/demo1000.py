@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
-import sys
-import time
+#import sys
+#import time
 import json
 
 
@@ -30,47 +30,18 @@ if __name__ == "__main__":
         exit(0)
     
     
-    print ("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
-    print ("<<< Demo Start")
-    print ("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
-
-    rundelay = 5
-
-    print ("\n")
-    print ("<<< Creating Controller instance")
-    time.sleep(rundelay)
-    ctrl = Controller(ctrlIpAddr, ctrlPortNum, ctrlUname, ctrlPswd, None)
-    print ("'Controller':")
-    print ctrl.brief_json()
-    
-    
-    print ("\n")
+    ctrl = Controller(ctrlIpAddr, ctrlPortNum, ctrlUname, ctrlPswd)
     name = "openflow:1"
-    print ("<<< Get detailed information about ports on OpenFlow node '%s'" % name)
 #    name = "openflow:10195227440578560"
-    time.sleep(rundelay)
     ofswitch = OFSwitch(ctrl, name)
     
-    result = ofswitch.get_ports_list()
+    
+    result = ofswitch.get_switch_info()
     status = result[0]
     if(status.eq(STATUS.OK) == True):
-        ports = result[1]
-        for port in ports:
-            result = ofswitch.get_port_detail_info(port)
-            status = result[0]
-            if(status.eq(STATUS.OK) == True):
-                print ("Port '%s' info:" % port)
-                info = result[1]
-                print json.dumps(info, indent=4)
-            else:
-                print ("\n")
-                print ("!!!Demo terminated, reason: %s" % status.brief().lower())
-                exit(0)
-        '''
-        print ("Ports list:")
-        ports = result[1]
-        print json.dumps(ports, indent=4, sort_keys=True)
-        '''
+        print ("'%s' info:" % name)
+        info = result[1]
+        print json.dumps(info, indent=4)
     else:
         print ("\n")
         print ("!!!Demo terminated, reason: %s" % status.brief().lower())
@@ -78,14 +49,20 @@ if __name__ == "__main__":
     
     
     print ("\n")
-    print (">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-    print (">>> Demo End")
-    print (">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-    
-    sys.exit(0)
+    result = ofswitch.get_features_info()
+    status = result[0]
+    if(status.eq(STATUS.OK) == True):
+        print ("'%s' features:" % name)
+        info = result[1]
+        print json.dumps(info, indent=4)
+    else:
+        print ("\n")
+        print ("!!!Demo terminated, reason: %s" % status.brief().lower())
+        exit(0)
 
-#    print ("\n")
-    result = ofswitch.get_ports_brief_info()
+    
+    print ("\n")
+    result = ofswitch.get_ports_info()
     status = result[0]
     if(status.eq(STATUS.OK) == True):
         print ("'%s' ports:" % name)
@@ -96,14 +73,21 @@ if __name__ == "__main__":
         print ("!!!Demo terminated, reason: %s" % status.brief().lower())
         exit(0)
     
-    
+        
     print ("\n")
-    print (">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-    print (">>> Demo End")
-    print (">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+    portnum = 1
+    result = ofswitch.get_port_info(portnum)
+    status = result[0]
+    if(status.eq(STATUS.OK) == True):
+        print ("Port '%s' info:" % portnum)
+        info = result[1]
+        print json.dumps(info, indent=4, sort_keys=True)
+    else:
+        print ("\n")
+        print ("!!!Demo terminated, reason: %s" % status.brief().lower())
+        exit(0)
     
     
-    '''
     print ("\n")
     tableid = 0
     result = ofswitch.get_operational_flows(tableid)
@@ -159,4 +143,4 @@ if __name__ == "__main__":
         print ("\n")
         print ("!!!Demo terminated, reason: %s" % status.brief().lower())
         exit(0)
-    '''
+

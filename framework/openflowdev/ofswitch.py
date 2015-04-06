@@ -127,10 +127,45 @@ class OFSwitch(OpenflowNode):
         
         return (status, info)
     
+    def get_ports_list(self):
+        status = OperStatus()
+        plist = []
+        ctrl = self.ctrl
+        myname = self.name
+        url = ctrl.get_node_operational_url(myname)
+        resp = ctrl.http_get_request(url, data=None, headers=None)
+        if(resp == None):
+            status.set_status(STATUS.CONN_ERROR)
+        elif(resp.content == None):
+            status.set_status(STATUS.CTRL_INTERNAL_ERROR)
+        elif (resp.status_code == 200):
+            obj = json.loads(resp.content)
+            p1 = 'node'
+            if(p1 in obj and isinstance(obj[p1], list)):
+                vlist = obj[p1]
+                p2 = 'node-connector'
+                d = find_dict_in_list(vlist, p2)
+                if (d != None) and isinstance(d[p2], list):
+                    items = d[p2]
+                    p3 = 'flow-node-inventory:port-number'
+                    for item in items:
+                        if(isinstance(item, dict) and item.has_key(p3)):
+                            plist.append(item[p3])
+                status.set_status(STATUS.OK)
+            else:
+                status.set_status(STATUS.DATA_NOT_FOUND)
+        else:
+            status.set_status(STATUS.HTTP_ERROR, resp)
+        
+        return (status, plist)
+    
+    def get_port_brief_info(self, portnum):
+        pass
+    
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def get_ports_info(self):        
+    def get_ports_brief_info(self):        
         status = OperStatus()
         info = []
         ctrl = self.ctrl
@@ -144,8 +179,8 @@ class OFSwitch(OpenflowNode):
             status.set_status(STATUS.CTRL_INTERNAL_ERROR)
         elif (resp.status_code == 200):
             dictionary = json.loads(resp.content)
-            p2 = 'node-connector'
-            vlist = find_key_values_in_dict(dictionary, p2)
+            p1 = 'node-connector'
+            vlist = find_key_values_in_dict(dictionary, p1)
             if (len(vlist) != 0 and (type(vlist[0]) is list)):
                 try:
                     for item in vlist[0]:
@@ -162,7 +197,6 @@ class OFSwitch(OpenflowNode):
                     print "Error: " + repr(e)
                     status.set_status(STATUS.DATA_NOT_FOUND)
             else:
-                print "---------------"
                 status.set_status(STATUS.DATA_NOT_FOUND)
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
@@ -201,7 +235,7 @@ class OFSwitch(OpenflowNode):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def get_port_info(self, portnum):
+    def get_port_detail_info(self, portnum):
         status = OperStatus()
         info = {}
         templateUrlExt = "/node-connector/{}:{}"
@@ -2150,7 +2184,7 @@ class Metadata(Match):
     def set_metadata_mask(self, metadata_mask):
         self.metadata_mask = metadata_mask
 
-''' Tmp code - START '''
+''' Test code - START '''
 if __name__ == "__main__":
     print "Start"
     
@@ -3012,7 +3046,7 @@ if __name__ == "__main__":
     print "flow HTTP payload"
     print flow_payload
     
-''' Tmp code - END'''
+''' Test code - END'''
     
 '''
 enum ofp_instruction_type {
