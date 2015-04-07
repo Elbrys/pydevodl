@@ -6,11 +6,10 @@ import json
 
 
 from framework.controller.controller import Controller
-#from framework.controller.openflownode import OpenflowNode
 from framework.openflowdev.ofswitch import OFSwitch
 from framework.openflowdev.ofswitch import FlowEntry
 from framework.openflowdev.ofswitch import Instruction
-from framework.openflowdev.ofswitch import DropAction
+from framework.openflowdev.ofswitch import OutputAction
 from framework.openflowdev.ofswitch import Match
 
 from framework.common.status import STATUS
@@ -43,47 +42,78 @@ if __name__ == "__main__":
     node = "openflow:1" # (name:DPID)
     ofswitch = OFSwitch(ctrl, node)
 
-    # --- Flow Match: Ethernet Type
-    #                 Ethernet Source Address
-    #                 Ethernet Destination Addresses
-    eth_type = 45 # (0x002D)
-    eth_src = "00:00:00:00:23:ae"   
+    # --- Flow Match: Ethernet Source Address
+    #                 Ethernet Destination Address
+    #                 ARP Operation
+    #                 ARP Source IPv4 Address
+    #                 ARP Target IPv4 Address
+    #                 ARP source hardware address
+    #                 ARP target hardware address
+    #     NOTE: Ethernet type MUST be 2054 (0x0806) -> ARP protocol
+    eth_type = 2054
+    eth_src = "00:ab:fe:01:03:31"
     eth_dst = "ff:ff:ff:ff:ff:ff"
-            
+    arp_opcode = 1 # ARP Request
+    arp_src_ipv4_addr = "192.168.4.1"
+    arp_tgt_ipv4_addr = "10.21.22.23"
+    arp_src_hw_addr = "12:34:56:78:98:ab"
+    arp_tgt_hw_addr = "fe:dc:ba:98:76:54"
+    
+    
     print ("<<< 'Controller': %s, 'OpenFlow' switch: '%s'" % (ctrlIpAddr, node))
 
     print "\n"
     print ("<<< Set OpenFlow flow on the Controller")
     print ("        Match:  Ethernet Type (%s)\n"
            "                Ethernet Source Address (%s)\n"
-           "                Ethernet Destination Address (%s)" % (hex(eth_type), eth_src, eth_dst))
-    print ("        Action: Drop")
-
-
+           "                Ethernet Destination Address (%s)\n" 
+           "                ARP Operation (%s)\n"
+           "                ARP Source IPv4 Address (%s)\n"
+           "                ARP Target IPv4 Address (%s)\n"
+           "                ARP Source Hardware Address (%s)\n"
+           "                ARP Target Hardware Address (%s)"   % (hex(eth_type), eth_src, 
+                                                                   eth_dst, arp_opcode,
+                                                                   arp_src_ipv4_addr,
+                                                                   arp_tgt_ipv4_addr,
+                                                                   arp_src_hw_addr,
+                                                                   arp_tgt_hw_addr))
+    print ("        Action: Output (CONTROLLER)")
+    
+    
     time.sleep(rundelay)
     
     
     flow_entry = FlowEntry()
     table_id = 0
     flow_entry.set_flow_table_id(table_id)
-    flow_id = 14
+    flow_id = 19
     flow_entry.set_flow_id(flow_id)
-    flow_entry.set_flow_priority(flow_priority = 1000)
+    flow_entry.set_flow_priority(flow_priority = 1010)
     
     # --- Instruction: 'Apply-action'
-    #     Action:      'Drop'
-    instruction = Instruction(instruction_order = 0)    
-    action = DropAction(action_order = 0)   
-    instruction.add_apply_action(action)    
+    #     Action:      'Output' CONTROLLER
+    instruction = Instruction(instruction_order = 0)
+    action = OutputAction(action_order = 0, port = "CONTROLLER")
+    instruction.add_apply_action(action)
     flow_entry.add_instruction(instruction)
     
     # --- Match Fields: Ethernet Type
     #                   Ethernet Source Address
-    #                   Ethernet Destination Address  
-    match = Match()
+    #                   Ethernet Destination Address
+    #                   ARP Operation 
+    #                   ARP Source IPv4 Address 
+    #                   ARP Target IPv4 Address
+    #                   ARP Source Hardware Address
+    #                   ARP Target Hardware Address
+    match = Match()    
     match.set_eth_type(eth_type)
-    match.set_eth_src(eth_src)    
+    match.set_eth_src(eth_src)
     match.set_eth_dst(eth_dst)
+    match.set_arp_opcode(arp_opcode)
+    match.set_arp_src_transport_address(arp_src_ipv4_addr)
+    match.set_arp_tgt_transport_address(arp_tgt_ipv4_addr)
+    match.set_arp_src_hw_address(arp_src_hw_addr)
+    match.set_arp_tgt_hw_address(arp_tgt_hw_addr)
     flow_entry.add_match(match)
     
     

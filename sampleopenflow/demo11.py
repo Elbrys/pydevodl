@@ -71,16 +71,16 @@ if __name__ == "__main__":
     print "\n"
     print ("<<< Set OpenFlow flow on the Controller")
     print ("        Match:  Ethernet Type (%s)\n"
-           "                Ethernet Source address (%s)\n"
-           "                Ethernet Destination address (%s)\n" 
-           "                IPv4 Source address (%s)\n"
-           "                IPv4 Destination address (%s)\n"
-           "                IP protocol number (%s)\n"
+           "                Ethernet Source Address (%s)\n"
+           "                Ethernet Destination Address (%s)\n" 
+           "                IPv4 Source Address (%s)\n"
+           "                IPv4 Destination Address (%s)\n"
+           "                IP Protocol Number (%s)\n"
            "                IP DSCP (%s)\n"
            "                IP ECN (%s)\n"
            "                ICMPv4 Type (%s)\n"
            "                ICMPv4 Code (%s)\n"
-           "                input port (%s)"               % (hex(eth_type), eth_src, 
+           "                Input Port (%s)"               % (hex(eth_type), eth_src, 
                                                               eth_dst, ipv4_src, ipv4_dst,
                                                               ip_proto, ip_dscp, ip_ecn,
                                                               icmpv4_type, icmpv4_code,
