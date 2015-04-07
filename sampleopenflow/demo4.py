@@ -43,8 +43,8 @@ if __name__ == "__main__":
     node = "openflow:1" # (name:DPID)
     ofswitch = OFSwitch(ctrl, node)
 
-    # OpenFlow flow match attributes
-    # --- Ethernet Type and IP Dst Address
+    # --- Flow Match: IPv4 Destination Address
+    #     NOTE: Ethernet type MUST be 2048 (0x0800) -> IPv4 protocol
     eth_type = 2048
     ipv4_dst = "10.11.12.13/24"
         
@@ -66,13 +66,15 @@ if __name__ == "__main__":
     flow_entry.set_flow_id(flow_id)
     flow_entry.set_flow_priority(flow_priority = 1000)
     
-    # --- 'Apply-action' instruction with action 'drop'
+    # --- Instruction: 'Apply-action'
+    #     Action:      'Drop'
     instruction = Instruction(instruction_order = 0)    
     action = DropAction(action_order = 0)   
     instruction.add_apply_action(action)
     flow_entry.add_instruction(instruction)
     
-    # --- Ethernet Type and IP Dst Address
+    # --- Match Fields: Ethernet Type
+    #                   IPv4 Destination Address
     match = Match()
     match.set_eth_type(eth_type)    
     match.set_ipv4_dst(ipv4_dst)

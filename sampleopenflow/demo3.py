@@ -46,8 +46,8 @@ if __name__ == "__main__":
     
     print ("\n")
     name = "openflow:1"
-    print ("<<< Get detailed information about ports on OpenFlow node '%s'" % name)
 #    name = "openflow:10195227440578560"
+    print ("<<< Get detailed information about ports on OpenFlow node '%s'" % name)
     time.sleep(rundelay)
     ofswitch = OFSwitch(ctrl, name)
     
@@ -66,11 +66,6 @@ if __name__ == "__main__":
                 print ("\n")
                 print ("!!!Demo terminated, reason: %s" % status.brief().lower())
                 exit(0)
-        '''
-        print ("Ports list:")
-        ports = result[1]
-        print json.dumps(ports, indent=4, sort_keys=True)
-        '''
     else:
         print ("\n")
         print ("!!!Demo terminated, reason: %s" % status.brief().lower())

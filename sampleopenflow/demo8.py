@@ -42,10 +42,15 @@ if __name__ == "__main__":
     node = "openflow:1" # (name:DPID)
     ofswitch = OFSwitch(ctrl, node)
 
-    # OpenFlow flow match attributes
-    # --- Ethernet Src & Dest Addresses, IPv4 Src & Dest Addresses, 
-    #     IP Protocol Number, IP DSCP, IP ECN, Input Port
-    #     NOTE: ethernet type MUST be 2048 (0x800) -> IP protocol
+    # --- Flow Match: Ethernet Source Address
+    #                 Ethernet Destination Address
+    #                 IPv4 Source Address
+    #                 IPv4 Destination Address
+    #                 IP Protocol Number
+    #                 IP DSCP
+    #                 IP ECN
+    #                 Input Port
+    #     NOTE: Ethernet type MUST be 2048 (0x800) -> IPv4 protocol
     eth_type = 2048
     eth_src = "00:1c:01:00:23:aa"   
     eth_dst = "00:02:02:60:ff:fe"
@@ -66,10 +71,10 @@ if __name__ == "__main__":
            "                Ethernet Destination address (%s)\n" 
            "                IPv4 Source address (%s)\n"
            "                IPv4 Destination address (%s)\n"
-           "                IP protocol number (%s)"
-           "                IP DSCP (%s)"
-           "                IP ECN (%s)"
-           "                input port (%s)\n"               % (hex(eth_type), eth_src, 
+           "                IP protocol number (%s)\n"
+           "                IP DSCP (%s)\n"
+           "                IP ECN (%s)\n"
+           "                input port (%s)"               % (hex(eth_type), eth_src, 
                                                                 eth_dst, ipv4_src, ipv4_dst,
                                                                 ip_proto, ip_dscp, ip_ecn,
                                                                 input_port))
@@ -88,19 +93,26 @@ if __name__ == "__main__":
     flow_entry.set_flow_cookie(cookie=100)
     flow_entry.set_flow_cookie_mask(cookie_mask=255)
     
-    # --- 'Apply-action' instruction with action 'output' to CONTROLLER
+    # --- Instruction: 'Apply-action'
+    #     Action:      'Output' to CONTROLLER
     instruction = Instruction(instruction_order = 0)
     action = OutputAction(action_order = 0, port = "CONTROLLER", max_len=60)
     instruction.add_apply_action(action)
     flow_entry.add_instruction(instruction)
     
-    # --- Ethernet Src & Dest Addresses, IPv4 Src & Dest Addresses, 
-    #     IP Protocol Number, IP DSCP, IP ECN, Input Port
-    #     NOTE: ethernet type MUST be 2048 (0x800) -> IP protocol
+    # --- Match Fields: Ethernet Type
+    #                   Ethernet Source Address
+    #                   Ethernet Destination Address
+    #                   IPv4 Source Address
+    #                   IPv4 Destination Address
+    #                   IP Protocol Number
+    #                   IP DSCP
+    #                   IP ECN
+    #                   Input Port
     match = Match()    
     match.set_eth_type(eth_type)
-    match.set_eth_dst(eth_dst)
     match.set_eth_src(eth_src)
+    match.set_eth_dst(eth_dst)
     match.set_ipv4_src(ipv4_src)
     match.set_ipv4_dst(ipv4_dst)
     match.set_ip_proto(ip_proto)
