@@ -44,6 +44,8 @@ if __name__ == "__main__":
     ofswitch = OFSwitch(ctrl, node)
 
     # OpenFlow flow match attributes
+    #--- Ethernet Src & Dest Addresses, IPv4 Src & Dest Addresses, Input Port
+    #    NOTE: Ethernet type must be 2048 (0x800) -> IPv4 protocol
     eth_type = 2048
     eth_src = "00:1c:01:00:23:aa"   
     eth_dst = "00:02:02:60:ff:fe"
@@ -76,6 +78,7 @@ if __name__ == "__main__":
     flow_entry.set_flow_id(flow_id)
     flow_entry.set_flow_priority(flow_priority = 1005)
     
+    # --- 'Apply-action' instruction with action 'output' to CONTROLLER
     instruction = Instruction(instruction_order = 0)
     action = OutputAction(action_order = 0, port = "CONTROLLER", max_len=60)
     instruction.add_apply_action(action)    

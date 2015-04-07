@@ -2467,7 +2467,7 @@ if __name__ == "__main__":
     match.set_metadata(metadata)    
     flow.add_match(match)
     
-    #TBD --- Metadata, Metadata Mask
+    # --- Metadata, Metadata Mask
     flow = FlowEntry()
     flow.set_flow_name(flow_name = "flow_with_metadata_and_metadata_mask")
     flow.set_flow_id(flow_id = 25)

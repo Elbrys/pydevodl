@@ -44,6 +44,7 @@ if __name__ == "__main__":
     ofswitch = OFSwitch(ctrl, node)
 
     # OpenFlow flow match attributes
+    # --- Ethernet Type and IP Dst Address
     eth_type = 2048
     ipv4_dst = "10.11.12.13/24"
         
@@ -65,6 +66,7 @@ if __name__ == "__main__":
     flow_entry.set_flow_id(flow_id)
     flow_entry.set_flow_priority(flow_priority = 1000)
     
+    # --- 'Apply-action' instruction with action 'drop'
     instruction = Instruction(instruction_order = 0)    
     action = DropAction(action_order = 0)   
     instruction.add_apply_action(action)
