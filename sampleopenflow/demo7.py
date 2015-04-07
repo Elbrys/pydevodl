@@ -66,8 +66,8 @@ if __name__ == "__main__":
            "                IPv4 Source address (%s)\n"
            "                IPv4 Destination address (%s)\n" 
            "                input port (%s)"               % (hex(eth_type), eth_src, 
-                                                                eth_dst, ipv4_src, ipv4_dst,
-                                                                input_port))
+                                                              eth_dst, ipv4_src, ipv4_dst,
+                                                              input_port))
     print ("        Action: Output (CONTROLLER)")
 
 

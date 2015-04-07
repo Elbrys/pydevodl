@@ -80,10 +80,10 @@ if __name__ == "__main__":
            "                TCP Source Port Number (%s)\n"
            "                TCP Destination Port Number (%s)\n"
            "                input port (%s)"               % (hex(eth_type), eth_src, 
-                                                                eth_dst, ipv4_src, ipv4_dst,
-                                                                ip_proto, ip_dscp, ip_ecn,
-                                                                tcp_src_port, tcp_dst_port,
-                                                                input_port))
+                                                              eth_dst, ipv4_src, ipv4_dst,
+                                                              ip_proto, ip_dscp, ip_ecn,
+                                                              tcp_src_port, tcp_dst_port,
+                                                              input_port))
     print ("        Action: Output (NORMAL)")
     
     

@@ -46,20 +46,24 @@ if __name__ == "__main__":
     #                 Ethernet Destination Address
     #                 IPv4 Source Address
     #                 IPv4 Destination Address
-    #                 IP Protocol Number
+    #                 ICMPv4 Type
+    #                 ICMPv4 Code
     #                 IP DSCP
     #                 IP ECN
     #                 Input Port
     #     NOTE: Ethernet type MUST be 2048 (0x800) -> IPv4 protocol
+    #           IP Protocol Type MUST be 1 -> ICMP
     eth_type = 2048
-    eth_src = "00:1c:01:00:23:aa"   
-    eth_dst = "00:02:02:60:ff:fe"
-    ipv4_src = "44.44.44.1/24"
-    ipv4_dst = "55.55.55.1/16"
-    ip_proto = 56
-    ip_dscp = 15
-    ip_ecn = 1
-    input_port = 1
+    eth_src = "00:00:00:11:23:ae"
+    eth_dst = "00:ff:20:01:1a:3d"
+    ipv4_src = "17.1.2.3/8"
+    ipv4_dst = "172.168.5.6/18"
+    ip_proto = 1
+    ip_dscp = 27
+    ip_ecn = 3
+    icmpv4_type = 6 # Alternate Host Address
+    icmpv4_code = 3 # Alternate Address for Host
+    input_port = 10
     
     
     print ("<<< 'Controller': %s, 'OpenFlow' switch: '%s'" % (ctrlIpAddr, node))
@@ -74,29 +78,30 @@ if __name__ == "__main__":
            "                IP protocol number (%s)\n"
            "                IP DSCP (%s)\n"
            "                IP ECN (%s)\n"
+           "                ICMPv4 Type (%s)\n"
+           "                ICMPv4 Code (%s)\n"
            "                input port (%s)"               % (hex(eth_type), eth_src, 
                                                               eth_dst, ipv4_src, ipv4_dst,
                                                               ip_proto, ip_dscp, ip_ecn,
+                                                              icmpv4_type, icmpv4_code,
                                                               input_port))
-    print ("        Action: Output (CONTROLLER)")
-
-
+    print ("        Action: Output (NORMAL)")
+    
+    
     time.sleep(rundelay)
-
-
+    
+    
     flow_entry = FlowEntry()
     table_id = 0
     flow_entry.set_flow_table_id(table_id)
-    flow_id = 15
+    flow_id = 18
     flow_entry.set_flow_id(flow_id)
-    flow_entry.set_flow_priority(flow_priority = 1006)
-    flow_entry.set_flow_cookie(cookie=100)
-    flow_entry.set_flow_cookie_mask(cookie_mask=255)
+    flow_entry.set_flow_priority(flow_priority = 1009)
     
     # --- Instruction: 'Apply-action'
-    #     Action:      'Output' to CONTROLLER
+    #     Action:      'Output' NORMAL
     instruction = Instruction(instruction_order = 0)
-    action = OutputAction(action_order = 0, port = "CONTROLLER", max_len=60)
+    action = OutputAction(action_order = 0, port = "NORMAL")
     instruction.add_apply_action(action)
     flow_entry.add_instruction(instruction)
     
@@ -108,6 +113,8 @@ if __name__ == "__main__":
     #                   IP Protocol Number
     #                   IP DSCP
     #                   IP ECN
+    #                   ICMPv4 Type
+    #                   ICMPv4 Code
     #                   Input Port
     match = Match()    
     match.set_eth_type(eth_type)
@@ -118,7 +125,9 @@ if __name__ == "__main__":
     match.set_ip_proto(ip_proto)
     match.set_ip_dscp(ip_dscp)
     match.set_ip_ecn(ip_ecn)    
-    match.set_in_port(input_port)    
+    match.set_icmpv4_type(icmpv4_type)
+    match.set_icmpv4_code(icmpv4_code)
+    match.set_in_port(input_port)
     flow_entry.add_match(match)
     
     
