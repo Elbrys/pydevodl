@@ -240,8 +240,8 @@ class Controller():
 
         """
         status = OperStatus()
-        templateUrl = "http://{}:{}/restconf/config/opendaylight-inventory:nodes"
-        url = templateUrl.format(self.ipAddr, self.portNum)
+        templateUrl = "http://{}:{}/restconf/config/opendaylight-inventory:nodes/node/{}"
+        url = templateUrl.format(self.ipAddr, self.portNum, nodeId)
 
         resp = self.http_get_request(url, data=None, headers=None)
         if(resp == None):
