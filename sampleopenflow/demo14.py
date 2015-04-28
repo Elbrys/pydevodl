@@ -79,7 +79,7 @@ if __name__ == "__main__":
     time.sleep(rundelay)
     
     flow_entry = FlowEntry()
-    flow_entry.set_flow_name(flow_name = "push_vlan_flow")
+    flow_entry.set_flow_name(flow_name = "Push VLAN 100")
     table_id = 0
     flow_entry.set_flow_table_id(table_id)
     flow_id = 21

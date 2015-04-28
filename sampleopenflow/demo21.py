@@ -8,7 +8,7 @@ from framework.controller.controller import Controller
 from framework.openflowdev.ofswitch import OFSwitch
 from framework.openflowdev.ofswitch import FlowEntry
 from framework.openflowdev.ofswitch import Instruction
-from framework.openflowdev.ofswitch import OutputAction, PushVlanHeaderAction, SetFieldAction
+from framework.openflowdev.ofswitch import OutputAction
 from framework.openflowdev.ofswitch import Match
 
 from framework.common.status import STATUS
@@ -42,88 +42,106 @@ if __name__ == "__main__":
     ofswitch = OFSwitch(ctrl, nodeName)
 
     # --- Flow Match: Ethernet Type
-    #                 VLAN ID
-    #                 Input Port
-    eth_type = 2048 # IPv4 protocol
-    vlan_id = 100
-    input_port = 3
+    #                 IP DSCP
+    #                 IP ECN
+    #                 IPv6 Source Address
+    #                 IPv6 Destination Address
+    #                 IPv6 Flow Label
+    #                 IPv6 Extension Header
+    #                 TCP Source Port
+    #                 TCP Destination Port
+    #                 Metadata
+    eth_type = 34525 # IPv6 protocol (0x86dd)
+    ip_dscp = 60
+    ip_ecn = 3
+    ipv6_src = "1234:5678:9ABC:DEF0:FDCD:A987:6543:210F/76"
+    ipv6_dst = "2000:2abc:edff:fe00::3456/94"
+    ipv6_flabel = 7
+    ipv6_exthdr = 0 # 'Hop-by-Hop Options' header type
+    ip_proto = 6 # TCP
+    tcp_src_port = 1831
+    tcp_dst_port = 100610
+    metadata = "123456789"
     
-    # --- Flow Actions: Push VLAN: Ethernet Type
-    #                   Set Field: VLAN ID
-    #                   Output:    Port Number
-    # NOTES:
-    #      Ethernet type 33024(0x8100) -> VLAN tagged frame (Customer VLAN Tag Type)
-    #      Ethernet type 34984(0x88A8) -> QINQ VLAN tagged frame (Service VLAN tag identifier)
-    push_eth_type = 34984
-    push_vlan_id = 200
-    output_port = 5
+    # --- Flow Actions: Output (CONTROLLER)
+    output_port = "CONTROLLER"
     
     print ("<<< 'Controller': %s, 'OpenFlow' switch: '%s'" % (ctrlIpAddr, nodeName))
     
     print "\n"
     print ("<<< Set OpenFlow flow on the Controller")
     print ("        Match:  Ethernet Type (%s)\n"
-           "                VLAN ID (%s)\n"
-           "                Input Port (%s)\n"              % (hex(eth_type), vlan_id,
-                                                               input_port))
-    print ("        Actions: 'Push VLAN' (Ethernet Type=%s)"
-                                                            % hex(push_eth_type))
-    print ("                 'Set Field' (VLAN ID=%s)" % push_vlan_id)
-    
-    print ("                 'Output' (to Physical Port Number %s)" % output_port)
+           "                IP DSCP (%s)\n"
+           "                IP ECN (%s)\n"
+           "                IPv6 Source Address (%s)\n"
+           "                IPv6 Destination Address (%s)\n"
+           "                IPv6 Flow Label (%s)\n"
+           "                IPv6 Extension Header (%s)\n"
+           "                TCP Source Port (%s)\n"
+           "                TCP Destination Port (%s)\n" 
+           "                Metadata (%s)"             % (hex(eth_type), ip_dscp, ip_ecn,
+                                                          ipv6_src, ipv6_dst, ipv6_flabel,
+                                                          ipv6_exthdr,
+                                                          tcp_src_port, tcp_dst_port, metadata))
+    print ("        Actions: 'Output' (to %s)" % output_port)
     
     
     time.sleep(rundelay)
     
+    
     flow_entry = FlowEntry()
-    flow_entry.set_flow_name(flow_name = "Push VLAN 100")
     table_id = 0
-    flow_entry.set_flow_table_id(table_id)
-    flow_id = 22
+    flow_id = 27
     flow_entry.set_flow_id(flow_id)
-    flow_entry.set_flow_priority(flow_priority = 1013)
-    flow_entry.set_flow_cookie(cookie = 407)
-    flow_entry.set_flow_cookie_mask(cookie_mask = 255)
-    flow_entry.set_flow_hard_timeout(hard_timeout = 3400)
-    flow_entry.set_flow_idle_timeout(idle_timeout = 3400)
+    flow_entry.set_flow_priority(flow_priority = 1020)
+    flow_entry.set_flow_cookie(cookie = 2100)
+    flow_entry.set_flow_hard_timeout(hard_timeout = 1234)
+    flow_entry.set_flow_idle_timeout(idle_timeout = 3456)
     
     # --- Instruction: 'Apply-action'
-    #     Actions:     'PushVlan'
-    #                  'SetField'
-    #                  'Output'
+    #     Actions:     'Output'
     instruction = Instruction(instruction_order = 0)
-    action = PushVlanHeaderAction(action_order = 0)
-    action.set_eth_type(eth_type = push_eth_type)
-    instruction.add_apply_action(action)    
-    action = SetFieldAction(action_order = 1)
-    action.set_vlan_id(vid = push_vlan_id)
-    instruction.add_apply_action(action)    
-    action = OutputAction(action_order = 2, port = output_port)
+    action = OutputAction(action_order = 0, port = output_port)
     instruction.add_apply_action(action)
     flow_entry.add_instruction(instruction)
     
     # --- Match Fields: Ethernet Type
-    #                   Ethernet Source Address
-    #                   Ethernet Destination Address
-    #                   Input Port
+    #                   IP DSCP
+    #                   IP ECN
+    #                   IPv6 Source Address
+    #                   IPv6 Destination Address
+    #                   IPv6 Flow Label
+    #                   IPv6 Extension Header    
+    #                   IP protocol number (TCP)
+    #                   TCP Source Port
+    #                   TCP Destination Port
+    #                   Metadata
     match = Match()    
     match.set_eth_type(eth_type)
-    match.set_vlan_id(vlan_id)
-    match.set_in_port(in_port = input_port)
-    flow_entry.add_match(match)   
+    match.set_ip_dscp(ip_dscp)
+    match.set_ip_ecn(ip_ecn)   
+    match.set_ipv6_src(ipv6_src )
+    match.set_ipv6_dst(ipv6_dst)
+    match.set_ipv6_flabel(ipv6_flabel)
+    match.set_ipv6_exh_hdr(ipv6_exthdr)  
+    match.set_ip_proto(ip_proto)
+    match.set_tcp_src_port(tcp_src_port)
+    match.set_tcp_dst_port(tcp_dst_port)
+    match.set_metadata(metadata)    
+    flow_entry.add_match(match)
     
-        
+    
     print ("\n")
     print ("<<< Flow to send:")
     print flow_entry.get_payload()
     time.sleep(rundelay)
     result = ofswitch.add_modify_flow(flow_entry)
-    status = result[0]
+    status = result[0]    
     if(status.eq(STATUS.OK) == True):
         print ("<<< Flow successfully added to the Controller")
     else:
         print ("\n")
-        print ("!!!Demo terminated, reason: %s" % status.brief().lower())
+        print ("!!!Demo terminated, reason: %s" % status.detail())
         exit(0)
     
     

@@ -8,7 +8,7 @@ from framework.controller.controller import Controller
 from framework.openflowdev.ofswitch import OFSwitch
 from framework.openflowdev.ofswitch import FlowEntry
 from framework.openflowdev.ofswitch import Instruction
-from framework.openflowdev.ofswitch import OutputAction, PushVlanHeaderAction, SetFieldAction
+from framework.openflowdev.ofswitch import OutputAction
 from framework.openflowdev.ofswitch import Match
 
 from framework.common.status import STATUS
@@ -42,77 +42,78 @@ if __name__ == "__main__":
     ofswitch = OFSwitch(ctrl, nodeName)
 
     # --- Flow Match: Ethernet Type
-    #                 VLAN ID
-    #                 Input Port
-    eth_type = 2048 # IPv4 protocol
-    vlan_id = 100
-    input_port = 3
+    #                 IPv6 Source Address
+    #                 IPv6 Destination Address
+    #                 IP DSCP
+    #                 TCP Source Port
+    #TCP Destination Port
+    eth_type = 34525 # IPv6 protocol (0x86dd)
+    ipv6_src = "4231::3210:3210:3210:3210/80"
+    ipv6_dst = "1234:1234:1234:1234::5678:5678/64"
+    ipv6_flabel = 33
+    ip_dscp = 60
+    ip_proto = 6 # TCP
+    tcp_src_port = 11111
+    tcp_dst_port = 22222
     
-    # --- Flow Actions: Push VLAN: Ethernet Type
-    #                   Set Field: VLAN ID
-    #                   Output:    Port Number
-    # NOTES:
-    #      Ethernet type 33024(0x8100) -> VLAN tagged frame (Customer VLAN Tag Type)
-    #      Ethernet type 34984(0x88A8) -> QINQ VLAN tagged frame (Service VLAN tag identifier)
-    push_eth_type = 34984
-    push_vlan_id = 200
-    output_port = 5
+    # --- Flow Actions: Output (CONTROLLER)
+    output_port = "CONTROLLER"
     
     print ("<<< 'Controller': %s, 'OpenFlow' switch: '%s'" % (ctrlIpAddr, nodeName))
     
     print "\n"
     print ("<<< Set OpenFlow flow on the Controller")
     print ("        Match:  Ethernet Type (%s)\n"
-           "                VLAN ID (%s)\n"
-           "                Input Port (%s)\n"              % (hex(eth_type), vlan_id,
-                                                               input_port))
-    print ("        Actions: 'Push VLAN' (Ethernet Type=%s)"
-                                                            % hex(push_eth_type))
-    print ("                 'Set Field' (VLAN ID=%s)" % push_vlan_id)
-    
-    print ("                 'Output' (to Physical Port Number %s)" % output_port)
+           "                IPv6 Source Address (%s)\n"
+           "                IPv6 Destination Address (%s)\n"
+           "                IPv6 Flow Label (%s)\n"
+           "                IP DSCP (%s)\n"
+           "                TCP Source Port (%s)\n"
+           "                TCP Destination Port (%s)" % (hex(eth_type), ipv6_src, ipv6_dst, ipv6_flabel,
+                                                          ip_dscp, tcp_src_port, tcp_dst_port))
+    print ("        Actions: 'Output' (to %s)" % output_port)
     
     
     time.sleep(rundelay)
     
-    flow_entry = FlowEntry()
-    flow_entry.set_flow_name(flow_name = "Push VLAN 100")
+    
+    flow_entry  = FlowEntry()
+    flow_entry.set_flow_name(flow_name = "demo19.py")
     table_id = 0
-    flow_entry.set_flow_table_id(table_id)
-    flow_id = 22
+    flow_id = 25
     flow_entry.set_flow_id(flow_id)
-    flow_entry.set_flow_priority(flow_priority = 1013)
-    flow_entry.set_flow_cookie(cookie = 407)
-    flow_entry.set_flow_cookie_mask(cookie_mask = 255)
-    flow_entry.set_flow_hard_timeout(hard_timeout = 3400)
+    flow_entry.set_flow_priority(flow_priority = 1018)
+    flow_entry.set_flow_cookie(cookie = 23)
+    flow_entry.set_flow_hard_timeout(hard_timeout = 1200)
     flow_entry.set_flow_idle_timeout(idle_timeout = 3400)
     
     # --- Instruction: 'Apply-action'
-    #     Actions:     'PushVlan'
-    #                  'SetField'
-    #                  'Output'
-    instruction = Instruction(instruction_order = 0)
-    action = PushVlanHeaderAction(action_order = 0)
-    action.set_eth_type(eth_type = push_eth_type)
+    #     Actions:     'Output'
+    instruction = Instruction(instruction_order = 0)    
+    action = OutputAction(action_order = 0, port = output_port)
     instruction.add_apply_action(action)    
-    action = SetFieldAction(action_order = 1)
-    action.set_vlan_id(vid = push_vlan_id)
-    instruction.add_apply_action(action)    
-    action = OutputAction(action_order = 2, port = output_port)
-    instruction.add_apply_action(action)
-    flow_entry.add_instruction(instruction)
+    flow_entry .add_instruction(instruction)
     
     # --- Match Fields: Ethernet Type
-    #                   Ethernet Source Address
-    #                   Ethernet Destination Address
-    #                   Input Port
-    match = Match()    
+    #                   IPv6 Source Address
+    #                   IPv6 Destination Address
+    #                   IPv6 Flow Label
+    #                   IP protocol number (TCP)
+    #                   IP DSCP
+    #                   TCP Source Port
+    #                   TCP Destination Port
+    match = Match()
     match.set_eth_type(eth_type)
-    match.set_vlan_id(vlan_id)
-    match.set_in_port(in_port = input_port)
-    flow_entry.add_match(match)   
+    match.set_ipv6_src(ipv6_src)
+    match.set_ipv6_dst(ipv6_dst)
+    match.set_ipv6_flabel(ipv6_flabel)   
+    match.set_ip_proto(ip_proto)
+    match.set_ip_dscp(ip_dscp)
+    match.set_tcp_src_port(tcp_src_port)
+    match.set_tcp_dst_port(tcp_dst_port)
+    flow_entry.add_match(match)
     
-        
+    
     print ("\n")
     print ("<<< Flow to send:")
     print flow_entry.get_payload()

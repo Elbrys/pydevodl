@@ -225,17 +225,18 @@ class OFSwitch(OpenflowNode):
             payload = flow_entry.get_payload()
 #            print payload 
             resp = ctrl.http_put_request(url, payload, headers)
-#            print resp
             if(resp == None):
                 status.set_status(STATUS.CONN_ERROR)
             elif(resp.content == None):
                 status.set_status(STATUS.CTRL_INTERNAL_ERROR)
             elif (resp.status_code == 200):
                 status.set_status(STATUS.OK)
+            else:               
+                status.set_status(STATUS.HTTP_ERROR, resp)                
         else:
             print "Error !!!"
             status.set_status(STATUS.MALFORM_DATA)
-        return (status, None)
+        return (status, resp)
     
     #---------------------------------------------------------------------------
     # 
