@@ -1,8 +1,15 @@
+"""
+@authors: Sergei Garbuzov
+@status: Development
+@version: 1.0.0
+
+ofswitch.py: OpenFlow switch properties and methods
+
+
+"""
 
 import string
 import json
-#import collections
-import sys
 
 from collections import OrderedDict
 
@@ -12,8 +19,6 @@ from framework.common.utils import find_key_values_in_dict
 from framework.common.utils import replace_str_value_in_dict
 from framework.common.utils import find_key_value_in_dict
 from framework.common.utils import find_dict_in_list
-from framework.common.utils import remove_empty_from_dict
-#from framework.common.utils import remove_unset_values_from_nested_dict
 from framework.common.utils import stripNone
     
 #-------------------------------------------------------------------------------
@@ -230,6 +235,29 @@ class OFSwitch(OpenflowNode):
         else:
             print "Error !!!"
             status.set_status(STATUS.MALFORM_DATA)
+        return (status, None)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def delete_flow(self, flow_table_id, flow_id):
+        status = OperStatus()
+        templateUrlExt = "/table/{}/flow/{}"
+        ctrl = self.ctrl
+        url = ctrl.get_node_config_url(self.name)        
+        urlext = templateUrlExt.format(flow_table_id, flow_id)        
+        url += urlext
+        
+        resp = ctrl.http_delete_request(url, data=None, headers=None)
+        if(resp == None):
+            status.set_status(STATUS.CONN_ERROR)
+        elif(resp.content == None):
+            status.set_status(STATUS.CTRL_INTERNAL_ERROR)
+        elif (resp.status_code == 200):
+            status.set_status(STATUS.OK)
+        else:
+            status.set_status(STATUS.HTTP_ERROR, resp)
+
         return (status, None)
     
     #---------------------------------------------------------------------------
@@ -688,7 +716,7 @@ class FlowEntry(object):
         d2 = stripNone(d1)
         payload = {self._mn : d2}
         return json.dumps(payload, default=lambda o: o.__dict__, sort_keys=True, indent=4)
-    
+        
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------

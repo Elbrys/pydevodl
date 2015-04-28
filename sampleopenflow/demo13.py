@@ -1,6 +1,5 @@
 #!/usr/bin/python
 
-#import sys
 import time
 import json
 
@@ -16,7 +15,7 @@ from framework.common.status import STATUS
 from framework.common.utils import load_dict_from_file
 
 if __name__ == "__main__":
-
+    
     f = "cfg.yml"
     d = {}
     if(load_dict_from_file(f, d) == False):
@@ -28,6 +27,7 @@ if __name__ == "__main__":
         ctrlPortNum = d['ctrlPortNum']
         ctrlUname = d['ctrlUname']
         ctrlPswd = d['ctrlPswd']
+        nodeName = d['nodeName']
     except:
         print ("Failed to get Controller device attributes")
         exit(0)
@@ -35,13 +35,12 @@ if __name__ == "__main__":
     print ("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
     print ("<<< Demo Start")
     print ("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
-
+    
     rundelay = 5
-
+    
     ctrl = Controller(ctrlIpAddr, ctrlPortNum, ctrlUname, ctrlPswd)
-    node = "openflow:1" # (name:DPID)
-    ofswitch = OFSwitch(ctrl, node)
-
+    ofswitch = OFSwitch(ctrl, nodeName)
+    
     # --- Flow Match: Ethernet Type
     #                 Ethernet Source Address
     #                 Ethernet Destination Address
@@ -54,8 +53,8 @@ if __name__ == "__main__":
     vlan_pcp = 3
     
     
-    print ("<<< 'Controller': %s, 'OpenFlow' switch: '%s'" % (ctrlIpAddr, node))
-
+    print ("<<< 'Controller': %s, 'OpenFlow' switch: '%s'" % (ctrlIpAddr, nodeName))
+    
     print "\n"
     print ("<<< Set OpenFlow flow on the Controller")
     print ("        Match:  Ethernet Type (%s)\n"
@@ -69,7 +68,7 @@ if __name__ == "__main__":
     
     time.sleep(rundelay)
     
-        
+    
     flow_entry = FlowEntry()
     table_id = 0
     flow_entry.set_flow_table_id(table_id)
@@ -129,6 +128,21 @@ if __name__ == "__main__":
     
     
     print ("\n")
+    print ("<<< Delete flow with id of '%s' from the Controller's cache "
+           "and from the table '%s' on the '%s' node" % (flow_id, table_id, nodeName))
+    time.sleep(rundelay)
+    result = ofswitch.delete_flow(flow_entry.get_flow_table_id(), flow_entry.get_flow_id())
+    status = result[0]
+    if(status.eq(STATUS.OK) == True):
+        print ("<<< Flow successfully removed from the Controller")
+    else:
+        print ("\n")
+        print ("!!!Demo terminated, reason: %s" % status.brief().lower())
+        exit(0)
+    
+    
+    print ("\n")
     print (">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
     print (">>> Demo End")
     print (">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+    

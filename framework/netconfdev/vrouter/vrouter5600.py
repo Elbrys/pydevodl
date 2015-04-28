@@ -1,4 +1,8 @@
 """
+@authors: Sergei Garbuzov
+@status: Development
+@version: 1.0.0
+
 vrouter5600.py: vRouter-5600 specific properties and communication methods
 
 

@@ -1,8 +1,13 @@
 """
+@authors: Sergei Garbuzov
+@status: Development
+@version: 1.0.0
+
 utils.py: Helper utilities
 
 
 """
+
 import sys
 import time
 import string
@@ -13,10 +18,8 @@ debug_count = 0
 def remove_empty_from_dict(d):
     if type(d) is dict:
         return dict((k, remove_empty_from_dict(v)) for k, v in d.iteritems() if v and remove_empty_from_dict(v))
-#        return dict((k, v) for k, v in d.iteritems() if v and remove_empty_from_dict(v))
     elif type(d) is list:
         return [remove_empty_from_dict(v) for v in d if v and remove_empty_from_dict(v)]
-#        return [v for v in d if v and remove_empty_from_dict(v)]
     else:
         return d
 
@@ -92,15 +95,10 @@ def find_key_value_in_dict(d, key):
     
     return None
 
-
 def find_dict_in_list(slist, key):
     for item in slist:
         if (type(item) is dict and item.has_key(key)):
             return item
-#            for k, v in item.items():
-#                if (k == key):
-#                    return {k, v}
-#            return dict((k,v) for k,v in item.items() if k == key)    
     return None
 
 def replace_str_value_in_dict(d, old, new):
@@ -130,25 +128,3 @@ def progress_wait_secs(msg=None, waitTime=None, sym="."):
             time.sleep(1)
         sys.stdout.write ("\n")
 
-'''        
-def replace_underscores_with_dashes_in_dict(d):
-    d1 = {}
-    for k, v in d.iteritems():
-        print type(k)
-        if (type(k) is str):
-            print "1)******"
-            k1 = k.replace('_', '-')
-        else:
-            k1 = k
-        
-        print type(v)
-        if (type(v) is str):
-            print "1)******"
-            v1 = v.replace('_','-')
-        else:
-            v1 = v
-            
-        d1[k1] = v1
-
-    return d1
-'''

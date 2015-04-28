@@ -1,4 +1,8 @@
 """
+@authors: Sergei Garbuzov
+@status: Development
+@version: 1.0.0
+
 netconfnode.py: Controller's NETCONF node specific properties
 
 

@@ -1,6 +1,5 @@
 #!/usr/bin/python
 
-import sys
 import time
 import json
 
@@ -24,6 +23,7 @@ if __name__ == "__main__":
         ctrlPortNum = d['ctrlPortNum']
         ctrlUname = d['ctrlUname']
         ctrlPswd = d['ctrlPswd']
+        nodeName = d['nodeName']
     except:
         print ("Failed to get Controller device attributes")
         exit(0)
@@ -44,15 +44,13 @@ if __name__ == "__main__":
     
     
     print ("\n")
-    name = "openflow:1"
-    print ("<<< Get information about OpenFlow node '%s'" % name)
-#    name = "openflow:10195227440578560"
+    print ("<<< Get information about OpenFlow node '%s'" % nodeName)
     time.sleep(rundelay)
-    ofswitch = OFSwitch(ctrl, name)
+    ofswitch = OFSwitch(ctrl, nodeName)
     result = ofswitch.get_switch_info()
     status = result[0]
     if(status.eq(STATUS.OK) == True):
-        print ("Node '%s' generic info:" % name)
+        print ("Node '%s' generic info:" % nodeName)
         info = result[1]
         print json.dumps(info, indent=4)
     else:
@@ -64,7 +62,7 @@ if __name__ == "__main__":
     result = ofswitch.get_features_info()
     status = result[0]
     if(status.eq(STATUS.OK) == True):
-        print ("Node '%s' features:" % name)
+        print ("Node '%s' features:" % nodeName)
         features = result[1]
         print json.dumps(features, indent=4)
     else:
@@ -78,7 +76,7 @@ if __name__ == "__main__":
     status = result[0]
     if(status.eq(STATUS.OK) == True):
         ports = result[1]
-        print ("Node '%s' ports list:" % name)
+        print ("Node '%s' ports list:" % nodeName)
         print json.dumps(ports, indent=4, sort_keys=True)
     else:
         print ("\n")
@@ -90,7 +88,7 @@ if __name__ == "__main__":
     result = ofswitch.get_ports_brief_info()
     status = result[0]
     if(status.eq(STATUS.OK) == True):
-        print ("Node '%s' ports brief information:" % name)
+        print ("Node '%s' ports brief information:" % nodeName)
         info = result[1]
         print json.dumps(info, indent=4, sort_keys=True)
     else:
@@ -103,3 +101,4 @@ if __name__ == "__main__":
     print (">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
     print (">>> Demo End")
     print (">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+    

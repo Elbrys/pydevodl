@@ -1,17 +1,16 @@
 #!/usr/bin/python
 
-#import sys
 import time
 import json
 
 
 from framework.controller.controller import Controller
-#from framework.controller.openflownode import OpenflowNode
 from framework.openflowdev.ofswitch import OFSwitch
 from framework.openflowdev.ofswitch import FlowEntry
 from framework.openflowdev.ofswitch import Instruction
 from framework.openflowdev.ofswitch import DropAction
 from framework.openflowdev.ofswitch import Match
+#from framework.openflowdev.ofswitch import delete_flow
 
 from framework.common.status import STATUS
 from framework.common.utils import load_dict_from_file
@@ -29,6 +28,7 @@ if __name__ == "__main__":
         ctrlPortNum = d['ctrlPortNum']
         ctrlUname = d['ctrlUname']
         ctrlPswd = d['ctrlPswd']
+        nodeName = d['nodeName']
     except:
         print ("Failed to get Controller device attributes")
         exit(0)
@@ -40,15 +40,14 @@ if __name__ == "__main__":
     rundelay = 5
 
     ctrl = Controller(ctrlIpAddr, ctrlPortNum, ctrlUname, ctrlPswd)
-    node = "openflow:1" # (name:DPID)
-    ofswitch = OFSwitch(ctrl, node)
+    ofswitch = OFSwitch(ctrl, nodeName)
 
     # --- Flow Match: IPv4 Destination Address
     #     NOTE: Ethernet type MUST be 2048 (0x0800) -> IPv4 protocol
     eth_type = 2048
     ipv4_dst = "10.11.12.13/24"
         
-    print ("<<< 'Controller': %s, 'OpenFlow' switch: %s" % (ctrlIpAddr, node))
+    print ("<<< 'Controller': %s, 'OpenFlow' switch: %s" % (ctrlIpAddr, nodeName))
 
     print "\n"
     print ("<<< Set OpenFlow flow on the Controller")
@@ -104,6 +103,19 @@ if __name__ == "__main__":
         print ("Flow info:")
         flow = result[1]
         print json.dumps(flow, indent=4)
+    else:
+        print ("\n")
+        print ("!!!Demo terminated, reason: %s" % status.brief().lower())
+        exit(0)
+    
+    
+    print ("\n")
+    print ("<<< Delete flow with id of '%s' from the Controller's cache and from the table '%s' on the '%s' node" % (flow_id, table_id, nodeName))
+    time.sleep(rundelay)
+    result = ofswitch.delete_flow(flow_entry.get_flow_table_id(), flow_entry.get_flow_id())
+    status = result[0]
+    if(status.eq(STATUS.OK) == True):
+        print ("<<< Flow successfully removed from the Controller")
     else:
         print ("\n")
         print ("!!!Demo terminated, reason: %s" % status.brief().lower())

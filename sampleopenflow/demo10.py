@@ -1,6 +1,5 @@
 #!/usr/bin/python
 
-#import sys
 import time
 import json
 
@@ -28,6 +27,7 @@ if __name__ == "__main__":
         ctrlPortNum = d['ctrlPortNum']
         ctrlUname = d['ctrlUname']
         ctrlPswd = d['ctrlPswd']
+        nodeName = d['nodeName']
     except:
         print ("Failed to get Controller device attributes")
         exit(0)
@@ -39,8 +39,7 @@ if __name__ == "__main__":
     rundelay = 5
 
     ctrl = Controller(ctrlIpAddr, ctrlPortNum, ctrlUname, ctrlPswd)
-    node = "openflow:1" # (name:DPID)
-    ofswitch = OFSwitch(ctrl, node)
+    ofswitch = OFSwitch(ctrl, nodeName)
 
     # --- Flow Match: Ethernet Source Address
     #                 Ethernet Destination Address
@@ -57,18 +56,18 @@ if __name__ == "__main__":
     eth_type = 2048
     eth_src = "00:00:00:11:23:ae"
     eth_dst = "20:14:29:01:19:61"
-    ipv4_src = "19.1.2.3/10"
+    ipv4_src = "192.1.2.3/10"
     ipv4_dst = "172.168.5.6/18"
     ip_proto = 17
     ip_dscp = 8
     ip_ecn = 3
     udp_src_port = 25364
     udp_dst_port = 8080
-    input_port = 3
+    input_port = 13
     
     
-    print ("<<< 'Controller': %s, 'OpenFlow' switch: '%s'" % (ctrlIpAddr, node))
-
+    print ("<<< 'Controller': %s, 'OpenFlow' switch: '%s'" % (ctrlIpAddr, nodeName))
+    
     print "\n"
     print ("<<< Set OpenFlow flow on the Controller")
     print ("        Match:  Ethernet Type (%s)\n"
@@ -128,7 +127,7 @@ if __name__ == "__main__":
     match.set_ip_ecn(ip_ecn)    
     match.set_udp_src_port(udp_src_port)
     match.set_udp_dst_port(udp_dst_port)
-    match.set_in_port(in_port = 3)    
+    match.set_in_port(in_port = input_port)    
     flow_entry.add_match(match)
     
     
@@ -156,6 +155,18 @@ if __name__ == "__main__":
         print ("Flow info:")
         flow = result[1]
         print json.dumps(flow, indent=4)
+    else:
+        print ("\n")
+        print ("!!!Demo terminated, reason: %s" % status.brief().lower())
+        exit(0)
+    
+    print ("\n")
+    print ("<<< Delete flow with id of '%s' from the Controller's cache and from the table '%s' on the '%s' node" % (flow_id, table_id, nodeName))
+    time.sleep(rundelay)
+    result = ofswitch.delete_flow(flow_entry.get_flow_table_id(), flow_entry.get_flow_id())
+    status = result[0]
+    if(status.eq(STATUS.OK) == True):
+        print ("<<< Flow successfully removed from the Controller")
     else:
         print ("\n")
         print ("!!!Demo terminated, reason: %s" % status.brief().lower())

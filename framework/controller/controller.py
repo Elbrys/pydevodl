@@ -1,4 +1,8 @@
 """
+@authors: Sergei Garbuzov
+@status: Development
+@version: 1.0.0
+
 controller.py: Controller's properties and communication methods
 
 

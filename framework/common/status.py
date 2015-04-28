@@ -1,4 +1,8 @@
 """
+@authors: Sergei Garbuzov
+@status: Development
+@version: 1.0.0
+
 status.py: Operational Status of a performed HTTP communication session
 
 
