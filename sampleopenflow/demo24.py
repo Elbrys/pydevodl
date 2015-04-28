@@ -9,8 +9,7 @@ from framework.openflowdev.ofswitch import OFSwitch
 from framework.openflowdev.ofswitch import FlowEntry
 from framework.openflowdev.ofswitch import Instruction
 from framework.openflowdev.ofswitch import OutputAction
-from framework.openflowdev.ofswitch import PushMplsHeaderAction
-from framework.openflowdev.ofswitch import SetFieldAction
+from framework.openflowdev.ofswitch import PopMplsHeaderAction
 from framework.openflowdev.ofswitch import Match
 
 from framework.common.status import STATUS
@@ -45,17 +44,15 @@ if __name__ == "__main__":
 
     # --- Flow Match: Ethernet Type
     #                 Input Port
-    #                 IPv4 Destination Address
-    eth_type = 2048 # IPv4
-    in_port = 13
-    ipv4_dst = "10.12.5.4/32"
+    #                 MPLS Label
+    eth_type = 34887 # MPLS unicast (0x8847)
+    in_port = 14
+    mpls_label = 44
     
-    # --- Flow Actions: Push MPLS
-    #                   Set Field
+    # --- Flow Actions: Pop MPLS
     #                   Output
-    push_ether_type = 34887 # MPLS unicast (0x8847)
-    mpls_label = 27
-    output_port = 14
+    pop_ether_type = 34887 # MPLS unicast (0x8847)
+    output_port = 13
     
     print ("<<< 'Controller': %s, 'OpenFlow' switch: '%s'" % (ctrlIpAddr, nodeName))
     
@@ -63,11 +60,9 @@ if __name__ == "__main__":
     print ("<<< Set OpenFlow flow on the Controller")
     print ("        Match:  Ethernet Type (%s)\n"
            "                Input Port (%s)\n"
-           "                IPv4 Destination Address (%s)"% (hex(eth_type), in_port, ipv4_dst))
-    print ("        Actions: Push MPLS Header (Ethernet Type %s)\n"
-           "                 Set Field (MPLS label %s)\n"
-           "        Actions: 'Output' (Physical Port number %s)" % (hex(push_ether_type), 
-                                                                    mpls_label, output_port))
+           "                MPLS Label (%s)"%     (hex(eth_type), in_port, mpls_label))
+    print ("        Actions: 'Pop MPLS (Ethernet Type %s)\n"
+           "                 'Output' (Physical Port number %s)" % (pop_ether_type, output_port))
     
     
     time.sleep(rundelay)
@@ -75,36 +70,32 @@ if __name__ == "__main__":
     
     flow_entry = FlowEntry()
     table_id = 0
-    flow_id = 28
-    flow_entry.set_flow_name(flow_name = "Push MPLS Label")
-    flow_entry.set_flow_id(flow_id )
-    flow_entry.set_flow_priority(flow_priority = 1021)
-    flow_entry.set_flow_cookie(cookie = 654)
+    flow_id = 30
+    flow_entry.set_flow_name(flow_name = "Strip MPLS Label")
+    flow_entry.set_flow_id(flow_id)
+    flow_entry.set_flow_priority(flow_priority = 1023)
+    flow_entry.set_flow_cookie(cookie = 889)
     flow_entry.set_flow_cookie_mask(cookie_mask = 255)
     
     # --- Instruction: 'Apply-action'
-    #     Actions:     'Push MPLS Header'
-    #                  'Set Field'
+    #     Actions:     'Pop MPLS Header'
     #                  'Output'
     instruction = Instruction(instruction_order = 0)
-    action = PushMplsHeaderAction(action_order = 0)
-    action.set_eth_type(push_ether_type)
-    instruction.add_apply_action(action)        
-    action = SetFieldAction(action_order = 1)
-    action.set_mpls_label(mpls_label)
+    action = PopMplsHeaderAction(action_order = 0)
+    action.set_eth_type(pop_ether_type)
     instruction.add_apply_action(action)    
-    action = OutputAction(action_order = 2, port = output_port)
+    action = OutputAction(action_order = 1, port = output_port)
     instruction.add_apply_action(action)
     flow_entry.add_instruction(instruction)
-    
+
     # --- Match Fields: Ethernet Type
     #                   Input Port
-    #                   IPv4 Destination Address
-    match = Match()    
+    #                   MPLS Label
+    match = Match()
     match.set_eth_type(eth_type)
     match.set_in_port(in_port)
-    match.set_ipv4_dst(ipv4_dst)
-    flow_entry.add_match(match)    
+    match.set_mpls_lable(mpls_label)
+    flow_entry.add_match(match)        
     
     
     print ("\n")
