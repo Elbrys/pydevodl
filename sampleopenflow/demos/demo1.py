@@ -1,5 +1,10 @@
 #!/usr/bin/python
 
+"""
+@authors: Sergei Garbuzov
+
+"""
+
 import time
 import json
 
@@ -11,7 +16,7 @@ from framework.common.utils import load_dict_from_file
 
 
 if __name__ == "__main__":
-
+    
     f = "cfg.yml"
     d = {}
     if(load_dict_from_file(f, d) == False):
@@ -32,9 +37,9 @@ if __name__ == "__main__":
     print ("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
     print ("<<< Demo Start")
     print ("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
-
+    
     rundelay = 5
-
+    
     print ("\n")
     print ("<<< Creating Controller instance")
     time.sleep(rundelay)
@@ -72,7 +77,7 @@ if __name__ == "__main__":
             print ("\n")
             print ("!!!Demo terminated, reason: %s" % status.brief().lower())
             exit(0)
-        
+    
     
     print ("\n")
     print (">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")

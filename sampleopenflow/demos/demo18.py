@@ -1,5 +1,10 @@
 #!/usr/bin/python
 
+"""
+@authors: Sergei Garbuzov
+
+"""
+
 import time
 import json
 
@@ -15,13 +20,13 @@ from framework.common.status import STATUS
 from framework.common.utils import load_dict_from_file
 
 if __name__ == "__main__":
-
+    
     f = "cfg.yml"
     d = {}
     if(load_dict_from_file(f, d) == False):
         print("Config file '%s' read error: " % f)
         exit()
-
+    
     try:
         ctrlIpAddr = d['ctrlIpAddr']
         ctrlPortNum = d['ctrlPortNum']
@@ -35,84 +40,75 @@ if __name__ == "__main__":
     print ("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
     print ("<<< Demo Start")
     print ("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
-
+    
     rundelay = 5
-
+    
     ctrl = Controller(ctrlIpAddr, ctrlPortNum, ctrlUname, ctrlPswd)
     ofswitch = OFSwitch(ctrl, nodeName)
-
-    # --- Flow Match: Ethernet Source Address
-    #                 Ethernet Destination Address
-    #                 IPv4 Source Address
-    #                 IPv4 Destination Address
-    #                 IP Protocol Number
-    #                 IP DSCP
-    #                 Input Port
-    #     NOTE: Ethernet type MUST be 2048 (0x800) -> IPv4 protocol
-    eth_type = 2048
-    eth_src = "00:1c:01:00:23:aa"   
-    eth_dst = "00:02:02:60:ff:fe"
-    ipv4_src = "10.0.245.1/24"
-    ipv4_dst = "192.168.1.123/16"
-    ip_proto = 56
-    ip_dscp = 15
-    input_port = 13
     
+    # --- Flow Match: Ethernet Type
+    #                 IPv6 Source Address
+    #                 IPv6 Destination Address
+    #                 IP DSCP
+    #                 TCP Source Port
+    #TCP Destination Port
+    eth_type = 34525 # IPv6 protocol (0x86dd)
+    ipv6_src = "2001::2acf:e9ff:fe21:6431/80"
+    ipv6_dst = "2004:1234:2acf:e9ff::fe21:6431/64"
+    ip_dscp = 8
+    ip_proto = 6 # TCP
+    tcp_src_port = 12345
+    tcp_dst_port = 54321
+    
+    # --- Flow Actions: Output (CONTROLLER)
+    output_port = "CONTROLLER"
     
     print ("<<< 'Controller': %s, 'OpenFlow' switch: '%s'" % (ctrlIpAddr, nodeName))
-
+    
     print "\n"
     print ("<<< Set OpenFlow flow on the Controller")
     print ("        Match:  Ethernet Type (%s)\n"
-           "                Ethernet Source Address (%s)\n"
-           "                Ethernet Destination Address (%s)\n" 
-           "                IPv4 Source Address (%s)\n"
-           "                IPv4 Destination Address (%s)\n"
-           "                IP Protocol Number (%s)\n"
+           "                IPv6 Source Address (%s)\n"
+           "                IPv6 Destination Address (%s)\n"
            "                IP DSCP (%s)\n"
-           "                Input Port (%s)"               % (hex(eth_type), eth_src, 
-                                                              eth_dst, ipv4_src, ipv4_dst,
-                                                              ip_proto, ip_dscp,
-                                                              input_port))
-    print ("        Action: Output (CONTROLLER)")
-
-
+           "                TCP Source Port (%s)\n"
+           "                TCP Destination Port (%s)" % (hex(eth_type), ipv6_src, ipv6_dst,
+                                                          ip_dscp, tcp_src_port, tcp_dst_port))
+    print ("        Action: Output (to %s)" % output_port)
+    
+    
     time.sleep(rundelay)
-
-
+    
+    
     flow_entry = FlowEntry()
+    flow_entry.set_flow_name(flow_name = "demo18.py")
     table_id = 0
-    flow_entry.set_flow_table_id(table_id)
-    flow_id = 15
+    flow_id = 24
     flow_entry.set_flow_id(flow_id)
-    flow_entry.set_flow_priority(flow_priority = 1006)
-    flow_entry.set_flow_cookie(cookie=100)
-    flow_entry.set_flow_cookie_mask(cookie_mask=255)
+    flow_entry.set_flow_priority(flow_priority = 1017)
     
     # --- Instruction: 'Apply-action'
-    #     Action:      'Output' to CONTROLLER
+    #     Actions:     'Output'
     instruction = Instruction(instruction_order = 0)
-    action = OutputAction(action_order = 0, port = "CONTROLLER", max_len=60)
+    action = OutputAction(action_order = 0, port = output_port)
     instruction.add_apply_action(action)
     flow_entry.add_instruction(instruction)
     
     # --- Match Fields: Ethernet Type
-    #                   Ethernet Source Address
-    #                   Ethernet Destination Address
-    #                   IPv4 Source Address
-    #                   IPv4 Destination Address
-    #                   IP Protocol Number
+    #                   IPv6 Source Address
+    #                   IPv6 Destination Address
+    #                   IP protocol number (TCP)
     #                   IP DSCP
-    #                   Input Port
+    #                   TCP Source Port
+    #                   TCP Destination Port
     match = Match()    
     match.set_eth_type(eth_type)
-    match.set_eth_src(eth_src)
-    match.set_eth_dst(eth_dst)
-    match.set_ipv4_src(ipv4_src)
-    match.set_ipv4_dst(ipv4_dst)
+    match.set_ipv6_src(ipv6_src)
+    match.set_ipv6_dst(ipv6_dst)
     match.set_ip_proto(ip_proto)
     match.set_ip_dscp(ip_dscp)
-    match.set_in_port(input_port)    
+    match.set_tcp_src_port(tcp_src_port)
+    match.set_tcp_dst_port(tcp_dst_port)
     flow_entry.add_match(match)
     
     
@@ -147,7 +143,8 @@ if __name__ == "__main__":
     
     
     print ("\n")
-    print ("<<< Delete flow with id of '%s' from the Controller's cache and from the table '%s' on the '%s' node" % (flow_id, table_id, nodeName))
+    print ("<<< Delete flow with id of '%s' from the Controller's cache "
+           "and from the table '%s' on the '%s' node" % (flow_id, table_id, nodeName))
     time.sleep(rundelay)
     result = ofswitch.delete_flow(flow_entry.get_flow_table_id(), flow_entry.get_flow_id())
     status = result[0]

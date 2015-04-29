@@ -1,5 +1,10 @@
 #!/usr/bin/python
 
+"""
+@authors: Sergei Garbuzov
+
+"""
+
 import time
 import json
 
@@ -9,19 +14,21 @@ from framework.openflowdev.ofswitch import OFSwitch
 from framework.openflowdev.ofswitch import FlowEntry
 from framework.openflowdev.ofswitch import Instruction
 from framework.openflowdev.ofswitch import OutputAction
+from framework.openflowdev.ofswitch import PushMplsHeaderAction
+from framework.openflowdev.ofswitch import SetFieldAction
 from framework.openflowdev.ofswitch import Match
 
 from framework.common.status import STATUS
 from framework.common.utils import load_dict_from_file
 
 if __name__ == "__main__":
-
+    
     f = "cfg.yml"
     d = {}
     if(load_dict_from_file(f, d) == False):
         print("Config file '%s' read error: " % f)
         exit()
-
+    
     try:
         ctrlIpAddr = d['ctrlIpAddr']
         ctrlPortNum = d['ctrlPortNum']
@@ -35,76 +42,74 @@ if __name__ == "__main__":
     print ("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
     print ("<<< Demo Start")
     print ("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
-
+    
     rundelay = 5
-
+    
     ctrl = Controller(ctrlIpAddr, ctrlPortNum, ctrlUname, ctrlPswd)
     ofswitch = OFSwitch(ctrl, nodeName)
-
-    # --- Flow Match: Ethernet Type
-    #                 IPv6 Source Address
-    #                 IPv6 Destination Address
-    #                 IP DSCP
-    #                 UDP Source Port
-    #                 UDP Destination Port
-    eth_type = 34525 # IPv6 protocol (0x86dd)
-    ipv6_src = "fe80::2acf:e9ff:fe21:6431/128"
-    ipv6_dst = "aabb:1234:2acf:e9ff::fe21:6431/64"
-    ip_dscp = 8
-    ip_proto = 17 # UDP
-    udp_src_port = 25364
-    udp_dst_port = 7777
     
-    # --- Flow Actions: Output (CONTROLLER)
-    output_port = "CONTROLLER"
+    # --- Flow Match: Ethernet Type
+    #                 Input Port
+    #                 IPv4 Destination Address
+    eth_type = 2048 # IPv4
+    in_port = 13
+    ipv4_dst = "10.12.5.4/32"
+    
+    # --- Flow Actions: Push MPLS
+    #                   Set Field
+    #                   Output
+    push_ether_type = 34887 # MPLS unicast (0x8847)
+    mpls_label = 27
+    output_port = 14
     
     print ("<<< 'Controller': %s, 'OpenFlow' switch: '%s'" % (ctrlIpAddr, nodeName))
     
     print "\n"
     print ("<<< Set OpenFlow flow on the Controller")
     print ("        Match:  Ethernet Type (%s)\n"
-           "                IPv6 Source Address (%s)\n"
-           "                IPv6 Destination Address (%s)\n"
-           "                IP DSCP (%s)\n"
-           "                UDP Source Port (%s)\n"
-           "                UDP Destination Port (%s)" % (hex(eth_type), ipv6_src, ipv6_dst,
-                                                          ip_dscp, udp_src_port, udp_dst_port))
-    print ("        Actions: 'Output' (to %s)" % output_port)
+           "                Input Port (%s)\n"
+           "                IPv4 Destination Address (%s)"% (hex(eth_type), in_port, ipv4_dst))
+    print ("        Action: Push MPLS Header (Ethernet Type %s)\n"
+           "                Set Field (MPLS label %s)\n"
+           "                Output (Physical Port number %s)" % (hex(push_ether_type), 
+                                                                    mpls_label, output_port))
     
     
     time.sleep(rundelay)
     
     
     flow_entry = FlowEntry()
-    flow_entry.set_flow_name(flow_name = "demo17.py")
     table_id = 0
-    flow_id = 23
-    flow_entry.set_flow_id(flow_id)
-    flow_entry.set_flow_priority(flow_priority = 1015)
+    flow_id = 28
+    flow_entry.set_flow_name(flow_name = "Push MPLS Label")
+    flow_entry.set_flow_id(flow_id )
+    flow_entry.set_flow_priority(flow_priority = 1021)
+    flow_entry.set_flow_cookie(cookie = 654)
+    flow_entry.set_flow_cookie_mask(cookie_mask = 255)
     
     # --- Instruction: 'Apply-action'
-    #     Actions:     'Output'
+    #     Actions:     'Push MPLS Header'
+    #                  'Set Field'
+    #                  'Output'
     instruction = Instruction(instruction_order = 0)
-    action = OutputAction(action_order = 0, port = output_port)
+    action = PushMplsHeaderAction(action_order = 0)
+    action.set_eth_type(push_ether_type)
+    instruction.add_apply_action(action)        
+    action = SetFieldAction(action_order = 1)
+    action.set_mpls_label(mpls_label)
+    instruction.add_apply_action(action)    
+    action = OutputAction(action_order = 2, port = output_port)
     instruction.add_apply_action(action)
     flow_entry.add_instruction(instruction)
     
     # --- Match Fields: Ethernet Type
-    #                   IPv6 Source Address
-    #                   IPv6 Destination Address
-    #                   IP protocol number (UDP)
-    #                   IP DSCP
-    #                   UDP Source Port
-    #                   UDP Destination Port
+    #                   Input Port
+    #                   IPv4 Destination Address
     match = Match()    
     match.set_eth_type(eth_type)
-    match.set_ipv6_src(ipv6_src)
-    match.set_ipv6_dst(ipv6_dst)
-    match.set_ip_proto(ip_proto)
-    match.set_ip_dscp(ip_dscp)
-    match.set_udp_src_port(udp_src_port)
-    match.set_udp_dst_port(udp_dst_port)
-    flow_entry.add_match(match)
+    match.set_in_port(in_port)
+    match.set_ipv4_dst(ipv4_dst)
+    flow_entry.add_match(match)    
     
     
     print ("\n")
@@ -112,12 +117,12 @@ if __name__ == "__main__":
     print flow_entry.get_payload()
     time.sleep(rundelay)
     result = ofswitch.add_modify_flow(flow_entry)
-    status = result[0]
+    status = result[0]    
     if(status.eq(STATUS.OK) == True):
         print ("<<< Flow successfully added to the Controller")
     else:
         print ("\n")
-        print ("!!!Demo terminated, reason: %s" % status.brief().lower())
+        print ("!!!Demo terminated, reason: %s" % status.detail())
         exit(0)
     
     

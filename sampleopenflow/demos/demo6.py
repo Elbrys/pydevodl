@@ -1,5 +1,10 @@
 #!/usr/bin/python
 
+"""
+@authors: Sergei Garbuzov
+
+"""
+
 import time
 import json
 
@@ -8,7 +13,7 @@ from framework.controller.controller import Controller
 from framework.openflowdev.ofswitch import OFSwitch
 from framework.openflowdev.ofswitch import FlowEntry
 from framework.openflowdev.ofswitch import Instruction
-from framework.openflowdev.ofswitch import OutputAction
+from framework.openflowdev.ofswitch import DropAction
 from framework.openflowdev.ofswitch import Match
 
 from framework.common.status import STATUS
@@ -21,7 +26,7 @@ if __name__ == "__main__":
     if(load_dict_from_file(f, d) == False):
         print("Config file '%s' read error: " % f)
         exit()
-
+    
     try:
         ctrlIpAddr = d['ctrlIpAddr']
         ctrlPortNum = d['ctrlPortNum']
@@ -43,15 +48,10 @@ if __name__ == "__main__":
     
     # --- Flow Match: Ethernet Type
     #                 Ethernet Source Address
-    #                 Ethernet Destination Address
-    #                 VLAN ID
-    #                 VLAN PCP
-    eth_type = 2048
-    eth_src = "00:00:00:11:23:ad"
-    eth_dst = "00:ff:29:01:19:61"
-    vlan_id = 100
-    vlan_pcp = 3
-    
+    #                 Ethernet Destination Addresses
+    eth_type = 45 # (0x002D)
+    eth_src = "00:01:02:03:04:05"   
+    eth_dst = "aa:bb:cc:dd:ee:ff"
     
     print ("<<< 'Controller': %s, 'OpenFlow' switch: '%s'" % (ctrlIpAddr, nodeName))
     
@@ -59,11 +59,8 @@ if __name__ == "__main__":
     print ("<<< Set OpenFlow flow on the Controller")
     print ("        Match:  Ethernet Type (%s)\n"
            "                Ethernet Source Address (%s)\n"
-           "                Ethernet Destination Address (%s)\n" 
-           "                VLAN ID (%s)\n"
-           "                VLAN PCP(%s)"                     % (hex(eth_type), eth_src, 
-                                                                 eth_dst, vlan_id, vlan_pcp))
-    print ("        Action: Output (to Physical Port Number)")
+           "                Ethernet Destination Address (%s)" % (hex(eth_type), eth_src, eth_dst))
+    print ("        Action: Drop")
     
     
     time.sleep(rundelay)
@@ -72,28 +69,24 @@ if __name__ == "__main__":
     flow_entry = FlowEntry()
     table_id = 0
     flow_entry.set_flow_table_id(table_id)
-    flow_id = 20
+    flow_id = 14
     flow_entry.set_flow_id(flow_id)
-    flow_entry.set_flow_priority(flow_priority = 1011)
+    flow_entry.set_flow_priority(flow_priority = 1000)
     
     # --- Instruction: 'Apply-action'
-    #     Action:      'Output' to port 7
+    #     Action:      'Drop'
     instruction = Instruction(instruction_order = 0)    
-    action = OutputAction(action_order = 0, port = 7)   
-    instruction.add_apply_action(action)
+    action = DropAction(action_order = 0)   
+    instruction.add_apply_action(action)    
     flow_entry.add_instruction(instruction)
     
     # --- Match Fields: Ethernet Type
     #                   Ethernet Source Address
-    #                   Ethernet Destination Address
-    #                   VLAN ID
-    #                   VLAN PCP
+    #                   Ethernet Destination Address  
     match = Match()
-    match.set_eth_type(eth_type)    
+    match.set_eth_type(eth_type)
     match.set_eth_src(eth_src)    
     match.set_eth_dst(eth_dst)
-    match.set_vlan_id(vlan_id)
-    match.set_vlan_pcp(vlan_pcp)
     flow_entry.add_match(match)
     
     
@@ -128,8 +121,7 @@ if __name__ == "__main__":
     
     
     print ("\n")
-    print ("<<< Delete flow with id of '%s' from the Controller's cache "
-           "and from the table '%s' on the '%s' node" % (flow_id, table_id, nodeName))
+    print ("<<< Delete flow with id of '%s' from the Controller's cache and from the table '%s' on the '%s' node" % (flow_id, table_id, nodeName))
     time.sleep(rundelay)
     result = ofswitch.delete_flow(flow_entry.get_flow_table_id(), flow_entry.get_flow_id())
     status = result[0]

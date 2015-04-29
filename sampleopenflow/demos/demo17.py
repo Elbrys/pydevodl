@@ -1,5 +1,10 @@
 #!/usr/bin/python
 
+"""
+@authors: Sergei Garbuzov
+
+"""
+
 import time
 import json
 
@@ -15,13 +20,13 @@ from framework.common.status import STATUS
 from framework.common.utils import load_dict_from_file
 
 if __name__ == "__main__":
-
+    
     f = "cfg.yml"
     d = {}
     if(load_dict_from_file(f, d) == False):
         print("Config file '%s' read error: " % f)
         exit()
-
+    
     try:
         ctrlIpAddr = d['ctrlIpAddr']
         ctrlPortNum = d['ctrlPortNum']
@@ -35,18 +40,25 @@ if __name__ == "__main__":
     print ("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
     print ("<<< Demo Start")
     print ("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
-
+    
     rundelay = 5
-
+    
     ctrl = Controller(ctrlIpAddr, ctrlPortNum, ctrlUname, ctrlPswd)
     ofswitch = OFSwitch(ctrl, nodeName)
 
     # --- Flow Match: Ethernet Type
     #                 IPv6 Source Address
     #                 IPv6 Destination Address
+    #                 IP DSCP
+    #                 UDP Source Port
+    #                 UDP Destination Port
     eth_type = 34525 # IPv6 protocol (0x86dd)
     ipv6_src = "fe80::2acf:e9ff:fe21:6431/128"
     ipv6_dst = "aabb:1234:2acf:e9ff::fe21:6431/64"
+    ip_dscp = 8
+    ip_proto = 17 # UDP
+    udp_src_port = 25364
+    udp_dst_port = 7777
     
     # --- Flow Actions: Output (CONTROLLER)
     output_port = "CONTROLLER"
@@ -57,23 +69,23 @@ if __name__ == "__main__":
     print ("<<< Set OpenFlow flow on the Controller")
     print ("        Match:  Ethernet Type (%s)\n"
            "                IPv6 Source Address (%s)\n"
-           "                IPv6 Destination Address (%s)" % (hex(eth_type), ipv6_src, ipv6_dst))
-    print ("        Actions: 'Output' (to %s)" % output_port)
+           "                IPv6 Destination Address (%s)\n"
+           "                IP DSCP (%s)\n"
+           "                UDP Source Port (%s)\n"
+           "                UDP Destination Port (%s)" % (hex(eth_type), ipv6_src, ipv6_dst,
+                                                          ip_dscp, udp_src_port, udp_dst_port))
+    print ("        Action: Output (to %s)" % output_port)
     
     
     time.sleep(rundelay)
     
     
     flow_entry = FlowEntry()
-    flow_entry.set_flow_name(flow_name = "match=ipv6_src,ipv6_dst;actions=output:Controller")
+    flow_entry.set_flow_name(flow_name = "demo17.py")
     table_id = 0
     flow_id = 23
     flow_entry.set_flow_id(flow_id)
-    flow_entry.set_flow_priority(flow_priority = 1014)
-    flow_entry.set_flow_cookie(cookie = 408)
-    flow_entry.set_flow_cookie_mask(cookie_mask = 255)
-    flow_entry.set_flow_hard_timeout(hard_timeout = 3400)
-    flow_entry.set_flow_idle_timeout(idle_timeout = 3400)
+    flow_entry.set_flow_priority(flow_priority = 1015)
     
     # --- Instruction: 'Apply-action'
     #     Actions:     'Output'
@@ -85,10 +97,18 @@ if __name__ == "__main__":
     # --- Match Fields: Ethernet Type
     #                   IPv6 Source Address
     #                   IPv6 Destination Address
+    #                   IP protocol number (UDP)
+    #                   IP DSCP
+    #                   UDP Source Port
+    #                   UDP Destination Port
     match = Match()    
-    match.set_eth_type(eth_type = 34525)
+    match.set_eth_type(eth_type)
     match.set_ipv6_src(ipv6_src)
     match.set_ipv6_dst(ipv6_dst)
+    match.set_ip_proto(ip_proto)
+    match.set_ip_dscp(ip_dscp)
+    match.set_udp_src_port(udp_src_port)
+    match.set_udp_dst_port(udp_dst_port)
     flow_entry.add_match(match)
     
     

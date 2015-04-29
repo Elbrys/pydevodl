@@ -1,5 +1,10 @@
 #!/usr/bin/python
 
+"""
+@authors: Sergei Garbuzov
+
+"""
+
 import time
 import json
 
@@ -8,20 +13,20 @@ from framework.controller.controller import Controller
 from framework.openflowdev.ofswitch import OFSwitch
 from framework.openflowdev.ofswitch import FlowEntry
 from framework.openflowdev.ofswitch import Instruction
-from framework.openflowdev.ofswitch import DropAction
+from framework.openflowdev.ofswitch import OutputAction
 from framework.openflowdev.ofswitch import Match
 
 from framework.common.status import STATUS
 from framework.common.utils import load_dict_from_file
 
 if __name__ == "__main__":
-
+    
     f = "cfg.yml"
     d = {}
     if(load_dict_from_file(f, d) == False):
         print("Config file '%s' read error: " % f)
         exit()
-
+    
     try:
         ctrlIpAddr = d['ctrlIpAddr']
         ctrlPortNum = d['ctrlPortNum']
@@ -35,52 +40,98 @@ if __name__ == "__main__":
     print ("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
     print ("<<< Demo Start")
     print ("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
-
+    
     rundelay = 5
-
+    
     ctrl = Controller(ctrlIpAddr, ctrlPortNum, ctrlUname, ctrlPswd)
     ofswitch = OFSwitch(ctrl, nodeName)
-
-    # --- Flow Match: IPv4 Source Address
+    
+    # --- Flow Match: Ethernet Source Address
+    #                 Ethernet Destination Address
+    #                 IPv4 Source Address
+    #                 IPv4 Destination Address
+    #                 TCP Source Port Number
+    #                 TCP Destination Port Number    
+    #                 IP DSCP
+    #                 Input Port
     #     NOTE: Ethernet type MUST be 2048 (0x800) -> IPv4 protocol
-    # NOTE: 
     eth_type = 2048
-    ipv4_src = "10.11.12.13/24"
-        
-            
-    print ("<<< 'Controller': %s, 'OpenFlow' switch: %s" % (ctrlIpAddr, nodeName))
-
+    eth_src = "00:00:00:11:23:ae"
+    eth_dst = "ff:ff:29:01:19:61"
+    ipv4_src = "17.1.2.3/8"
+    ipv4_dst = "172.168.5.6/16"
+    ip_proto = 6
+    ip_dscp = 2
+    tcp_src_port = 25364
+    tcp_dst_port = 8080
+    input_port = 13
+    
+    
+    print ("<<< 'Controller': %s, 'OpenFlow' switch: '%s'" % (ctrlIpAddr, nodeName))
+    
     print "\n"
     print ("<<< Set OpenFlow flow on the Controller")
     print ("        Match:  Ethernet Type (%s)\n"
-           "                IPv4 Source Address (%s)" % (hex(eth_type), ipv4_src))
-    print ("        Action: Drop")
-
+           "                Ethernet Source Address (%s)\n"
+           "                Ethernet Destination Address (%s)\n" 
+           "                IPv4 Source Address (%s)\n"
+           "                IPv4 Destination Address (%s)\n"
+           "                IP Protocol Number (%s)\n"
+           "                IP DSCP (%s)\n"
+           "                TCP Source Port Number (%s)\n"
+           "                TCP Destination Port Number (%s)\n"
+           "                Input Port (%s)"               % (hex(eth_type), eth_src, 
+                                                              eth_dst, ipv4_src, ipv4_dst,
+                                                              ip_proto, ip_dscp,
+                                                              tcp_src_port, tcp_dst_port,
+                                                              input_port))
+    print ("        Action: Output (NORMAL)")
+    
+    
     time.sleep(rundelay)
     
     
     flow_entry = FlowEntry()
     table_id = 0
     flow_entry.set_flow_table_id(table_id)
-    flow_id = 12
+    flow_id = 16
     flow_entry.set_flow_id(flow_id)
-    flow_entry.set_flow_priority(flow_priority = 1000)
+    flow_entry.set_flow_priority(flow_priority = 1007)
+    flow_entry.set_flow_cookie(cookie=101)
+    flow_entry.set_flow_cookie_mask(cookie_mask=255)
     
     # --- Instruction: 'Apply-action'
-    #     Action:      'Drop'
-    instruction = Instruction(instruction_order = 0)    
-    action = DropAction(action_order = 0)    
+    #     Action:      'Output' NORMAL
+    instruction = Instruction(instruction_order = 0)
+    action = OutputAction(action_order = 0, port = "NORMAL")
     instruction.add_apply_action(action)
     flow_entry.add_instruction(instruction)
     
     # --- Match Fields: Ethernet Type
+    #                   Ethernet Source Address
+    #                   Ethernet Destination Address
     #                   IPv4 Source Address
-    match = Match()
-    match.set_eth_type(eth_type)     
-    match.set_ipv4_src(ipv4_src)       
+    #                   IPv4 Destination Address
+    #                   IP Protocol Number
+    #                   IP DSCP
+    #                   IP ECN
+    #                   TCP Source Port Number
+    #                   TCP Destination Port Number
+    #                   Input Port
+    match = Match()    
+    match.set_eth_type(eth_type)
+    match.set_eth_src(eth_src)
+    match.set_eth_dst(eth_dst)
+    match.set_ipv4_src(ipv4_src)
+    match.set_ipv4_dst(ipv4_dst)
+    match.set_ip_proto(ip_proto)
+    match.set_ip_dscp(ip_dscp)
+    match.set_tcp_src_port(tcp_src_port)
+    match.set_tcp_dst_port(tcp_dst_port)
+    match.set_in_port(input_port)    
     flow_entry.add_match(match)
     
-
+    
     print ("\n")
     print ("<<< Flow to send:")
     print flow_entry.get_payload()

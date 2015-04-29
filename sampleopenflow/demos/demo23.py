@@ -1,5 +1,10 @@
 #!/usr/bin/python
 
+"""
+@authors: Sergei Garbuzov
+
+"""
+
 import time
 import json
 
@@ -9,19 +14,20 @@ from framework.openflowdev.ofswitch import OFSwitch
 from framework.openflowdev.ofswitch import FlowEntry
 from framework.openflowdev.ofswitch import Instruction
 from framework.openflowdev.ofswitch import OutputAction
+from framework.openflowdev.ofswitch import SetFieldAction
 from framework.openflowdev.ofswitch import Match
 
 from framework.common.status import STATUS
 from framework.common.utils import load_dict_from_file
 
 if __name__ == "__main__":
-
+    
     f = "cfg.yml"
     d = {}
     if(load_dict_from_file(f, d) == False):
         print("Config file '%s' read error: " % f)
         exit()
-
+    
     try:
         ctrlIpAddr = d['ctrlIpAddr']
         ctrlPortNum = d['ctrlPortNum']
@@ -35,51 +41,35 @@ if __name__ == "__main__":
     print ("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
     print ("<<< Demo Start")
     print ("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
-
+    
     rundelay = 5
-
+    
     ctrl = Controller(ctrlIpAddr, ctrlPortNum, ctrlUname, ctrlPswd)
     ofswitch = OFSwitch(ctrl, nodeName)
-
-    # --- Flow Match: Ethernet Type
-    #                 IP DSCP
-    #                 IP ECN
-    #                 IPv6 Source Address
-    #                 IPv6 Destination Address
-    #                 IPv6 Flow Label
-    #                 ICMPv6 type
-    #                 ICMPv6 Code
-    #                 Metadata
-    eth_type = 34525 # IPv6 protocol (0x86dd)
-    ip_dscp = 60
-    ip_ecn = 3
-    ipv6_src = "1234:5678:9ABC:DEF0:FDCD:A987:6543:210F/76"
-    ipv6_dst = "2000:2abc:edff:fe00::3456/94"
-    ipv6_flabel = 15
-    ip_proto = 58 # ICMPv6
-    icmpv6_type = 6
-    icmpv6_code = 3
-    metadata = "0x0123456789ABCDEF"
     
-    # --- Flow Actions: Output (CONTROLLER)
-    output_port = "CONTROLLER"
+    # --- Flow Match: Ethernet Type
+    #                 Input Port
+    #                 IPv4 Destination Address
+    eth_type = 34887 # MPLS unicast (0x8847)
+    in_port = 13
+    mpls_label = 27
+    
+    # --- Flow Actions: Push MPLS
+    #                   Set Field
+    #                   Output
+    push_ether_type = 34887 # MPLS unicast (0x8847)
+    push_mpls_label = 44
+    output_port = 14
     
     print ("<<< 'Controller': %s, 'OpenFlow' switch: '%s'" % (ctrlIpAddr, nodeName))
     
     print "\n"
     print ("<<< Set OpenFlow flow on the Controller")
     print ("        Match:  Ethernet Type (%s)\n"
-           "                IP DSCP (%s)\n"
-           "                IP ECN (%s)\n"
-           "                IPv6 Source Address (%s)\n"
-           "                IPv6 Destination Address (%s)\n"
-           "                IPv6 Flow Label (%s)\n"
-           "                ICMPv6 Type (%s)\n"
-           "                ICMPv6 Code (%s)\n" 
-           "                Metadata (%s)"             % (hex(eth_type), ip_dscp, ip_ecn,
-                                                          ipv6_src, ipv6_dst, ipv6_flabel,
-                                                          icmpv6_type, icmpv6_code, metadata))
-    print ("        Actions: 'Output' (to %s)" % output_port)
+           "                Input Port (%s)\n"
+           "                MPLS Label (%s)"%     (hex(eth_type), in_port, mpls_label))
+    print ("        Action: Set Field (MPLS Label %s)\n"
+           "                Output (Physical Port number %s)" % (push_mpls_label, output_port))
     
     
     time.sleep(rundelay)
@@ -87,44 +77,32 @@ if __name__ == "__main__":
     
     flow_entry = FlowEntry()
     table_id = 0
-    flow_id = 26
-    flow_entry.set_flow_name(flow_name = "demo20.py")
+    flow_id = 29
+    flow_entry.set_flow_name(flow_name = "Change MPLS Label")
     flow_entry.set_flow_id(flow_id)
-    flow_entry.set_flow_priority(flow_priority = 1019)
-    flow_entry.set_flow_cookie(cookie = 250)
+    flow_entry.set_flow_priority(flow_priority = 1022)
+    flow_entry.set_flow_cookie(cookie = 401)
     flow_entry.set_flow_cookie_mask(cookie_mask = 255)
-    flow_entry.set_flow_hard_timeout(hard_timeout = 1200)
-    flow_entry.set_flow_idle_timeout(idle_timeout = 3400)
     
     # --- Instruction: 'Apply-action'
-    #     Actions:     'Output'
-    instruction = Instruction(instruction_order = 0)
-    action = OutputAction(action_order = 0, port = output_port)
+    #     Actions:     'Set Field'
+    #                  'Output'
+    instruction = Instruction(instruction_order = 0)    
+    action = SetFieldAction(action_order = 0)
+    action.set_mpls_label(push_mpls_label)
+    instruction.add_apply_action(action)        
+    action = OutputAction(action_order = 1, port = 2)
     instruction.add_apply_action(action)
     flow_entry.add_instruction(instruction)
     
     # --- Match Fields: Ethernet Type
-    #                   IP DSCP
-    #                   IP ECN
-    #                   IPv6 Source Address
-    #                   IPv6 Destination Address
-    #                   IPv6 Flow Label
-    #                   IP protocol number (ICMPv6)
-    #                   ICMPv6 Type
-    #                   ICMPv6 Code
-    #                   Metadata
+    #                   Input Port
+    #                   MPLS Label
     match = Match()    
-    match.set_eth_type(eth_type)
-    match.set_ip_dscp(ip_dscp)
-    match.set_ip_ecn(ip_ecn)   
-    match.set_ipv6_src(ipv6_src)
-    match.set_ipv6_dst(ipv6_dst)
-    match.set_ipv6_flabel(ipv6_flabel)
-    match.set_ip_proto(ip_proto)
-    match.set_icmpv6_type(icmpv6_type)
-    match.set_icmpv6_code(icmpv6_code)
-    match.set_metadata(metadata)    
-    flow_entry.add_match(match)
+    match.set_eth_type(eth_type = 34887)
+    match.set_in_port(in_port)
+    match.set_mpls_lable(mpls_label)
+    flow_entry.add_match(match)        
     
     
     print ("\n")

@@ -1,5 +1,10 @@
 #!/usr/bin/python
 
+"""
+@authors: Sergei Garbuzov
+
+"""
+
 import time
 import json
 
@@ -15,13 +20,13 @@ from framework.common.status import STATUS
 from framework.common.utils import load_dict_from_file
 
 if __name__ == "__main__":
-
+    
     f = "cfg.yml"
     d = {}
     if(load_dict_from_file(f, d) == False):
         print("Config file '%s' read error: " % f)
         exit()
-
+    
     try:
         ctrlIpAddr = d['ctrlIpAddr']
         ctrlPortNum = d['ctrlPortNum']
@@ -40,42 +45,40 @@ if __name__ == "__main__":
     
     ctrl = Controller(ctrlIpAddr, ctrlPortNum, ctrlUname, ctrlPswd)
     ofswitch = OFSwitch(ctrl, nodeName)
-
+    
     # --- Flow Match: Ethernet Source Address
     #                 Ethernet Destination Address
-    #                 ARP Operation
-    #                 ARP Source IPv4 Address
-    #                 ARP Target IPv4 Address
-    #                 ARP source hardware address
-    #                 ARP target hardware address
-    #     NOTE: Ethernet type MUST be 2054 (0x0806) -> ARP protocol
-    eth_type = 2054
-    eth_src = "00:ab:fe:01:03:31"
-    eth_dst = "ff:ff:ff:ff:ff:ff"
-    arp_opcode = 1 # ARP Request
-    arp_src_ipv4_addr = "192.168.4.1"
-    arp_tgt_ipv4_addr = "10.21.22.23"
-    arp_src_hw_addr = "12:34:56:78:98:ab"
-    arp_tgt_hw_addr = "fe:dc:ba:98:76:54"
+    #                 IPv4 Source Address
+    #                 IPv4 Destination Address
+    #                 IP Protocol Number
+    #                 IP DSCP
+    #                 Input Port
+    #     NOTE: Ethernet type MUST be 2048 (0x800) -> IPv4 protocol
+    eth_type = 2048
+    eth_src = "00:1c:01:00:23:aa"   
+    eth_dst = "00:02:02:60:ff:fe"
+    ipv4_src = "10.0.245.1/24"
+    ipv4_dst = "192.168.1.123/16"
+    ip_proto = 56
+    ip_dscp = 15
+    input_port = 13
     
     
     print ("<<< 'Controller': %s, 'OpenFlow' switch: '%s'" % (ctrlIpAddr, nodeName))
-
+    
     print "\n"
     print ("<<< Set OpenFlow flow on the Controller")
     print ("        Match:  Ethernet Type (%s)\n"
            "                Ethernet Source Address (%s)\n"
            "                Ethernet Destination Address (%s)\n" 
-           "                ARP Operation (%s)\n"
-           "                ARP Source IPv4 Address (%s)\n"
-           "                ARP Target IPv4 Address (%s)\n"
-           "                ARP Source Hardware Address (%s)\n"
-           "                ARP Target Hardware Address (%s)"   % (hex(eth_type), eth_src, 
-                                                                   eth_dst, arp_opcode,
-                                                                   arp_src_ipv4_addr,
-                                                                   arp_tgt_ipv4_addr,
-                                                                   arp_src_hw_addr,
-                                                                   arp_tgt_hw_addr))
+           "                IPv4 Source Address (%s)\n"
+           "                IPv4 Destination Address (%s)\n"
+           "                IP Protocol Number (%s)\n"
+           "                IP DSCP (%s)\n"
+           "                Input Port (%s)"               % (hex(eth_type), eth_src, 
+                                                              eth_dst, ipv4_src, ipv4_dst,
+                                                              ip_proto, ip_dscp,
+                                                              input_port))
     print ("        Action: Output (CONTROLLER)")
     
     
@@ -85,34 +88,36 @@ if __name__ == "__main__":
     flow_entry = FlowEntry()
     table_id = 0
     flow_entry.set_flow_table_id(table_id)
-    flow_id = 19
+    flow_id = 15
     flow_entry.set_flow_id(flow_id)
-    flow_entry.set_flow_priority(flow_priority = 1010)
+    flow_entry.set_flow_priority(flow_priority = 1006)
+    flow_entry.set_flow_cookie(cookie=100)
+    flow_entry.set_flow_cookie_mask(cookie_mask=255)
     
     # --- Instruction: 'Apply-action'
-    #     Action:      'Output' CONTROLLER
+    #     Action:      'Output' to CONTROLLER
     instruction = Instruction(instruction_order = 0)
-    action = OutputAction(action_order = 0, port = "CONTROLLER")
+    action = OutputAction(action_order = 0, port = "CONTROLLER", max_len=60)
     instruction.add_apply_action(action)
     flow_entry.add_instruction(instruction)
     
     # --- Match Fields: Ethernet Type
     #                   Ethernet Source Address
     #                   Ethernet Destination Address
-    #                   ARP Operation 
-    #                   ARP Source IPv4 Address 
-    #                   ARP Target IPv4 Address
-    #                   ARP Source Hardware Address
-    #                   ARP Target Hardware Address
+    #                   IPv4 Source Address
+    #                   IPv4 Destination Address
+    #                   IP Protocol Number
+    #                   IP DSCP
+    #                   Input Port
     match = Match()    
     match.set_eth_type(eth_type)
     match.set_eth_src(eth_src)
     match.set_eth_dst(eth_dst)
-    match.set_arp_opcode(arp_opcode)
-    match.set_arp_src_transport_address(arp_src_ipv4_addr)
-    match.set_arp_tgt_transport_address(arp_tgt_ipv4_addr)
-    match.set_arp_src_hw_address(arp_src_hw_addr)
-    match.set_arp_tgt_hw_address(arp_tgt_hw_addr)
+    match.set_ipv4_src(ipv4_src)
+    match.set_ipv4_dst(ipv4_dst)
+    match.set_ip_proto(ip_proto)
+    match.set_ip_dscp(ip_dscp)
+    match.set_in_port(input_port)    
     flow_entry.add_match(match)
     
     
@@ -163,3 +168,4 @@ if __name__ == "__main__":
     print (">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
     print (">>> Demo End")
     print (">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+    
