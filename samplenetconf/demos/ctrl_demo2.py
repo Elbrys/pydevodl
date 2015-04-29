@@ -1,6 +1,10 @@
 #!/usr/bin/python
 
-import sys
+"""
+@authors: Sergei Garbuzov
+
+"""
+
 import time
 
 from framework.controller.controller import Controller

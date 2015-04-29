@@ -1,6 +1,10 @@
 #!/usr/bin/python
 
-import sys
+"""
+@authors: Sergei Garbuzov
+
+"""
+
 import time
 
 from framework.controller.controller import Controller
@@ -10,19 +14,19 @@ from framework.common.utils import load_dict_from_file
 
 
 if __name__ == "__main__":
-
+    
     f = "cfg4.yml"
     d = {}
     if(load_dict_from_file(f, d) == False):
         print("Config file '%s' read error: " % f)
         exit()
-
+    
     try:
         ctrlIpAddr = d['ctrlIpAddr']
         ctrlPortNum = d['ctrlPortNum']
         ctrlUname = d['ctrlUname']
         ctrlPswd = d['ctrlPswd']
-
+        
         nodeName = d['nodeName']
         nodeIpAddr = d['nodeIpAddr']
         nodePortNum = d['nodePortNum']
@@ -36,10 +40,10 @@ if __name__ == "__main__":
     print ("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
     print ("<<< Demo Start")
     print ("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
-
+    
     rundelay = 5
     
-
+    
     print ("\n")
     ctrl = Controller(ctrlIpAddr, ctrlPortNum, ctrlUname, ctrlPswd)
     vrouter = VRouter5600(ctrl, nodeName, nodeIpAddr, nodePortNum, nodeUname, nodePswd)
@@ -84,6 +88,19 @@ if __name__ == "__main__":
     else:
         print ("\n")
         print ("!!!Demo terminated, reason: %s" % status.brief().lower())
+        exit(0)
+    
+    
+    print "\n"
+    print (">>> Remove '%s' NETCONF node from the Controller" % nodeName)
+    time.sleep(rundelay)    
+    result = ctrl.delete_netconf_node(vrouter)
+    status = result[0]
+    if(status.eq(STATUS.OK)):
+        print ("'%s' NETCONF node was successfully removed from the Controller" % nodeName)
+    else:
+        print ("\n")
+        print ("!!!Demo terminated, reason: %s" % status.brief())        
         exit(0)
     
     

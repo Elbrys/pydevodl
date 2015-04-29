@@ -316,7 +316,7 @@ class Controller():
     # 
     #---------------------------------------------------------------------------
     def get_all_nodes_in_config(self):
-        """Return a list of nodes in the controller's config data store  
+        """Return a list of nodes in the controller's configuration data store  
 
         :return: A tuple:  Status, list of nodes in the config data store of the controller
         :rtype: :class:`pybvc.common.status.OperStatus`, list
@@ -394,7 +394,14 @@ class Controller():
                         nd.update({p2 : item[p3]})
                         p4 = 'netconf-node-inventory:connected'
                         p5 = 'connected'
-                        if ((p4 in item) and (item[p4] == True)):
+                        # OpenFlow devices on the Controller are always prefixed with "openflow".
+                        # OpenFlow devices are connecting to the Controller (not vice versa as
+                        # in NETCONF case). So if we see an OpenFlow device in the Controller's
+                        # operational inventory store the 'connected' status for the device is True.
+                        p6 = 'openflow'
+                        if (p6 in item[p3]):
+                            nd.update({p5 : True})                        
+                        elif ((p4 in item) and (item[p4] == True)):
                             nd.update({p5 : True})
                         else:
                             nd.update({p5 : False})
@@ -405,6 +412,112 @@ class Controller():
             status.set_status(STATUS.HTTP_ERROR, resp)
 
         return (status, nlist)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_netconf_nodes_in_config(self):
+        """Return a list of NETCONF nodes in the controller's configuration data store  
+
+        :return: A tuple:  Status, list of nodes in the config data store of the controller
+        :rtype: :class:`pybvc.common.status.OperStatus`, list
+
+        - STATUS.CONN_ERROR:  if the controller did not respond. List is empty.
+        - STATUS.CTRL_INTERNAL_ERROR:  if the controller responded but did not provide any status. List is empty.
+        - STATUS.OK:  Success. List is valid.  
+        - STATUS.DATA_NOT_FOUND:  Success.  List is empty.
+        - STATUS.HTTP_ERROR:  if the controller responded with an error status code. 
+
+        """
+        status = OperStatus()
+        templateUrl = "http://{}:{}/restconf/config/opendaylight-inventory:nodes"
+        url = templateUrl.format(self.ipAddr, self.portNum)        
+        nlist = [] 
+        
+        resp = self.http_get_request(url, data=None, headers=None)
+        if(resp == None):
+            status.set_status(STATUS.CONN_ERROR)
+        elif(resp.content == None):
+            status.set_status(STATUS.CTRL_INTERNAL_ERROR)
+        elif (resp.status_code == 200):
+            p1 = 'nodes'
+            p2 = 'node'
+            if(p1 in resp.content and p2 in resp.content):
+                elemlist = json.loads(resp.content).get(p1).get(p2)
+                for elem in elemlist:
+                    p3 = 'id'
+                    # OpenFlow devices on the Controller are always prefixed with "openflow".
+                    # So we use an extra check for "openflow" to sort them out
+                    p4 = 'openflow'
+                    if(p3 in elem and p4 not in elem[p3]):
+                        nlist.append(str(elem[p3]))
+                status.set_status(STATUS.OK)
+            else:
+                status.set_status(STATUS.DATA_NOT_FOUND)
+        else:
+            status.set_status(STATUS.HTTP_ERROR, resp)
+        
+        return (status, nlist)
+        pass
+    
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_netconf_nodes_conn_status(self):
+        """Return a list of NETCONF nodes and the status of their connection to the controller.
+
+        :return: A tuple:  Status, list of nodes the status of their connection to the controller
+        :rtype: :class:`pybvc.common.status.OperStatus`, list of dict [{node:<node id>, connected:<boolean>},...]
+
+        - STATUS.CONN_ERROR:  if the controller did not respond. List is empty.
+        - STATUS.CTRL_INTERNAL_ERROR:  if the controller responded but did not provide any status. List is empty.
+        - STATUS.OK:  Success. List is valid.  
+        - STATUS.DATA_NOT_FOUND:  Success.  List is empty.
+        - STATUS.HTTP_ERROR:  if the controller responded with an error status code. 
+
+        """ 
+        status = OperStatus()
+        templateUrl = "http://{}:{}/restconf/operational/opendaylight-inventory:nodes"
+        url = templateUrl.format(self.ipAddr, self.portNum)
+        nlist = [] 
+
+        resp = self.http_get_request(url, data=None, headers=None)
+        if(resp == None):
+            status.set_status(STATUS.CONN_ERROR)
+        elif(resp.content == None):
+            status.set_status(STATUS.CTRL_INTERNAL_ERROR)
+        elif (resp.status_code == 200):
+            p1 = 'nodes'
+            p2 = 'node'
+            if(p1 in resp.content and p2 in resp.content):            
+                status.set_status(STATUS.OK)
+                itemlist = json.loads(resp.content).get(p1).get(p2)
+                for item in itemlist:
+                    p3 = 'id'
+                    # OpenFlow devices on the Controller are always prefixed with "openflow".
+                    # So we use an extra check for "openflow" to sort them out
+                    p4 = 'openflow'
+                    if (p3 in item and p4 not in item[p3]):
+                        nd = dict()
+                        nd.update({p2 : item[p3]})
+                        p5 = 'netconf-node-inventory:connected'
+                        p6 = 'connected'
+                        if ((p5 in item) and (item[p5] == True)):
+                            nd.update({p6 : True})
+                        else:
+                            nd.update({p6 : False})
+                        nlist.append(nd)
+            else:
+                status.set_status(STATUS.DATA_NOT_FOUND)
+        else:
+            status.set_status(STATUS.HTTP_ERROR, resp)
+
+        return (status, nlist)
+        pass
+    
+    
+    
     
     #---------------------------------------------------------------------------
     # 

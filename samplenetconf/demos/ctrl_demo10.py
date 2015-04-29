@@ -1,6 +1,10 @@
 #!/usr/bin/python
 
-import sys
+"""
+@authors: Sergei Garbuzov
+
+"""
+
 import time
 
 from framework.controller.controller import Controller
@@ -49,7 +53,7 @@ if __name__ == "__main__":
     print "\n"
     print ("<<< Show NETCONF nodes configured on the Controller")
     time.sleep(rundelay)
-    result = ctrl.get_all_nodes_in_config()
+    result = ctrl.get_netconf_nodes_in_config()
     status = result[0]
     if(status.eq(STATUS.OK)):
         print "Nodes configured:"
@@ -59,7 +63,7 @@ if __name__ == "__main__":
     else:
         print ("\n")
         print ("!!!Demo terminated, reason: %s" % status.brief())        
-        sys.exit(0)
+        exit(0)
     
     
     print ("\n")
@@ -81,13 +85,13 @@ if __name__ == "__main__":
         print ("\n")
         print ("!!!Demo terminated, reason: %s" % status.brief())        
         print status.detail()
-        sys.exit(0)
+        exit(0)
     
     
     print "\n"
     print ("<<< Show NETCONF nodes configured on the Controller")
     time.sleep(rundelay)
-    result = ctrl.get_all_nodes_in_config()
+    result = ctrl.get_netconf_nodes_in_config()
     status = result[0]
     if(status.eq(STATUS.OK)):
         print "Nodes configured:"
@@ -97,7 +101,7 @@ if __name__ == "__main__":
     else:
         print ("\n")
         print ("!!!Demo terminated, reason: %s" % status.brief())        
-        sys.exit(0)
+        exit(0)
     
     
     print "\n"
@@ -110,13 +114,13 @@ if __name__ == "__main__":
     else:
         print ("\n")
         print ("!!!Demo terminated, reason: %s" % status.brief())        
-        sys.exit(0)
+        exit(0)
     
     
     print "\n"
     print ("<<< Show connection status for all NETCONF nodes configured on the Controller")
     time.sleep(rundelay)
-    result = ctrl.get_all_nodes_conn_status()
+    result = ctrl.get_netconf_nodes_conn_status()
     status = result[0]
     if(status.eq(STATUS.OK)):
         print "Nodes connection status:"
@@ -131,7 +135,7 @@ if __name__ == "__main__":
     else:
         print ("\n")
         print ("!!!Demo terminated, reason: %s" % status.brief())        
-        sys.exit(0)
+        exit(0)
     
     
     print "\n"
@@ -148,7 +152,7 @@ if __name__ == "__main__":
     else:
         print ("\n")
         print ("!!!Demo terminated, reason: %s" % status.brief())        
-        sys.exit(0)
+        exit(0)
     
     
     print "\n"
@@ -161,13 +165,13 @@ if __name__ == "__main__":
     else:
         print ("\n")
         print ("!!!Demo terminated, reason: %s" % status.brief())        
-        sys.exit(0)
+        exit(0)
     
     
     print "\n"
     print ("<<< Show NETCONF nodes configured on the Controller")
     time.sleep(rundelay)
-    result = ctrl.get_all_nodes_in_config()
+    result = ctrl.get_netconf_nodes_in_config()
     status = result[0]
     if(status.eq(STATUS.OK)):
         print "Nodes configured:"
@@ -177,7 +181,7 @@ if __name__ == "__main__":
     else:
         print ("\n")
         print ("!!!Demo terminated, reason: %s" % status.brief())        
-        sys.exit(0)
+        exit(0)
     
     
     print "\n"
@@ -194,7 +198,7 @@ if __name__ == "__main__":
     else:
         print ("\n")
         print ("!!!Demo terminated, reason: %s" % status.brief())        
-        sys.exit(0)
+        exit(0)
     
     
     print ("\n")

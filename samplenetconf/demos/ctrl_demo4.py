@@ -1,6 +1,10 @@
 #!/usr/bin/python
 
-import sys
+"""
+@authors: Sergei Garbuzov
+
+"""
+
 import time
 import json
 
@@ -54,7 +58,7 @@ if __name__ == "__main__":
     else:
         print ("\n")
         print ("!!!Demo terminated, reason: %s" % status.brief())        
-        sys.exit(0)
+        exit(0)
     
     
     print ("\n")

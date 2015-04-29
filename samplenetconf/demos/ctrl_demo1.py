@@ -1,12 +1,16 @@
 #!/usr/bin/python
 
-import sys
+"""
+@authors: Sergei Garbuzov
+
+"""
+
 import time
 import json
 
 from framework.controller.controller import Controller
 from framework.common.status import STATUS
-from framework.common.utils import load_dict_from_file, progress_wait_secs
+from framework.common.utils import load_dict_from_file
 
 
 if __name__ == "__main__":
@@ -36,7 +40,6 @@ if __name__ == "__main__":
     print ("\n")
     print ("<<< Creating Controller instance")
     time.sleep(rundelay)
-#    progress_wait_secs("<<< Creating Controller instance ", waitTime=rundelay, sym=".")
     ctrl = Controller(ctrlIpAddr, ctrlPortNum, ctrlUname, ctrlPswd)
     print ("'Controller':")
     print ctrl.to_json()
