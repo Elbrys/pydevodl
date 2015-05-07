@@ -10,7 +10,7 @@ from framework.common.utils import load_dict_from_file
 
 
 if __name__ == "__main__":
-
+    
     f = "cfg.yml"
     d = {}
     if(load_dict_from_file(f, d) == False):
@@ -37,10 +37,10 @@ if __name__ == "__main__":
     print ("<<< 'Controller': %s, '%s': %s" % (ctrlIpAddr, nodeName, nodeIpAddr))
 
     result = vrouter.get_schemas()
-    status = result[0]
+    status = result.get_status()
     if(status.eq(STATUS.OK) == True):
         print "YANG models list:"
-        slist = result[1]
+        slist = result.get_data()
         print json.dumps(slist, default=lambda o: o.__dict__, sort_keys=True, indent=4)
     else:
         print ("\n")

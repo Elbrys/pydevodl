@@ -26,7 +26,7 @@ from framework.common.constants import *
 def delete_flows(ofswitch, table_id, flow_ids):
     for flow_id in flow_ids:
         result = ofswitch.delete_flow(table_id, flow_id)
-        status = result[0]
+        status = result.get_status()
         if(status.eq(STATUS.OK) == True):
             print ("<<< Flow with id of '%s' successfully removed from the Controller" % flow_id)
         else:
@@ -144,7 +144,7 @@ if __name__ == "__main__":
     print flow_entry1.get_payload()
     time.sleep(rundelay)
     result = ofswitch.add_modify_flow(flow_entry1)
-    status = result[0]    
+    status = result.get_status()
     if(status.eq(STATUS.OK) == True):
         print ("<<< Flow successfully added to the Controller")
     else:
@@ -220,7 +220,7 @@ if __name__ == "__main__":
     print flow_entry2.get_payload()
     time.sleep(rundelay)
     result = ofswitch.add_modify_flow(flow_entry2)
-    status = result[0]    
+    status = result.get_status()
     if(status.eq(STATUS.OK) == True):
         print ("<<< Flow successfully added to the Controller")
     else:
@@ -275,7 +275,7 @@ if __name__ == "__main__":
     print flow_entry3.get_payload()
     time.sleep(rundelay)
     result = ofswitch.add_modify_flow(flow_entry3)
-    status = result[0]    
+    status = result.get_status()
     if(status.eq(STATUS.OK) == True):
         print ("<<< Flow successfully added to the Controller")
     else:
@@ -330,7 +330,7 @@ if __name__ == "__main__":
     print flow_entry4.get_payload()
     time.sleep(rundelay)
     result = ofswitch.add_modify_flow(flow_entry4)
-    status = result[0]    
+    status = result.get_status()
     if(status.eq(STATUS.OK) == True):
         print ("<<< Flow successfully added to the Controller")
     else:
@@ -345,11 +345,11 @@ if __name__ == "__main__":
     time.sleep(rundelay)
     for i in range(first_flow_id, flow_id+1):
         result = ofswitch.get_configured_flow(table_id, i)
-        status = result[0]
+        status = result.get_status()
         if(status.eq(STATUS.OK) == True):
             print ("<<< Flow '%s' successfully read from the Controller" % i)
             print ("Flow info:")
-            flow = result[1]
+            flow = result.get_data()
             print json.dumps(flow, indent=4)
         else:
             print ("\n")

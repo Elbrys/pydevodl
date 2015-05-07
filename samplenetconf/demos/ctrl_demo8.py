@@ -14,7 +14,7 @@ from framework.common.utils import load_dict_from_file
 
 
 if __name__ == "__main__":
-
+    
     f = "cfg1.yml"
     d = {}
     if(load_dict_from_file(f, d) == False):
@@ -50,10 +50,10 @@ if __name__ == "__main__":
     nodeName = "controller-config"
     time.sleep(rundelay)
     result = ctrl.get_sessions_info(nodeName)
-    status = result[0]
+    status = result.get_status()
     if(status.eq(STATUS.OK)):
         print "Sessions:"
-        slist = result[1]
+        slist = result.get_data()
         print json.dumps(slist, default=lambda o: o.__dict__, sort_keys=True, indent=4)
     else:
         print ("\n")

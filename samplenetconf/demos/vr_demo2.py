@@ -53,7 +53,7 @@ if __name__ == "__main__":
     print ("\n")
     time.sleep(rundelay)    
     result = ctrl.add_netconf_node(vrouter)
-    status = result[0]
+    status = result.get_status()
     if(status.eq(STATUS.OK) == True):
         print ("<<< '%s' added to the Controller" % nodeName)
     else:
@@ -65,7 +65,7 @@ if __name__ == "__main__":
     print ("\n")
     time.sleep(rundelay)
     result = ctrl.check_node_conn_status(nodeName)
-    status = result[0]
+    status = result.get_status()
     if(status.eq(STATUS.NODE_CONNECTED) == True):
         print ("<<< '%s' is connected to the Controller" % nodeName)
     else:
@@ -80,10 +80,10 @@ if __name__ == "__main__":
     print ("<<< Retrieve '%s' YANG model definition from the '%s'" % (yangModelName, nodeName))
     time.sleep(rundelay)
     result = vrouter.get_schema(yangModelName, yangModelVerson)
-    status = result[0]
+    status = result.get_status()
     if(status.eq(STATUS.OK) == True):
         print "YANG model definition:"
-        schema = result[1]
+        schema = result.get_data()
         print schema
     else:
         print ("\n")
@@ -95,7 +95,7 @@ if __name__ == "__main__":
     print (">>> Remove '%s' NETCONF node from the Controller" % nodeName)
     time.sleep(rundelay)    
     result = ctrl.delete_netconf_node(vrouter)
-    status = result[0]
+    status = result.get_status()
     if(status.eq(STATUS.OK)):
         print ("'%s' NETCONF node was successfully removed from the Controller" % nodeName)
     else:

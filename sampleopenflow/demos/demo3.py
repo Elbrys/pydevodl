@@ -54,15 +54,15 @@ if __name__ == "__main__":
     ofswitch = OFSwitch(ctrl, nodeName)
     
     result = ofswitch.get_ports_list()
-    status = result[0]
+    status = result.get_status()
     if(status.eq(STATUS.OK) == True):
-        ports = result[1]
+        ports = result.get_data()
         for port in ports:
             result = ofswitch.get_port_detail_info(port)
-            status = result[0]
+            status = result.get_status()
             if(status.eq(STATUS.OK) == True):
                 print ("Port '%s' info:" % port)
-                info = result[1]
+                info = result.get_data()
                 print json.dumps(info, indent=4)
             else:
                 print ("\n")

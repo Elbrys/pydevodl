@@ -4,13 +4,12 @@ import sys
 import json
 
 from framework.controller.controller import Controller
-from framework.netconfdev.vrouter.vrouter5600  import VRouter5600
 from framework.common.status import STATUS
 from framework.common.utils import load_dict_from_file
 
 
 if __name__ == "__main__":
-
+    
     f = "cfg.yml"
     d = {}
     if(load_dict_from_file(f, d) == False):
@@ -34,10 +33,10 @@ if __name__ == "__main__":
 
     ctrl = Controller(ctrlIpAddr, ctrlPortNum, ctrlUname, ctrlPswd)
     result = ctrl.get_schemas("controller-config")
-    status = result[0]
+    status = result.get_status()
     if(status.eq(STATUS.OK) == True):
         print "YANG models list:"
-        slist = result[1]
+        slist = result.get_data()
         print json.dumps(slist, default=lambda o: o.__dict__, sort_keys=True, indent=4)
     else:
         print ("\n")
@@ -47,21 +46,3 @@ if __name__ == "__main__":
 
     print "\n"
     
-    '''
-    vrouter = VRouter5600(ctrl, nodeName, nodeIpAddr, nodePortNum, nodeUname, nodePswd)    
-    print ("<<< 'Controller': %s, '%s': %s" % (ctrlIpAddr, nodeName, nodeIpAddr))
-
-    result = vrouter.get_schemas()
-    status = result[0]
-    if(status.eq(STATUS.OK) == True):
-        print "YANG models list:"
-        slist = result[1]
-        print json.dumps(slist, default=lambda o: o.__dict__, sort_keys=True, indent=4)
-    else:
-        print ("\n")
-        print ("!!!Failed, reason: %s" % status.brief().lower())
-        print ("%s" % status.detail())
-        sys.exit(0)
-
-    print "\n"
-    '''

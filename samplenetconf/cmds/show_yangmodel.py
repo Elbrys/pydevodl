@@ -2,7 +2,6 @@
 
 import sys
 import getopt
-import json
 
 from framework.controller.controller import Controller
 from framework.netconfdev.vrouter.vrouter5600  import VRouter5600
@@ -15,7 +14,7 @@ def usage(myname):
     sys.exit()
 
 if __name__ == "__main__":
-
+    
     f = "cfg.yml"
     d = {}
     if(load_dict_from_file(f, d) == False):
@@ -70,10 +69,10 @@ if __name__ == "__main__":
     vrouter = VRouter5600(ctrl, nodeName, nodeIpAddr, nodePortNum, nodeUname, nodePswd) 
     print ("<<< 'Controller': %s, '%s': %s" % (ctrlIpAddr, nodeName, nodeIpAddr))
     result = vrouter.get_schema(model_identifier, model_version)
-    status = result[0]
+    status = result.get_status()
     if(status.eq(STATUS.OK) == True):
         print "YANG model definition:"
-        schema = result[1]
+        schema = result.get_data()
         print schema
     else:
         print ("\n")

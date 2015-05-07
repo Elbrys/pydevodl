@@ -9,7 +9,7 @@ from framework.common.utils import load_dict_from_file
 
 
 if __name__ == "__main__":
-
+    
     f = "cfg.yml"
     d = {}
     if(load_dict_from_file(f, d) == False):
@@ -36,7 +36,7 @@ if __name__ == "__main__":
 
     print (">>> Adding '%s' to the Controller '%s'" % (nodeName, ctrlIpAddr))
     result = ctrl.add_netconf_node(node)
-    status = result[0]
+    status = result.get_status()
     if(status.eq(STATUS.OK) == True):
         print ("'%s' was successfully added to the Controller" % nodeName)
     else:

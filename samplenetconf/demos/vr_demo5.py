@@ -53,7 +53,7 @@ if __name__ == "__main__":
     print ("\n")
     time.sleep(rundelay)
     result = ctrl.add_netconf_node(vrouter)
-    status = result[0]
+    status = result.get_status()
     if(status.eq(STATUS.OK) == True):
         print ("<<< '%s' added to the Controller" % nodeName)
     else:
@@ -65,7 +65,7 @@ if __name__ == "__main__":
     print ("\n")
     time.sleep(rundelay)
     result = ctrl.check_node_conn_status(nodeName)
-    status = result[0]
+    status = result.get_status()
     if(status.eq(STATUS.NODE_CONNECTED) == True):
         print ("<<< '%s' is connected to the Controller" % nodeName)
     else:
@@ -78,10 +78,10 @@ if __name__ == "__main__":
     print ("<<< Show list of dataplane interfaces on the '%s'" % nodeName)
     time.sleep(rundelay)
     result = vrouter.get_dataplane_interfaces_list()
-    status = result[0]
+    status = result.get_status()
     if(status.eq(STATUS.OK) == True):
         print "Dataplane interfaces:"
-        dpIfList = result[1]
+        dpIfList = result.get_data()
         print json.dumps(dpIfList, indent=4)
     else:
         print ("\n")
@@ -94,10 +94,10 @@ if __name__ == "__main__":
     print ("<<< Show '%s' dataplane interface configuration on the '%s'" % (ifName,nodeName))
     time.sleep(rundelay)
     result = vrouter.get_dataplane_interface_cfg(ifName)
-    status = result[0]
+    status = result.get_status()
     if(status.eq(STATUS.OK) == True):
         print ("Dataplane interface '%s' config:" % ifName)
-        cfg = result[1]
+        cfg = result.get_data()
         data = json.loads(cfg)
         print json.dumps(data, indent=4)
     else:
@@ -110,10 +110,10 @@ if __name__ == "__main__":
     print ("<<< Show configuration of dataplane interfaces on the '%s'" % nodeName)
     time.sleep(rundelay)
     result = vrouter.get_dataplane_interfaces_cfg()
-    status = result[0]
+    status = result.get_status()
     if(status.eq(STATUS.OK) == True):
         print "Dataplane interfaces config:"
-        dpIfCfg = result[1]
+        dpIfCfg = result.get_data()
         print json.dumps(dpIfCfg, indent=4)
     else:
         print ("\n")
@@ -125,7 +125,7 @@ if __name__ == "__main__":
     print (">>> Remove '%s' NETCONF node from the Controller" % nodeName)
     time.sleep(rundelay)    
     result = ctrl.delete_netconf_node(vrouter)
-    status = result[0]
+    status = result.get_status()
     if(status.eq(STATUS.OK)):
         print ("'%s' NETCONF node was successfully removed from the Controller" % nodeName)
     else:

@@ -53,10 +53,10 @@ if __name__ == "__main__":
     time.sleep(rundelay)
     ofswitch = OFSwitch(ctrl, nodeName)
     result = ofswitch.get_switch_info()
-    status = result[0]
+    status = result.get_status()
     if(status.eq(STATUS.OK) == True):
         print ("Node '%s' generic info:" % nodeName)
-        info = result[1]
+        info = result.get_data()
         print json.dumps(info, indent=4)
     else:
         print ("\n")
@@ -65,10 +65,10 @@ if __name__ == "__main__":
     
     print ("\n")
     result = ofswitch.get_features_info()
-    status = result[0]
+    status = result.get_status()
     if(status.eq(STATUS.OK) == True):
         print ("Node '%s' features:" % nodeName)
-        features = result[1]
+        features = result.get_data()
         print json.dumps(features, indent=4)
     else:
         print ("\n")
@@ -78,9 +78,9 @@ if __name__ == "__main__":
     
     print ("\n")
     result = ofswitch.get_ports_list()
-    status = result[0]
+    status = result.get_status()
     if(status.eq(STATUS.OK) == True):
-        ports = result[1]
+        ports = result.get_data()
         print ("Node '%s' ports list:" % nodeName)
         print json.dumps(ports, indent=4, sort_keys=True)
     else:
@@ -91,10 +91,10 @@ if __name__ == "__main__":
     
     print ("\n")
     result = ofswitch.get_ports_brief_info()
-    status = result[0]
+    status = result.get_status()
     if(status.eq(STATUS.OK) == True):
         print ("Node '%s' ports brief information:" % nodeName)
-        info = result[1]
+        info = result.get_data()
         print json.dumps(info, indent=4, sort_keys=True)
     else:
         print ("\n")

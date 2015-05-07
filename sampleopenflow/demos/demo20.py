@@ -138,7 +138,7 @@ if __name__ == "__main__":
     print flow_entry.get_payload()
     time.sleep(rundelay)
     result = ofswitch.add_modify_flow(flow_entry)
-    status = result[0]    
+    status = result.get_status()   
     if(status.eq(STATUS.OK) == True):
         print ("<<< Flow successfully added to the Controller")
     else:
@@ -151,11 +151,11 @@ if __name__ == "__main__":
     print ("<<< Get configured flow from the Controller")    
     time.sleep(rundelay)
     result = ofswitch.get_configured_flow(table_id, flow_id)
-    status = result[0]
+    status = result.get_status()
     if(status.eq(STATUS.OK) == True):
         print ("<<< Flow successfully read from the Controller")
         print ("Flow info:")
-        flow = result[1]
+        flow = result.get_data()
         print json.dumps(flow, indent=4)
     else:
         print ("\n")
@@ -168,7 +168,7 @@ if __name__ == "__main__":
            "and from the table '%s' on the '%s' node" % (flow_id, table_id, nodeName))
     time.sleep(rundelay)
     result = ofswitch.delete_flow(flow_entry.get_flow_table_id(), flow_entry.get_flow_id())
-    status = result[0]
+    status = result.get_status()
     if(status.eq(STATUS.OK) == True):
         print ("<<< Flow successfully removed from the Controller")
     else:

@@ -10,7 +10,7 @@ from framework.common.utils import load_dict_from_file
 
 
 if __name__ == "__main__":
-
+    
     f = "cfg.yml"
     d = {}
     if(load_dict_from_file(f, d) == False):
@@ -37,10 +37,10 @@ if __name__ == "__main__":
     print ("<<< 'Controller': %s, '%s': %s" % (ctrlIpAddr, nodeName, nodeIpAddr))
     
     result = vrouter.get_loopback_interfaces_list()
-    status = result[0]
+    status = result.get_status()
     if(status.eq(STATUS.OK) == True):
         print "Loopback interfaces:"
-        dpIfList = result[1]
+        dpIfList = result.get_data()
         print json.dumps(dpIfList, indent=4)
     else:
         print ("\n")

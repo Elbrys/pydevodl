@@ -38,10 +38,10 @@ if __name__ == "__main__":
     
     print("\n")
     result = vrouter.get_cfg()
-    status = result[0]
+    status = result.get_status()
     if(status.eq(STATUS.OK) == True):
         print ("'%s' configuration:" % nodeName)
-        cfg = result[1]
+        cfg = result.get_data()
         data = json.loads(cfg)
         print json.dumps(data, indent=4)
     else:

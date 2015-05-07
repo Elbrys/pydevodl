@@ -14,7 +14,7 @@ from framework.common.utils import load_dict_from_file
 
 
 if __name__ == "__main__":
-
+    
     f = "cfg1.yml"
     d = {}
     if(load_dict_from_file(f, d) == False):
@@ -49,9 +49,9 @@ if __name__ == "__main__":
     print ("<<< Get list of service provider applications available on the Controller")
     time.sleep(rundelay)
     result = ctrl.get_service_providers_info()
-    status = result[0]
+    status = result.get_status()
     if(status.eq(STATUS.OK)):
-        services = result[1]
+        services = result.get_data()
         print "Service providers:"
         print json.dumps(services, default=lambda o: o.__dict__, sort_keys=True, indent=4)
     else:

@@ -14,6 +14,7 @@ import json
 from collections import OrderedDict
 
 from framework.controller.openflownode import OpenflowNode
+from framework.common.result import Result
 from framework.common.status import OperStatus, STATUS
 from framework.common.utils import find_key_values_in_dict
 from framework.common.utils import replace_str_value_in_dict
@@ -100,7 +101,7 @@ class OFSwitch(OpenflowNode):
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
         
-        return (status, info)
+        return Result(status, info)
     
     #---------------------------------------------------------------------------
     # 
@@ -130,8 +131,8 @@ class OFSwitch(OpenflowNode):
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
         
-        return (status, info)
-    
+        return Result(status, info)
+        
     def get_ports_list(self):
         status = OperStatus()
         plist = []
@@ -162,8 +163,8 @@ class OFSwitch(OpenflowNode):
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
         
-        return (status, plist)
-    
+        return Result(status, plist)
+        
     def get_port_brief_info(self, portnum):
         pass
     
@@ -206,7 +207,7 @@ class OFSwitch(OpenflowNode):
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
         
-        return (status, info)
+        return Result(status, info)
     
     #---------------------------------------------------------------------------
     # 
@@ -236,7 +237,8 @@ class OFSwitch(OpenflowNode):
         else:
             print "Error !!!"
             status.set_status(STATUS.MALFORM_DATA)
-        return (status, resp)
+        
+        return Result(status, resp)
     
     #---------------------------------------------------------------------------
     # 
@@ -258,8 +260,8 @@ class OFSwitch(OpenflowNode):
             status.set_status(STATUS.OK)
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
-
-        return (status, None)
+        
+        return Result(status, None)
     
     #---------------------------------------------------------------------------
     # 
@@ -292,7 +294,7 @@ class OFSwitch(OpenflowNode):
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
         
-        return (status, info)
+        return Result(status, info)
     
     #---------------------------------------------------------------------------
     # 
@@ -300,15 +302,17 @@ class OFSwitch(OpenflowNode):
     def get_flows(self, tableid, operational=True):
         status = OperStatus()
         flows = {}
-        url = ""
         templateUrlExt = "/flow-node-inventory:table/{}"
         urlext = templateUrlExt.format(tableid)
         ctrl = self.ctrl
+        
+        url = ""
         if (operational):
             url = ctrl.get_node_operational_url(self.name)
         else:
             url = ctrl.get_node_config_url(self.name)        
         url += urlext
+        
         resp = ctrl.http_get_request(url, data=None, headers=None)
         if(resp == None):
             status.set_status(STATUS.CONN_ERROR)
@@ -317,9 +321,11 @@ class OFSwitch(OpenflowNode):
         elif (resp.status_code == 200):
             dictionary = json.loads(resp.content)
             try:
-                vlist = dictionary['flow-node-inventory:table']
-                if (len(vlist) != 0 and (type(vlist[0]) is dict) and ('flow' in vlist[0])):
-                    flows = vlist[0]['flow']
+                p1 = 'flow-node-inventory:table'
+                p2 = 'flow'
+                vlist = dictionary[p1]
+                if (len(vlist) != 0 and (type(vlist[0]) is dict) and (p2 in vlist[0])):
+                    flows = vlist[0][p2]
                     status.set_status(STATUS.OK)
                 else:
                     status.set_status(STATUS.DATA_NOT_FOUND)
@@ -328,7 +334,7 @@ class OFSwitch(OpenflowNode):
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
         
-        return (status, flows)    
+        return Result(status, flows)        
     
     #---------------------------------------------------------------------------
     # 
@@ -340,7 +346,7 @@ class OFSwitch(OpenflowNode):
         if(status.eq(STATUS.OK) == True):
             flows = result[1]
         
-        return (status, flows)
+        return Result(status, flows)
     
     #---------------------------------------------------------------------------
     # 
@@ -356,8 +362,8 @@ class OFSwitch(OpenflowNode):
             for item in flist:
                 f = self.odl_to_ovs_flow_syntax(item)
                 ovsflows.append(f)
-
-        return (status, ovsflows)
+        
+        return Result(status, ovsflows)
     
     #---------------------------------------------------------------------------
     # 
@@ -369,7 +375,7 @@ class OFSwitch(OpenflowNode):
         if(status.eq(STATUS.OK) == True):
             flows = result[1]
         
-        return (status, flows)
+        return Result(status, flows)
     
     #---------------------------------------------------------------------------
     # 
@@ -393,7 +399,8 @@ class OFSwitch(OpenflowNode):
             status.set_status(STATUS.OK)
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
-        return (status, flow)
+        
+        return Result(status, flow)
     
     #---------------------------------------------------------------------------
     # 
@@ -409,8 +416,8 @@ class OFSwitch(OpenflowNode):
             for item in flist:
                 f = self.odl_to_ovs_flow_syntax(item)
                 ovsflows.append(f)
-
-        return (status, ovsflows)
+        
+        return Result(status, ovsflows)
     
     #---------------------------------------------------------------------------
     # 

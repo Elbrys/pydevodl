@@ -12,6 +12,7 @@ import string
 import json
 
 from framework.controller.netconfnode import NetconfNode
+from framework.common.result import Result
 from framework.common.status import OperStatus, STATUS
 from framework.common.utils import remove_empty_from_dict
 
@@ -126,7 +127,7 @@ class VRouter5600(NetconfNode):
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
         
-        return (status, cfg)
+        return Result(status, cfg)
     
     #---------------------------------------------------------------------------
     # 
@@ -163,7 +164,7 @@ class VRouter5600(NetconfNode):
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
         
-        return (status, cfg)
+        return Result(status, cfg)
     
     #---------------------------------------------------------------------------
     # 
@@ -200,8 +201,8 @@ class VRouter5600(NetconfNode):
             status.set_status(STATUS.OK)
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
-
-        return (status, cfg)
+        
+        return Result(status, cfg)
     
     #---------------------------------------------------------------------------
     # 
@@ -236,7 +237,7 @@ class VRouter5600(NetconfNode):
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
         
-        return (status, None)
+        return Result(status, None)
     
     #---------------------------------------------------------------------------
     # TBD
@@ -289,8 +290,8 @@ class VRouter5600(NetconfNode):
             else:
                 status.set_status(STATUS.HTTP_ERROR, resp)
                 break
-            
-        return (status, None)
+        
+        return Result(status, None)
     
     #---------------------------------------------------------------------------
     # 
@@ -336,7 +337,7 @@ class VRouter5600(NetconfNode):
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
         
-        return (status, None)
+        return Result(status, None)
     
     #---------------------------------------------------------------------------
     # 
@@ -370,9 +371,8 @@ class VRouter5600(NetconfNode):
             status.set_status(STATUS.OK)
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
-
-        return (status, None)
-    
+        
+        return Result(status, None)
     
     #---------------------------------------------------------------------------
     # 
@@ -392,9 +392,9 @@ class VRouter5600(NetconfNode):
         ifList = []
         
         result = self.get_interfaces_cfg()
-        status = result[0]
+        status = result.get_status()
         if(status.eq(STATUS.OK)):
-            cfg = result[1]
+            cfg = result.get_data()
             p1 = 'interfaces'
             if(p1 in cfg):
                 d = json.loads(cfg).get(p1)
@@ -407,8 +407,7 @@ class VRouter5600(NetconfNode):
                             if p2 in item:
                                 ifList.append(item[p2])
         
-        return (status, ifList)
-    
+        return Result(status, ifList)
     
     #---------------------------------------------------------------------------
     # 
@@ -444,8 +443,7 @@ class VRouter5600(NetconfNode):
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
         
-        return (status, cfg)
-    
+        return Result(status, cfg)
     
     #---------------------------------------------------------------------------
     # 
@@ -465,9 +463,9 @@ class VRouter5600(NetconfNode):
         dpIfList = []
 
         result = self.get_interfaces_cfg()
-        status = result[0]
+        status = result.get_status()
         if(status.eq(STATUS.OK)):
-            cfg = result[1]
+            cfg = result.get_data()
             p1 = 'interfaces'
             p2 = 'vyatta-interfaces-dataplane:dataplane'
             if(p1 in cfg and p2 in cfg):
@@ -477,9 +475,8 @@ class VRouter5600(NetconfNode):
                     if p3 in item:
                         dpIfList.append(item[p3])
         
-        return (status, dpIfList)
+        return Result(status, dpIfList)
     
-
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
@@ -498,17 +495,16 @@ class VRouter5600(NetconfNode):
         dpIfCfg = None
         
         result = self.get_interfaces_cfg()
-        status = result[0]
+        status = result.get_status()
         if(status.eq(STATUS.OK)):
-            cfg = result[1]
+            cfg = result.get_data()
             p1 = 'interfaces'
             p2 = 'vyatta-interfaces-dataplane:dataplane'
             if(p1 in cfg and p2 in cfg):
                 dpIfCfg = json.loads(cfg).get(p1).get(p2)
-
-        return (status, dpIfCfg)
+        
+        return Result(status, dpIfCfg)
     
-
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
@@ -544,7 +540,7 @@ class VRouter5600(NetconfNode):
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
         
-        return (status, cfg)
+        return Result(status, cfg)
     
     #---------------------------------------------------------------------------
     # 
@@ -564,9 +560,9 @@ class VRouter5600(NetconfNode):
         lbInterfaces = []
         
         result = self.get_interfaces_cfg()
-        status = result[0]
+        status = result.get_status()
         if(status.eq(STATUS.OK)):
-            cfg = result[1]
+            cfg = result.get_data()
             p1 = 'interfaces'
             p2 = 'vyatta-interfaces-loopback:loopback'
             if(p1 in cfg and p2 in cfg):
@@ -575,8 +571,8 @@ class VRouter5600(NetconfNode):
                 for item in items:
                     if p3 in item:
                         lbInterfaces.append(item[p3])
-      
-        return (status, lbInterfaces)        
+        
+        return Result(status, lbInterfaces)        
     
     #---------------------------------------------------------------------------
     # 
@@ -596,15 +592,15 @@ class VRouter5600(NetconfNode):
         lbIfCfg = None
 
         result = self.get_interfaces_cfg()
-        status = result[0]
+        status = result.get_status()
         if(status.eq(STATUS.OK)):
-            cfg = result[1]
+            cfg = result.get_data()
             p1 = 'interfaces'
             p2 = 'vyatta-interfaces-loopback:loopback'
             if(p1 in cfg and p2 in cfg):
                 lbIfCfg = json.loads(cfg).get(p1).get(p2)
         
-        return (status, lbIfCfg)
+        return Result(status, lbIfCfg)
     
     #---------------------------------------------------------------------------
     # 
@@ -639,7 +635,7 @@ class VRouter5600(NetconfNode):
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
         
-        return (status, resp)
+        return Result(status, resp)
 
 #===============================================================================
 # Class 'Firewall'

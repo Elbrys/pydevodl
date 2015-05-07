@@ -51,10 +51,10 @@ if __name__ == "__main__":
     print ("<<< Get list of OpenFlow nodes connected to the Controller")
     time.sleep(rundelay)
     result = ctrl.get_openflow_nodes_operational_list()
-    status = result[0]
+    status = result.get_status()
     if(status.eq(STATUS.OK) == True):
         print ("OpenFlow node names (composed as \"openflow:datapathid\"):")
-        nodenames = result[1]
+        nodenames = result.get_data()
         print json.dumps(nodenames, indent=4)
     else:
         print ("\n")
@@ -68,10 +68,10 @@ if __name__ == "__main__":
     for name in nodenames:
         ofswitch = OFSwitch(ctrl, name)
         result = ofswitch.get_switch_info()
-        status = result[0]
+        status = result.get_status()
         if(status.eq(STATUS.OK) == True):
             print ("'%s' info:" % name)
-            info = result[1]
+            info = result.get_data()
             print json.dumps(info, indent=4)
         else:
             print ("\n")

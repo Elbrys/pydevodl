@@ -14,7 +14,7 @@ from framework.common.utils import load_dict_from_file
 
 
 if __name__ == "__main__":
-
+    
     f = "cfg2.yml"
     d = {}
     if(load_dict_from_file(f, d) == False):
@@ -54,10 +54,10 @@ if __name__ == "__main__":
     print ("<<< Show NETCONF nodes configured on the Controller")
     time.sleep(rundelay)
     result = ctrl.get_netconf_nodes_in_config()
-    status = result[0]
+    status = result.get_status()
     if(status.eq(STATUS.OK)):
         print "Nodes configured:"
-        nlist = result[1]
+        nlist = result.get_data()
         for item in nlist:
             print "   '{}'".format(item)   
     else:
@@ -78,7 +78,7 @@ if __name__ == "__main__":
     print ("<<< Add '%s' NETCONF node to the Controller" % nodeName)
     time.sleep(rundelay)    
     result = ctrl.add_netconf_node(node)
-    status = result[0]
+    status = result.get_status()
     if(status.eq(STATUS.OK)):
         print ("'%s' NETCONF node was successfully added to the Controller" % nodeName)
     else:
@@ -92,10 +92,10 @@ if __name__ == "__main__":
     print ("<<< Show NETCONF nodes configured on the Controller")
     time.sleep(rundelay)
     result = ctrl.get_netconf_nodes_in_config()
-    status = result[0]
+    status = result.get_status()
     if(status.eq(STATUS.OK)):
         print "Nodes configured:"
-        nlist = result[1]
+        nlist = result.get_data()
         for item in nlist:
             print "   '{}'".format(item)   
     else:
@@ -108,7 +108,7 @@ if __name__ == "__main__":
     print ("<<< Find the '%s' NETCONF node on the Controller" % nodeName)
     time.sleep(rundelay)
     result = ctrl.check_node_config_status(nodeName)
-    status = result[0]
+    status = result.get_status()
     if(status.eq(STATUS.NODE_CONFIGURED)):
         print ("'%s' node is configured" % nodeName)
     else:
@@ -121,10 +121,10 @@ if __name__ == "__main__":
     print ("<<< Show connection status for all NETCONF nodes configured on the Controller")
     time.sleep(rundelay)
     result = ctrl.get_netconf_nodes_conn_status()
-    status = result[0]
+    status = result.get_status()
     if(status.eq(STATUS.OK)):
         print "Nodes connection status:"
-        nlist = result[1]    
+        nlist = result.get_data()
         for item in nlist:
             status = ""
             if (item['connected'] == True):
@@ -142,7 +142,7 @@ if __name__ == "__main__":
     print ("<<< Show connection status for the '%s' NETCONF node" % nodeName)
     time.sleep(rundelay)
     result = ctrl.check_node_conn_status(nodeName)
-    status = result[0]
+    status = result.get_status()
     if(status.eq(STATUS.NODE_CONNECTED)):
         print ("'%s' node is connected" % nodeName)
     elif (status.eq(STATUS.NODE_DISONNECTED)):
@@ -159,7 +159,7 @@ if __name__ == "__main__":
     print (">>> Remove '%s' NETCONF node from the Controller" % nodeName)
     time.sleep(rundelay)    
     result = ctrl.delete_netconf_node(node)
-    status = result[0]
+    status = result.get_status()
     if(status.eq(STATUS.OK)):
         print ("'%s' NETCONF node was successfully removed from the Controller" % nodeName)
     else:
@@ -172,10 +172,10 @@ if __name__ == "__main__":
     print ("<<< Show NETCONF nodes configured on the Controller")
     time.sleep(rundelay)
     result = ctrl.get_netconf_nodes_in_config()
-    status = result[0]
+    status = result.get_status()
     if(status.eq(STATUS.OK)):
         print "Nodes configured:"
-        nlist = result[1]
+        nlist = result.get_data()
         for item in nlist:
             print "   '{}'".format(item)   
     else:
@@ -188,7 +188,7 @@ if __name__ == "__main__":
     print ("<<< Show connection status for the '%s' NETCONF node" % nodeName)
     time.sleep(rundelay)
     result = ctrl.check_node_conn_status(nodeName)
-    status = result[0]
+    status = result.get_status()
     if (status.eq(STATUS.NODE_CONNECTED)):
         print ("'%s' node is connected" % nodeName)
     elif (status.eq(STATUS.NODE_DISONNECTED)):

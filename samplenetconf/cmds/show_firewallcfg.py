@@ -1,6 +1,5 @@
 #!/usr/bin/python
 
-import sys
 import json
 
 from framework.controller.controller import Controller
@@ -10,7 +9,7 @@ from framework.common.utils import load_dict_from_file
 
 
 if __name__ == "__main__":
-
+    
     f = "cfg.yml"
     d = {}
     if(load_dict_from_file(f, d) == False):
@@ -40,10 +39,10 @@ if __name__ == "__main__":
     print("\n")
     print ("<<< Show firewalls configuration on the '%s'" % nodeName)
     result = vrouter.get_firewalls_cfg()
-    status = result[0]
+    status = result.get_status()
     if(status.eq(STATUS.OK) == True):
         print ("'%s' firewalls config:" % nodeName)
-        cfg = result[1]
+        cfg = result.get_data()
         data = json.loads(cfg)
         print json.dumps(data, indent=4)
     else:

@@ -1,14 +1,12 @@
 #!/usr/bin/python
 
-import sys
-
 from framework.controller.controller import Controller
 from framework.common.status import STATUS
 from framework.common.utils import load_dict_from_file
 
 
 if __name__ == "__main__":
-
+    
     f = "cfg.yml"
     d = {}
     if(load_dict_from_file(f, d) == False):
@@ -35,10 +33,10 @@ if __name__ == "__main__":
     print ("<<< NETCONF nodes configured on the Controller")
     ctrl = Controller(ctrlIpAddr, ctrlPortNum, ctrlUname, ctrlPswd)
     result = ctrl.get_all_nodes_in_config()
-    status = result[0]
+    status = result.get_status()
     if(status.eq(STATUS.OK) == True):
         print "Nodes configured:"
-        nlist = result[1]
+        nlist = result.get_data()
         for item in nlist:
             print "   '{}'".format(item)   
     else:
@@ -49,10 +47,10 @@ if __name__ == "__main__":
     print "\n"
     print ("<<< NETCONF nodes connection status on the Controller")
     result = ctrl.get_all_nodes_conn_status()
-    status = result[0]
+    status = result.get_status()
     if(status.eq(STATUS.OK) == True):
         print "Nodes connection status:"
-        nlist = result[1]    
+        nlist = result.get_data()
         for item in nlist:
             status = ""
             if (item['connected'] == True):

@@ -1,7 +1,5 @@
 #!/usr/bin/python
 
-import sys
-
 from framework.controller.controller import Controller
 from framework.controller.netconfnode import NetconfNode
 from framework.common.status import STATUS
@@ -9,7 +7,7 @@ from framework.common.utils import load_dict_from_file
 
 
 if __name__ == "__main__":
-
+    
     f = "cfg.yml"
     d = {}
     if(load_dict_from_file(f, d) == False):
@@ -36,7 +34,7 @@ if __name__ == "__main__":
 
     print (">>> Removing '%s' from the Controller '%s'" % (nodeName, ctrlIpAddr))
     result = ctrl.delete_netconf_node(node)
-    status = result[0]
+    status = result.get_status()
     if(status.eq(STATUS.OK) == True):
         print ("'%s' was successfully removed from the Controller" % nodeName)
     else:

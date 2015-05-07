@@ -53,7 +53,7 @@ if __name__ == "__main__":
     print ("\n")
     time.sleep(rundelay)
     result = ctrl.add_netconf_node(vrouter)
-    status = result[0]
+    status = result.get_status()
     if(status.eq(STATUS.OK) == True):
         print ("<<< '%s' added to the Controller" % nodeName)
     else:
@@ -65,7 +65,7 @@ if __name__ == "__main__":
     print ("\n")
     time.sleep(rundelay)
     result = ctrl.check_node_conn_status(nodeName)
-    status = result[0]
+    status = result.get_status()
     if(status.eq(STATUS.NODE_CONNECTED) == True):
         print ("<<< '%s' is connected to the Controller" % nodeName)
     else:
@@ -78,10 +78,10 @@ if __name__ == "__main__":
     print ("<<< Show list of loopback interfaces on the '%s'" % nodeName)
     time.sleep(rundelay)
     result = vrouter.get_loopback_interfaces_list()
-    status = result[0]
+    status = result.get_status()
     if(status.eq(STATUS.OK) == True):
         print "Loopback interfaces:"
-        dpIfList = result[1]
+        dpIfList = result.get_data()
         print json.dumps(dpIfList, indent=4)
     else:
         print ("\n")
@@ -94,10 +94,10 @@ if __name__ == "__main__":
     print ("<<< Show '%s' loopback interface configuration on the '%s'" % (ifName,nodeName))
     time.sleep(rundelay)
     result = vrouter.get_loopback_interface_cfg(ifName)
-    status = result[0]
+    status = result.get_status()
     if(status.eq(STATUS.OK) == True):
         print ("Loopback interface '%s' config:" % ifName)
-        response = result[1]
+        response = result.get_data()
         content = response.content
         data = json.loads(content)
         print json.dumps(data, indent=4)
@@ -111,10 +111,10 @@ if __name__ == "__main__":
     print ("<<< Show configuration of loopback interfaces on the '%s'" % nodeName)
     time.sleep(rundelay)
     result = vrouter.get_loopback_interfaces_cfg()
-    status = result[0]
+    status = result.get_status()
     if(status.eq(STATUS.OK) == True):
         print "Loopback interfaces config:"
-        lbIfCfg = result[1]
+        lbIfCfg = result.get_data()
         print json.dumps(lbIfCfg, indent=4)
     else:
         print ("\n")
@@ -126,10 +126,10 @@ if __name__ == "__main__":
     print ("<<< Show interfaces configuration on the '%s'" % nodeName)
     time.sleep(rundelay)
     result = vrouter.get_interfaces_cfg()
-    status = result[0]
+    status = result.get_status()
     if(status.eq(STATUS.OK) == True):
         print "Interfaces config:"
-        cfg = result[1]
+        cfg = result.get_data()
         data = json.loads(cfg)
         print json.dumps(data, indent=4)
     else:
@@ -142,7 +142,7 @@ if __name__ == "__main__":
     print (">>> Remove '%s' NETCONF node from the Controller" % nodeName)
     time.sleep(rundelay)    
     result = ctrl.delete_netconf_node(vrouter)
-    status = result[0]
+    status = result.get_status()
     if(status.eq(STATUS.OK)):
         print ("'%s' NETCONF node was successfully removed from the Controller" % nodeName)
     else:

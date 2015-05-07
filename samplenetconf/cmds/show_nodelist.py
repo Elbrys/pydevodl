@@ -1,14 +1,12 @@
 #!/usr/bin/python
 
-import sys
-
 from framework.controller.controller import Controller
 from framework.common.status import STATUS
 from framework.common.utils import load_dict_from_file
 
 
 if __name__ == "__main__":
-
+    
     f = "cfg.yml"
     d = {}
     if(load_dict_from_file(f, d) == False):
@@ -29,10 +27,10 @@ if __name__ == "__main__":
     print ("<<< Get list of all nodes registered on the Controller")
     ctrl = Controller(ctrlIpAddr, ctrlPortNum, ctrlUname, ctrlPswd)
     result = ctrl.get_nodes_operational_list()
-    status = result[0]
+    status = result.get_status()
     if(status.eq(STATUS.OK) == True):
         print "Nodes:"
-        nlist = result[1]
+        nlist = result.get_data()
         for item in nlist:
             print "   '{}'".format(item)   
     else:

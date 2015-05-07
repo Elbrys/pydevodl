@@ -14,7 +14,7 @@ from framework.common.utils import load_dict_from_file
 
 
 if __name__ == "__main__":
-
+    
     f = "cfg1.yml"
     d = {}
     if(load_dict_from_file(f, d) == False):
@@ -49,10 +49,10 @@ if __name__ == "__main__":
     print ("<<< Show list of all NETCONF operations supported by the Controller")
     time.sleep(rundelay)
     result = ctrl.get_netconf_operations("controller-config")
-    status = result[0]
+    status = result.get_status()
     if(status.eq(STATUS.OK)):
         print "NETCONF operations:"
-        slist = result[1]
+        slist = result.get_data()
         print json.dumps(slist, default=lambda o: o.__dict__, sort_keys=True, indent=4)
     else:
         print ("\n")

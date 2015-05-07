@@ -13,7 +13,7 @@ from framework.common.utils import load_dict_from_file
 
 
 if __name__ == "__main__":
-
+    
     f = "cfg1.yml"
     d = {}
     if(load_dict_from_file(f, d) == False):
@@ -51,10 +51,10 @@ if __name__ == "__main__":
     time.sleep(rundelay)
     nodeName = "controller-config"
     result = ctrl.get_schema(nodeName, yangModelName, yangModelVerson)
-    status = result[0]    
+    status = result.get_status()
     if(status.eq(STATUS.OK)):
         print ("YANG model:")
-        schema = result[1]
+        schema = result.get_data()
         print schema
     else:
         print ("\n")

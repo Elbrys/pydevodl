@@ -13,6 +13,7 @@ import xmltodict
 import requests
 from requests.auth import HTTPBasicAuth
 from requests.exceptions import ConnectionError, Timeout
+from framework.common.result import Result
 from framework.common.status import OperStatus, STATUS
 from framework.common.utils import find_dict_in_list
 
@@ -199,7 +200,7 @@ class Controller():
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
         
-        return (status, nlist)     
+        return Result(status, nlist)     
     
     #---------------------------------------------------------------------------
     # 
@@ -225,7 +226,7 @@ class Controller():
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
         
-        return (status, info)
+        return Result(status, info)
     
     #---------------------------------------------------------------------------
     # 
@@ -257,7 +258,7 @@ class Controller():
         else:
             status.set_status(STATUS.DATA_NOT_FOUND, resp)
         
-        return (status, None)
+        return Result(status, None)
     
     #---------------------------------------------------------------------------
     # 
@@ -309,9 +310,9 @@ class Controller():
                 status.set_status(STATUS.NODE_NOT_FOUND)
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
-                
-        return (status, None)
-
+        
+        return Result(status, None)
+    
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
@@ -353,8 +354,8 @@ class Controller():
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
         
-        return (status, nlist)
-
+        return Result(status, nlist)
+    
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
@@ -410,8 +411,8 @@ class Controller():
                 status.set_status(STATUS.DATA_NOT_FOUND)
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
-
-        return (status, nlist)
+        
+        return Result(status, nlist)
     
     #---------------------------------------------------------------------------
     # 
@@ -457,9 +458,7 @@ class Controller():
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
         
-        return (status, nlist)
-        pass
-    
+        return Result(status, nlist)
     
     #---------------------------------------------------------------------------
     # 
@@ -512,12 +511,8 @@ class Controller():
                 status.set_status(STATUS.DATA_NOT_FOUND)
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
-
-        return (status, nlist)
-        pass
-    
-    
-    
+        
+        return Result(status, nlist)
     
     #---------------------------------------------------------------------------
     # 
@@ -555,7 +550,7 @@ class Controller():
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
         
-        return (status, slist)
+        return Result(status, slist)
     
     #---------------------------------------------------------------------------
     # 
@@ -606,7 +601,7 @@ class Controller():
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
         
-        return (status, schema)
+        return Result(status, schema)
     
     #---------------------------------------------------------------------------
     # 
@@ -645,7 +640,7 @@ class Controller():
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
         
-        return (status, olist)
+        return Result(status, olist)
     
     #---------------------------------------------------------------------------
     # 
@@ -695,8 +690,8 @@ class Controller():
             '''
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
-
-        return (status, mlist)
+        
+        return Result(status, mlist)
     
     #---------------------------------------------------------------------------
     # 
@@ -736,7 +731,7 @@ class Controller():
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
         
-        return (status, module)
+        return Result(status, module)
     
     #---------------------------------------------------------------------------
     # 
@@ -775,7 +770,7 @@ class Controller():
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)                
         
-        return (status, slist)
+        return Result(status, slist)
     
     #---------------------------------------------------------------------------
     # 
@@ -812,8 +807,8 @@ class Controller():
                 status.set_status(STATUS.DATA_NOT_FOUND)                
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
-
-        return (status, slist)
+        
+        return Result(status, slist)
     
     #---------------------------------------------------------------------------
     # 
@@ -851,8 +846,8 @@ class Controller():
                 status.set_status(STATUS.DATA_NOT_FOUND)
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
-
-        return (status, slist)
+        
+        return Result(status, slist)
     
     #---------------------------------------------------------------------------
     # 
@@ -891,7 +886,7 @@ class Controller():
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)        
         
-        return (status, service)
+        return Result(status, service)
     
     #---------------------------------------------------------------------------
     # 
@@ -956,7 +951,7 @@ class Controller():
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
         
-        return (status, resp)
+        return Result(status, resp)
     
     #---------------------------------------------------------------------------
     # 
@@ -987,8 +982,8 @@ class Controller():
             status.set_status(STATUS.OK)
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
-
-        return (status, None)
+        
+        return Result(status, None)
     
     #---------------------------------------------------------------------------
     # TBD: 
@@ -1034,7 +1029,7 @@ class Controller():
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
         
-        return (status, None)
+        return Result(status, None)
     
     #---------------------------------------------------------------------------
     # 
@@ -1099,6 +1094,5 @@ class Controller():
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
         
-#        print nlist
-        return (status, nlist)     
+        return Result(status, nlist) 
         

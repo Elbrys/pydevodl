@@ -55,7 +55,7 @@ if __name__ == "__main__":
     print ("\n")
     time.sleep(rundelay)
     result = ctrl.add_netconf_node(vrouter)
-    status = result[0]
+    status = result.get_status()
     if(status.eq(STATUS.OK) == True):
         print ("<<< '%s' added to the Controller" % nodeName)
     else:
@@ -67,7 +67,7 @@ if __name__ == "__main__":
     print ("\n")
     time.sleep(rundelay)
     result = ctrl.check_node_conn_status(nodeName)
-    status = result[0]
+    status = result.get_status()
     if(status.eq(STATUS.NODE_CONNECTED) == True):
         print ("<<< '%s' is connected to the Controller" % nodeName)
     else:
@@ -80,10 +80,10 @@ if __name__ == "__main__":
     print ("<<< Show firewalls configuration on the '%s'" % nodeName)
     time.sleep(rundelay)
     result = vrouter.get_firewalls_cfg()
-    status = result[0]
+    status = result.get_status()
     if (status.eq(STATUS.OK) == True):
         print ("'%s' firewalls config:" % nodeName)
-        cfg = result[1]
+        cfg = result.get_data()
         data = json.loads(cfg)
         print json.dumps(data, indent=4)
     else:
@@ -105,7 +105,7 @@ if __name__ == "__main__":
     rules.add_rule(rule)
     firewall1.add_rules(rules)
     result = vrouter.create_firewall_instance(firewall1)
-    status = result[0]
+    status = result.get_status()
     if(status.eq(STATUS.OK) == True):
         print ("Firewall instance '%s' was successfully created" % fwName1)
     else:
@@ -127,7 +127,7 @@ if __name__ == "__main__":
     rules.add_rule(rule)
     firewall2.add_rules(rules)    
     result = vrouter.create_firewall_instance(firewall2)
-    status = result[0]
+    status = result.get_status()
     if(status.eq(STATUS.OK) == True):
         print ("Firewall instance '%s' was successfully created" % fwName2)
     else:
@@ -141,10 +141,10 @@ if __name__ == "__main__":
     print ("<<< Show firewalls configuration on the '%s'" % nodeName)
     time.sleep(rundelay)
     result = vrouter.get_firewalls_cfg()
-    status = result[0]
+    status = result.get_status()
     if (status.eq(STATUS.OK) == True):
         print ("'%s' firewalls config:" % nodeName)
-        cfg = result[1]
+        cfg = result.get_data()
         data = json.loads(cfg)
         print json.dumps(data, indent=4)
     else:
@@ -157,7 +157,7 @@ if __name__ == "__main__":
     print ("<<< Apply firewall '%s' to inbound traffic and '%s' to outbound traffic on the '%s' dataplane interface" % (fwName1, fwName2, ifName))
     time.sleep(rundelay)    
     result = vrouter.set_dataplane_interface_firewall(ifName, fwName1, fwName2)
-    status = result[0]
+    status = result.get_status()
     if(status.eq(STATUS.OK) == True):
         print ("Firewall instances were successfully applied to the '%s' dataplane interface" % (ifName))
     else:
@@ -170,10 +170,10 @@ if __name__ == "__main__":
     print ("<<< Show '%s' dataplane interface configuration on the '%s'" % (ifName, nodeName))
     time.sleep(rundelay)
     result = vrouter.get_dataplane_interface_cfg(ifName)
-    status = result[0]
+    status = result.get_status()
     if(status.eq(STATUS.OK) == True):
         print ("Interfaces '%s' config:" % ifName)
-        cfg = result[1]
+        cfg = result.get_data()
         data = json.loads(cfg)
         print json.dumps(data, indent=4)
     else:
@@ -186,7 +186,7 @@ if __name__ == "__main__":
     print ("<<< Remove firewall settings from the '%s' dataplane interface" % (ifName))
     time.sleep(rundelay)    
     result = vrouter.delete_dataplane_interface_firewall(ifName)
-    status = result[0]
+    status = result.get_status()
     if(status.eq(STATUS.OK) == True):
         print ("Firewall settings successfully removed from '%s' dataplane interface" % ifName)
     else:
@@ -199,10 +199,10 @@ if __name__ == "__main__":
     print ("<<< Show '%s' dataplane interface configuration on the '%s'" % (ifName,nodeName))
     time.sleep(rundelay)
     result = vrouter.get_dataplane_interface_cfg(ifName)
-    status = result[0]
+    status = result.get_status()
     if(status.eq(STATUS.OK) == True):
         print ("Interfaces '%s' config:" % ifName)
-        cfg = result[1]
+        cfg = result.get_data()
         data = json.loads(cfg)
         print json.dumps(data, indent=4)
     else:
@@ -215,7 +215,7 @@ if __name__ == "__main__":
     print (">>> Remove firewall instance '%s' from '%s' " % (fwName1, nodeName))
     time.sleep(rundelay)
     result = vrouter.delete_firewall_instance(firewall1)  
-    status = result[0]
+    status = result.get_status()
     if(status.eq(STATUS.OK) == True):
         print ("Firewall instance '%s' was successfully deleted" % fwName1)
     else:
@@ -228,7 +228,7 @@ if __name__ == "__main__":
     print (">>> Remove firewall instance '%s' from '%s' " % (fwName2, nodeName))
     time.sleep(rundelay)
     result = vrouter.delete_firewall_instance(firewall2)  
-    status = result[0]
+    status = result.get_status()
     if(status.eq(STATUS.OK) == True):
         print ("Firewall instance '%s' was successfully deleted" % fwName2)
     else:
@@ -241,10 +241,10 @@ if __name__ == "__main__":
     print ("<<< Show firewalls configuration on the '%s'" % nodeName)
     time.sleep(rundelay)
     result = vrouter.get_firewalls_cfg()
-    status = result[0]
+    status = result.get_status()
     if (status.eq(STATUS.OK) == True):
         print ("'%s' firewalls config:" % nodeName)
-        cfg = result[1]
+        cfg = result.get_data()
         data = json.loads(cfg)
         print json.dumps(data, indent=4)
     else:
@@ -257,7 +257,7 @@ if __name__ == "__main__":
     print (">>> Remove '%s' NETCONF node from the Controller" % nodeName)
     time.sleep(rundelay)    
     result = ctrl.delete_netconf_node(vrouter)
-    status = result[0]
+    status = result.get_status()
     if(status.eq(STATUS.OK)):
         print ("'%s' NETCONF node was successfully removed from the Controller" % nodeName)
     else:
