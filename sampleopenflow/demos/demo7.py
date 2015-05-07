@@ -18,6 +18,7 @@ from framework.openflowdev.ofswitch import Match
 
 from framework.common.status import STATUS
 from framework.common.utils import load_dict_from_file
+from framework.common.constants import *
 
 if __name__ == "__main__":
     
@@ -52,7 +53,7 @@ if __name__ == "__main__":
     #                 IPv4 Destination Address
     #                 Input Port
     #     NOTE: Ethernet type must be 2048 (0x800) -> IPv4 protocol
-    eth_type = 2048
+    eth_type = ETH_TYPE_IPv4
     eth_src = "00:1a:1b:00:22:aa"   
     eth_dst = "00:2b:00:60:ff:f1"
     ipv4_src = "44.44.44.1/24"

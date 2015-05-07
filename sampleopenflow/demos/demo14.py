@@ -18,6 +18,7 @@ from framework.openflowdev.ofswitch import Match
 
 from framework.common.status import STATUS
 from framework.common.utils import load_dict_from_file
+from framework.common.constants import *
 
 if __name__ == "__main__":
     
@@ -50,7 +51,7 @@ if __name__ == "__main__":
     #                 Ethernet Source Address
     #                 Ethernet Destination Address
     #                 Input Port
-    eth_type = 2048
+    eth_type = ETH_TYPE_IPv4
     eth_src = "00:00:00:AA:BB:CC"
     eth_dst = "FF:FF:AA:BC:ED:FE"
     input_port = 5
@@ -58,10 +59,7 @@ if __name__ == "__main__":
     # --- Flow Actions: Push VLAN: Ethernet Type
     #                   Set Field: VLAN ID
     #                   Output:    Port Number
-    # NOTES:
-    #      Ethernet type 33024(0x8100) -> VLAN tagged frame (Customer VLAN Tag Type)
-    #      Ethernet type 34984(0x88A8) -> QINQ VLAN tagged frame (Service VLAN tag identifier)
-    push_eth_type = 33024
+    push_eth_type = ETH_TYPE_DOT1Q # 802.1q VLAN tagged frame
     push_vlan_id = 100
     output_port = 5
     
@@ -72,7 +70,7 @@ if __name__ == "__main__":
     print ("        Match:  Ethernet Type (%s)\n"
            "                Ethernet Source Address (%s)\n"
            "                Ethernet Destination Address (%s)\n"
-           "                Input Port (%s)\n"              % (hex(eth_type), eth_src, 
+           "                Input Port (%s)"              % (hex(eth_type), eth_src, 
                                                                eth_dst, input_port))
     print ("        Action: Push VLAN (Ethernet Type=%s)"
                                                             % hex(push_eth_type))

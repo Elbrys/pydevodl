@@ -18,6 +18,7 @@ from framework.openflowdev.ofswitch import Match
 
 from framework.common.status import STATUS
 from framework.common.utils import load_dict_from_file
+from framework.common.constants import *
 
 if __name__ == "__main__":
     
@@ -55,15 +56,15 @@ if __name__ == "__main__":
     #                 ICMPv6 type
     #                 ICMPv6 Code
     #                 Metadata
-    eth_type = 34525 # IPv6 protocol (0x86dd)
-    ip_dscp = 60
-    ip_ecn = 3
+    eth_type = ETH_TYPE_IPv6
+    ip_dscp = IP_DSCP_CS7 # 'Class Selector' = 'Network'
+    ip_ecn = IP_ECN_CE # 'Congestion Encountered'
     ipv6_src = "1234:5678:9ABC:DEF0:FDCD:A987:6543:210F/76"
     ipv6_dst = "2000:2abc:edff:fe00::3456/94"
     ipv6_flabel = 15
-    ip_proto = 58 # ICMPv6
-    icmpv6_type = 6
-    icmpv6_code = 3
+    ip_proto = IP_PROTO_ICMPv6
+    icmpv6_type = 1 # 'Destination Unreachable'
+    icmpv6_code = 3 # 'Address Unreachable'
     metadata = "0x0123456789ABCDEF"
     
     # --- Flow Actions: Output (CONTROLLER)

@@ -20,6 +20,7 @@ from framework.openflowdev.ofswitch import Match
 
 from framework.common.status import STATUS
 from framework.common.utils import load_dict_from_file
+from framework.common.constants import *
 
 if __name__ == "__main__":
     
@@ -51,14 +52,14 @@ if __name__ == "__main__":
     # --- Flow Match: Ethernet Type
     #                 Input Port
     #                 IPv4 Destination Address
-    eth_type = 2048 # IPv4
+    eth_type = ETH_TYPE_IPv4
     in_port = 13
     ipv4_dst = "10.12.5.4/32"
     
     # --- Flow Actions: Push MPLS
     #                   Set Field
     #                   Output
-    push_ether_type = 34887 # MPLS unicast (0x8847)
+    push_ether_type = ETH_TYPE_MPLS_UCAST
     mpls_label = 27
     output_port = 14
     

@@ -19,6 +19,7 @@ from framework.openflowdev.ofswitch import Match
 
 from framework.common.status import STATUS
 from framework.common.utils import load_dict_from_file
+from framework.common.constants import *
 
 if __name__ == "__main__":
     
@@ -50,15 +51,13 @@ if __name__ == "__main__":
     # --- Flow Match: Ethernet Type
     #                 Input Port
     #                 IPv4 Destination Address
-    eth_type = 34887 # MPLS unicast (0x8847)
+    eth_type = ETH_TYPE_MPLS_UCAST
     in_port = 13
     mpls_label = 27
     
-    # --- Flow Actions: Push MPLS
-    #                   Set Field
+    # --- Flow Actions: Set Field
     #                   Output
-    push_ether_type = 34887 # MPLS unicast (0x8847)
-    push_mpls_label = 44
+    new_mpls_label = 44
     output_port = 14
     
     print ("<<< 'Controller': %s, 'OpenFlow' switch: '%s'" % (ctrlIpAddr, nodeName))
@@ -69,7 +68,7 @@ if __name__ == "__main__":
            "                Input Port (%s)\n"
            "                MPLS Label (%s)"%     (hex(eth_type), in_port, mpls_label))
     print ("        Action: Set Field (MPLS Label %s)\n"
-           "                Output (Physical Port number %s)" % (push_mpls_label, output_port))
+           "                Output (Physical Port number %s)" % (new_mpls_label, output_port))
     
     
     time.sleep(rundelay)
@@ -89,7 +88,7 @@ if __name__ == "__main__":
     #                  'Output'
     instruction = Instruction(instruction_order = 0)    
     action = SetFieldAction(action_order = 0)
-    action.set_mpls_label(push_mpls_label)
+    action.set_mpls_label(new_mpls_label)
     instruction.add_apply_action(action)        
     action = OutputAction(action_order = 1, port = 2)
     instruction.add_apply_action(action)
@@ -99,7 +98,7 @@ if __name__ == "__main__":
     #                   Input Port
     #                   MPLS Label
     match = Match()    
-    match.set_eth_type(eth_type = 34887)
+    match.set_eth_type(eth_type)
     match.set_in_port(in_port)
     match.set_mpls_lable(mpls_label)
     flow_entry.add_match(match)        

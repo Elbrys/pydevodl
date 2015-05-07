@@ -21,6 +21,7 @@ from framework.openflowdev.ofswitch import Match
 
 from framework.common.status import STATUS
 from framework.common.utils import load_dict_from_file
+from framework.common.constants import *
 
 def delete_flows(ofswitch, table_id, flow_ids):
     for flow_id in flow_ids:
@@ -64,12 +65,12 @@ if __name__ == "__main__":
     cookie_mask = 255
     customer_port = 110
     provider_port = 111
-    qinq_eth_type = 34984  # QinQ tag protocol id (0x88a8)
-    dot1q_eth_type = 33024 # 802.1Q tag protocol id (0x8100)
-    arp_eth_type = 2054    # ARP
-    ip_eth_type = 2048     # IP
-    provider_vlan_id = 100 # S-TAG
-    customer_vlan_id = 998 # C-TAG    
+    qinq_eth_type = ETH_TYPE_STAG  # 802.1ad (QinQ) VLAN tagged frame
+    dot1q_eth_type = ETH_TYPE_CTAG # 802.1q VLAN tagged frame
+    arp_eth_type = ETH_TYPE_ARP
+    ip_eth_type = ETH_TYPE_IPv4
+    provider_vlan_id = 100 # Provider VLAN
+    customer_vlan_id = 998 # Customer VLAN   
     first_flow_id = 31
     
     
@@ -84,13 +85,13 @@ if __name__ == "__main__":
     print ("        Match:  Ethernet Type (%s)\n"
            "                VLAN ID (%s)\n"
            "                Input Port (%s)" % (hex(arp_eth_type), customer_vlan_id, customer_port))
-    print ("        Actions: Push VLAN (Ethernet Type %s)\n"
-           "                 Set Field (VLAN ID %s)\n"
-           "                 Push VLAN (Ethernet Type %s)\n"
-           "                 Set Field (VLAN ID %s)\n"
-           "                 Output (Physical Port number %s)" % (hex(qinq_eth_type), provider_vlan_id,
-                                                                  hex(dot1q_eth_type), customer_vlan_id,
-                                                                  provider_port))
+    print ("        Action: Push VLAN (Ethernet Type %s)\n"
+           "                Set Field (VLAN ID %s)\n"
+           "                Push VLAN (Ethernet Type %s)\n"
+           "                Set Field (VLAN ID %s)\n"
+           "                Output (Physical Port number %s)" % (hex(qinq_eth_type), provider_vlan_id,
+                                                                 hex(dot1q_eth_type), customer_vlan_id,
+                                                                 provider_port))
     
     time.sleep(rundelay)
     
@@ -237,8 +238,8 @@ if __name__ == "__main__":
     print ("        Match:  Ethernet Type (%s)\n"
            "                VLAN ID (%s)\n"
            "                Input Port (%s)" % (hex(arp_eth_type), provider_vlan_id, provider_port))
-    print ("        Actions: Pop VLAN\n"
-           "                 Output (Physical Port number %s)" % (customer_port))
+    print ("        Action: Pop VLAN\n"
+           "                Output (Physical Port number %s)" % (customer_port))
     
     time.sleep(rundelay)
     
@@ -292,8 +293,8 @@ if __name__ == "__main__":
     print ("        Match:  Ethernet Type (%s)\n"
            "                VLAN ID (%s)\n"
            "                Input Port (%s)" % (hex(ip_eth_type), provider_vlan_id, provider_port))
-    print ("        Actions: Pop VLAN\n"
-           "                 Output (Physical Port number %s)" % (customer_port))
+    print ("        Action: Pop VLAN\n"
+           "                Output (Physical Port number %s)" % (customer_port))
     
     time.sleep(rundelay)
     

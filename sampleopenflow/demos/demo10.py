@@ -18,6 +18,8 @@ from framework.openflowdev.ofswitch import Match
 
 from framework.common.status import STATUS
 from framework.common.utils import load_dict_from_file
+from framework.common.constants import *
+
 
 if __name__ == "__main__":
     
@@ -58,14 +60,14 @@ if __name__ == "__main__":
     #     NOTE: Ethernet type MUST be 2048 (0x800) -> IPv4 protocol
     
     
-    eth_type = 2048
+    eth_type = ETH_TYPE_IPv4
     eth_src = "00:00:00:11:23:ae"
     eth_dst = "20:14:29:01:19:61"
     ipv4_src = "192.1.2.3/10"
     ipv4_dst = "172.168.5.6/18"
-    ip_proto = 17
-    ip_dscp = 8
-    ip_ecn = 3
+    ip_proto = IP_PROTO_UDP
+    ip_dscp = IP_DSCP_CS1   # 'Class Selector' = 'Priority'
+    ip_ecn = IP_ECN_CE      # Congestion Encountered
     udp_src_port = 25364
     udp_dst_port = 8080
     input_port = 13

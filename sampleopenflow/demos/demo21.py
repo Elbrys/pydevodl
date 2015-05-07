@@ -18,6 +18,7 @@ from framework.openflowdev.ofswitch import Match
 
 from framework.common.status import STATUS
 from framework.common.utils import load_dict_from_file
+from framework.common.constants import *
 
 if __name__ == "__main__":
     
@@ -56,14 +57,14 @@ if __name__ == "__main__":
     #                 TCP Source Port
     #                 TCP Destination Port
     #                 Metadata
-    eth_type = 34525 # IPv6 protocol (0x86dd)
-    ip_dscp = 60
-    ip_ecn = 3
+    eth_type = ETH_TYPE_IPv6
+    ip_dscp = IP_DSCP_CS6 # 'Class Selector' = 'Internet'
+    ip_ecn = IP_ECN_CE # 'Congestion Encountered'
     ipv6_src = "1234:5678:9ABC:DEF0:FDCD:A987:6543:210F/76"
     ipv6_dst = "2000:2abc:edff:fe00::3456/94"
     ipv6_flabel = 7
     ipv6_exthdr = 0 # 'no next header'
-    ip_proto = 6 # TCP
+    ip_proto = IP_PROTO_TCP
     tcp_src_port = 1831
     tcp_dst_port = 100610
     metadata = "123456789"

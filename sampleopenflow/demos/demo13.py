@@ -18,6 +18,7 @@ from framework.openflowdev.ofswitch import Match
 
 from framework.common.status import STATUS
 from framework.common.utils import load_dict_from_file
+from framework.common.constants import *
 
 if __name__ == "__main__":
     
@@ -51,11 +52,11 @@ if __name__ == "__main__":
     #                 Ethernet Destination Address
     #                 VLAN ID
     #                 VLAN PCP
-    eth_type = 2048
+    eth_type = ETH_TYPE_IPv4
     eth_src = "00:00:00:11:23:ad"
     eth_dst = "00:ff:29:01:19:61"
     vlan_id = 100
-    vlan_pcp = 3
+    vlan_pcp = PCP_CA # 'Critical Applications' (priority 3)
     
     
     print ("<<< 'Controller': %s, 'OpenFlow' switch: '%s'" % (ctrlIpAddr, nodeName))

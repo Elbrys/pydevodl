@@ -18,6 +18,7 @@ from framework.openflowdev.ofswitch import Match
 
 from framework.common.status import STATUS
 from framework.common.utils import load_dict_from_file
+from framework.common.constants import *
 
 if __name__ == "__main__":
     
@@ -54,10 +55,10 @@ if __name__ == "__main__":
     #                 ARP source hardware address
     #                 ARP target hardware address
     #     NOTE: Ethernet type MUST be 2054 (0x0806) -> ARP protocol
-    eth_type = 2054
+    eth_type = ETH_TYPE_ARP
     eth_src = "00:ab:fe:01:03:31"
     eth_dst = "ff:ff:ff:ff:ff:ff"
-    arp_opcode = 1 # ARP Request
+    arp_opcode = ARP_REQUEST
     arp_src_ipv4_addr = "192.168.4.1"
     arp_tgt_ipv4_addr = "10.21.22.23"
     arp_src_hw_addr = "12:34:56:78:98:ab"

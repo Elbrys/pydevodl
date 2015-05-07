@@ -18,6 +18,7 @@ from framework.openflowdev.ofswitch import Match
 
 from framework.common.status import STATUS
 from framework.common.utils import load_dict_from_file
+from framework.common.constants import *
 
 if __name__ == "__main__":
     
@@ -55,13 +56,13 @@ if __name__ == "__main__":
     #                 IP DSCP
     #                 Input Port
     #     NOTE: Ethernet type MUST be 2048 (0x800) -> IPv4 protocol
-    eth_type = 2048
+    eth_type = ETH_TYPE_IPv4
     eth_src = "00:00:00:11:23:ae"
     eth_dst = "ff:ff:29:01:19:61"
     ipv4_src = "17.1.2.3/8"
     ipv4_dst = "172.168.5.6/16"
-    ip_proto = 6
-    ip_dscp = 2
+    ip_proto = IP_PROTO_TCP
+    ip_dscp = IP_DSCP_AF12 # Assured Forwarding ('class'=1, 'drop precedence'=2)
     tcp_src_port = 25364
     tcp_dst_port = 8080
     input_port = 13

@@ -18,6 +18,7 @@ from framework.openflowdev.ofswitch import Match
 
 from framework.common.status import STATUS
 from framework.common.utils import load_dict_from_file
+from framework.common.constants import *
 
 if __name__ == "__main__":
     
@@ -51,12 +52,12 @@ if __name__ == "__main__":
     #                 IPv6 Destination Address
     #                 IP DSCP
     #                 TCP Source Port
-    #TCP Destination Port
-    eth_type = 34525 # IPv6 protocol (0x86dd)
+    #                 TCP Destination Port
+    eth_type = ETH_TYPE_IPv6
     ipv6_src = "2001::2acf:e9ff:fe21:6431/80"
     ipv6_dst = "2004:1234:2acf:e9ff::fe21:6431/64"
-    ip_dscp = 8
-    ip_proto = 6 # TCP
+    ip_dscp = IP_DSCP_CS1 # 'Class Selector' = 'Priority'
+    ip_proto = IP_PROTO_TCP
     tcp_src_port = 12345
     tcp_dst_port = 54321
     

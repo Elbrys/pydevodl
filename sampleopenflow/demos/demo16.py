@@ -18,6 +18,7 @@ from framework.openflowdev.ofswitch import Match
 
 from framework.common.status import STATUS
 from framework.common.utils import load_dict_from_file
+from framework.common.constants import *
 
 if __name__ == "__main__":
     
@@ -49,7 +50,7 @@ if __name__ == "__main__":
     # --- Flow Match: Ethernet Type
     #                 IPv6 Source Address
     #                 IPv6 Destination Address
-    eth_type = 34525 # IPv6 protocol (0x86dd)
+    eth_type = ETH_TYPE_IPv6
     ipv6_src = "fe80::2acf:e9ff:fe21:6431/128"
     ipv6_dst = "aabb:1234:2acf:e9ff::fe21:6431/64"
     
@@ -91,7 +92,7 @@ if __name__ == "__main__":
     #                   IPv6 Source Address
     #                   IPv6 Destination Address
     match = Match()    
-    match.set_eth_type(eth_type = 34525)
+    match.set_eth_type(eth_type)
     match.set_ipv6_src(ipv6_src)
     match.set_ipv6_dst(ipv6_dst)
     flow_entry.add_match(match)

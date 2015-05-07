@@ -19,6 +19,7 @@ from framework.openflowdev.ofswitch import Match
 
 from framework.common.status import STATUS
 from framework.common.utils import load_dict_from_file
+from framework.common.constants import *
 
 if __name__ == "__main__":
     
@@ -50,13 +51,13 @@ if __name__ == "__main__":
     # --- Flow Match: Ethernet Type
     #                 Input Port
     #                 MPLS Label
-    eth_type = 34887 # MPLS unicast (0x8847)
+    eth_type = ETH_TYPE_MPLS_UCAST
     in_port = 14
     mpls_label = 44
     
     # --- Flow Actions: Pop MPLS
     #                   Output
-    pop_ether_type = 34887 # MPLS unicast (0x8847)
+    pop_ether_type = ETH_TYPE_MPLS_UCAST
     output_port = 13
     
     print ("<<< 'Controller': %s, 'OpenFlow' switch: '%s'" % (ctrlIpAddr, nodeName))
