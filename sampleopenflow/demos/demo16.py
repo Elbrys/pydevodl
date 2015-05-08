@@ -74,6 +74,7 @@ if __name__ == "__main__":
     flow_entry.set_flow_name(flow_name = "match=ipv6_src,ipv6_dst;actions=output:Controller")
     table_id = 0
     flow_id = 23
+    flow_entry.set_flow_table_id(table_id)
     flow_entry.set_flow_id(flow_id)
     flow_entry.set_flow_priority(flow_priority = 1014)
     flow_entry.set_flow_cookie(cookie = 408)

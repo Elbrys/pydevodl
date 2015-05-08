@@ -93,7 +93,9 @@ if __name__ == "__main__":
     flow_entry.set_flow_table_id(table_id)
     flow_id = 19
     flow_entry.set_flow_id(flow_id)
-    flow_entry.set_flow_priority(flow_priority = 1010)
+    flow_entry.set_flow_hard_timeout(0)
+    flow_entry.set_flow_idle_timeout(0)
+    flow_entry.set_flow_priority(1010)
     
     # --- Instruction: 'Apply-action'
     #     Action:      'Output' CONTROLLER

@@ -85,7 +85,10 @@ if __name__ == "__main__":
     flow_entry.set_flow_name(flow_name = "demo17.py")
     table_id = 0
     flow_id = 23
+    flow_entry.set_flow_table_id(table_id)
     flow_entry.set_flow_id(flow_id)
+    flow_entry.set_flow_hard_timeout(0)
+    flow_entry.set_flow_idle_timeout(0)
     flow_entry.set_flow_priority(flow_priority = 1015)
     
     # --- Instruction: 'Apply-action'

@@ -40,11 +40,11 @@ class OperStatus(object):
     def brief(self):
         return self.__status_code_string()
     
-    def detail(self):
+    def detailed(self):
+        s = self.brief()
         if(self.http_resp != None and self.http_resp.content != None):
-            return self.http_resp.content
-        else:
-            return ""
+            s += "\n" + self.http_resp.content
+        return s
     
     def code(self):
         return self.status_code

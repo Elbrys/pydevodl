@@ -84,7 +84,7 @@ if __name__ == "__main__":
     else:
         print ("\n")
         print ("!!!Demo terminated, reason: %s" % status.brief())        
-        print status.detail()
+        print status.detailed()
         exit(0)
     
     

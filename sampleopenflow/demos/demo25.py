@@ -97,8 +97,11 @@ if __name__ == "__main__":
     
     flow_id = first_flow_id
     flow_entry1 = FlowEntry()
+    flow_entry1.set_flow_table_id(table_id)
     flow_entry1.set_flow_name(flow_name = "[MLX1-A] Test flow (match:inport=110,arp;actions:push-QINQ-tag,mod_vlan=100,push-DOT1Q-tag,mod_vlan=998,output:111)")
     flow_entry1.set_flow_id(flow_id)
+    flow_entry1.set_flow_hard_timeout(hard_timeout = 600)
+    flow_entry1.set_flow_idle_timeout(idle_timeout = 300)
     flow_entry1.set_flow_priority(priority)
     flow_entry1.set_flow_cookie(cookie)
     flow_entry1.set_flow_cookie_mask(cookie_mask)
@@ -149,7 +152,7 @@ if __name__ == "__main__":
         print ("<<< Flow successfully added to the Controller")
     else:
         print ("\n")
-        print ("!!!Demo terminated, reason: %s" % status.detail())
+        print ("!!!Demo terminated, reason: %s" % status.detailed())
         delete_flows(ofswitch, table_id, range(first_flow_id, flow_id+1))
         exit(0)
     
@@ -173,8 +176,11 @@ if __name__ == "__main__":
     
     flow_id += 1
     flow_entry2 = FlowEntry()
+    flow_entry2.set_flow_table_id(table_id)
     flow_entry2.set_flow_name(flow_name = "[MLX1-A] Test flow (match:inport=110,ip;actions:push-QINQ-tag,mod_vlan=100,output:111)")
     flow_entry2.set_flow_id(flow_id)
+    flow_entry2.set_flow_hard_timeout(hard_timeout = 600)
+    flow_entry2.set_flow_idle_timeout(idle_timeout = 300)
     flow_entry2.set_flow_priority(priority)
     flow_entry2.set_flow_cookie(cookie)
     flow_entry2.set_flow_cookie_mask(cookie_mask)
@@ -225,7 +231,7 @@ if __name__ == "__main__":
         print ("<<< Flow successfully added to the Controller")
     else:
         print ("\n")
-        print ("!!!Demo terminated, reason: %s" % status.detail())
+        print ("!!!Demo terminated, reason: %s" % status.detailed())
         delete_flows(ofswitch, table_id, range(first_flow_id, flow_id+1))
         exit(0)
     
@@ -245,8 +251,11 @@ if __name__ == "__main__":
     
     flow_id += 1
     flow_entry3 = FlowEntry()
+    flow_entry3.set_flow_table_id(table_id)
     flow_entry3.set_flow_name(flow_name = "[MLX1-A] Test flow (match:inport=111,arp,vid=100;actions:pop-vlan-tag,output=110)")
     flow_entry3.set_flow_id(flow_id)
+    flow_entry3.set_flow_hard_timeout(hard_timeout = 600)
+    flow_entry3.set_flow_idle_timeout(idle_timeout = 300)
     flow_entry3.set_flow_priority(priority)
     flow_entry3.set_flow_cookie(cookie)
     flow_entry3.set_flow_cookie_mask(cookie_mask)
@@ -280,7 +289,7 @@ if __name__ == "__main__":
         print ("<<< Flow successfully added to the Controller")
     else:
         print ("\n")
-        print ("!!!Demo terminated, reason: %s" % status.detail())
+        print ("!!!Demo terminated, reason: %s" % status.detailed())
         delete_flows(ofswitch, table_id, range(first_flow_id, flow_id+1))
         exit(0)
     
@@ -300,8 +309,11 @@ if __name__ == "__main__":
     
     flow_id += 1
     flow_entry4 = FlowEntry()
-    flow_entry4.set_flow_name(flow_name = "[MLX1-A] Test flow (match:inport=111,ip,vid=100; actions:pop-vlan-tag,output=110)")
+    flow_entry4.set_flow_table_id(table_id)
     flow_entry4.set_flow_id(flow_id)
+    flow_entry4.set_flow_name(flow_name = "[MLX1-A] Test flow (match:inport=111,ip,vid=100; actions:pop-vlan-tag,output=110)")
+    flow_entry4.set_flow_hard_timeout(hard_timeout = 600)
+    flow_entry4.set_flow_idle_timeout(idle_timeout = 300)
     flow_entry4.set_flow_priority(priority)
     flow_entry4.set_flow_cookie(cookie)
     flow_entry4.set_flow_cookie_mask(cookie_mask)
@@ -335,7 +347,7 @@ if __name__ == "__main__":
         print ("<<< Flow successfully added to the Controller")
     else:
         print ("\n")
-        print ("!!!Demo terminated, reason: %s" % status.detail())
+        print ("!!!Demo terminated, reason: %s" % status.detailed())
         delete_flows(ofswitch, table_id, range(first_flow_id, flow_id+1))
         exit(0)
     
@@ -353,7 +365,7 @@ if __name__ == "__main__":
             print json.dumps(flow, indent=4)
         else:
             print ("\n")
-            print ("!!!Demo terminated, reason: %s" % status.detail())
+            print ("!!!Demo terminated, reason: %s" % status.detailed())
             delete_flows(ofswitch, table_id, range(first_flow_id, flow_id+1))
             exit(0)
     
@@ -363,8 +375,8 @@ if __name__ == "__main__":
            "and from the table '%s' on the '%s' node" % (table_id, nodeName))
     time.sleep(rundelay)
     delete_flows(ofswitch, table_id, range(first_flow_id, flow_id+1))
-    
-    
+
+        
     print ("\n")
     print (">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
     print (">>> Demo End")

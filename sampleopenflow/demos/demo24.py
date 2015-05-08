@@ -77,8 +77,11 @@ if __name__ == "__main__":
     flow_entry = FlowEntry()
     table_id = 0
     flow_id = 30
-    flow_entry.set_flow_name(flow_name = "Strip MPLS Label")
+    flow_entry.set_flow_table_id(table_id)
     flow_entry.set_flow_id(flow_id)
+    flow_entry.set_flow_name(flow_name = "Strip MPLS Label")
+    flow_entry.set_flow_hard_timeout(hard_timeout = 0)
+    flow_entry.set_flow_idle_timeout(idle_timeout = 0)
     flow_entry.set_flow_priority(flow_priority = 1023)
     flow_entry.set_flow_cookie(cookie = 889)
     flow_entry.set_flow_cookie_mask(cookie_mask = 255)
@@ -114,7 +117,7 @@ if __name__ == "__main__":
         print ("<<< Flow successfully added to the Controller")
     else:
         print ("\n")
-        print ("!!!Demo terminated, reason: %s" % status.detail())
+        print ("!!!Demo terminated, reason: %s" % status.detailed())
         exit(0)
     
     

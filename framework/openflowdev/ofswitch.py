@@ -638,8 +638,12 @@ class FlowEntry(object):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def __init__(self):
-        ''' Flow identifier in ODL inventory '''
+    def __init__(self, **flow_entry):
+        if flow_entry:
+            self.__dict__.update(flow_entry)
+            return
+        
+        ''' Unique identifier of this FlowEntry in the Controller's data store '''
         self.id = None
         
         ''' Opaque Controller-issued identifier '''
@@ -650,19 +654,19 @@ class FlowEntry(object):
         self.cookie_mask = None  
         
         ''' ID of the table to put the flow in '''
-        self.table_id = 0
+        self.table_id = None
         
         ''' Priority level of flow entry '''
         self.priority = None
         
         ''' Idle time before discarding (seconds) '''
-        self.idle_timeout = 0
+        self.idle_timeout = None
         
         ''' Max time before discarding (seconds) '''
-        self.hard_timeout = 0 
+        self.hard_timeout = None
         
         ''' Modify/Delete entry strictly matching wildcards and priority '''
-        self.strict = False
+        self.strict = None
         
         ''' For OFPFC_DELETE* commands, require matching entries to include this as an
             output port. A value of OFPP_ANY indicates no restriction. '''
@@ -682,7 +686,7 @@ class FlowEntry(object):
         self.id = None
         
         ''' ??? (internal Controller's inventory attribute) '''
-        self.installHw = False
+        self.installHw = None
         
         ''' Boolean flag used to enforce OpenFlow switch to do ordered message processing.
             Barrier request/reply messages are used by the controller to ensure message dependencies
@@ -692,7 +696,7 @@ class FlowEntry(object):
             Upon receipt, the switch must finish processing all previously-received messages, including
             sending corresponding reply or error messages, before executing any messages beyond the
             Barrier Request. '''
-        self.barrier=False
+        self.barrier=None
         
         ''' Buffered packet to apply to, or OFP_NO_BUFFER. Not meaningful for OFPFC_DELETE* '''
         self.buffer_id = None
@@ -714,6 +718,7 @@ class FlowEntry(object):
     # 
     #---------------------------------------------------------------------------
     def get_payload(self):
+        """ Return FlowEntry as a payload for the HTTP request body """
         s = self.to_json()        
         s = string.replace(s, '_', '-')
         # Following are exceptions from the common ODL rules for having all
@@ -746,6 +751,12 @@ class FlowEntry(object):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
+    def get_flow_name(self):
+        return self.flow_name
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def set_flow_id(self, flow_id):
         self.id = flow_id
     
@@ -758,8 +769,38 @@ class FlowEntry(object):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
+    def set_flow_install_hw(self, install_hw):
+        self.installHw = install_hw
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_flow_install_hw(self):
+        return self.installHw
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_flow_barrier(self, barrier):
+        self.barrier = barrier
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_flow_barrier(self, barrier):
+        return self.barrier
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def set_flow_priority(self, flow_priority):
         self.priority = flow_priority
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_flow_priority(self):
+        return self.priority
     
     #---------------------------------------------------------------------------
     # 
@@ -770,8 +811,20 @@ class FlowEntry(object):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
+    def get_flow_hard_timeout(self):
+        return self.hard_timeout
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def set_flow_idle_timeout(self, idle_timeout):
         self.idle_timeout = idle_timeout
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_flow_idle_timeout(self):
+        return self.idle_timeout
     
     #---------------------------------------------------------------------------
     # 
@@ -782,16 +835,40 @@ class FlowEntry(object):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
+    def get_flow_cookie(self):
+        return self.cookie
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def set_flow_cookie_mask(self, cookie_mask):
         self.cookie_mask = cookie_mask
     
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
+    def get_flow_cookie_mask(self):
+        return self.cookie_mask
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_flow_strict(self, strict):
+        self.strict = strict
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_flow_strict(self):
+        return self.strict
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def add_instruction(self, instruction):
         if(self.instructions == None):
-            self.instructions = {}
-        self.instructions.update({'instruction':instruction})
+            self.instructions = {'instruction': []}
+        self.instructions['instruction'].append(instruction)
     
     #---------------------------------------------------------------------------
     # 
@@ -810,14 +887,14 @@ class Instructions():
     # 
     #---------------------------------------------------------------------------
     def __init__(self):
-        self.instructions = {}
-
+        self.instructions = {'instruction': []}
+    
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def add_instruction(self, instruction):
         self.instructions.append(instruction)
-
+    
 #-------------------------------------------------------------------------------
 # 
 #-------------------------------------------------------------------------------

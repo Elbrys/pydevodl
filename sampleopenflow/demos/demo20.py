@@ -94,6 +94,7 @@ if __name__ == "__main__":
     flow_entry = FlowEntry()
     table_id = 0
     flow_id = 26
+    flow_entry.set_flow_table_id(table_id)
     flow_entry.set_flow_name(flow_name = "demo20.py")
     flow_entry.set_flow_id(flow_id)
     flow_entry.set_flow_priority(flow_priority = 1019)
@@ -143,7 +144,7 @@ if __name__ == "__main__":
         print ("<<< Flow successfully added to the Controller")
     else:
         print ("\n")
-        print ("!!!Demo terminated, reason: %s" % status.detail())
+        print ("!!!Demo terminated, reason: %s" % status.brief().lower())
         exit(0)
     
     
