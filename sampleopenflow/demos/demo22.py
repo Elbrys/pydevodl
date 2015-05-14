@@ -91,7 +91,7 @@ if __name__ == "__main__":
     flow_entry.set_flow_cookie(cookie = 654)
     flow_entry.set_flow_cookie_mask(cookie_mask = 255)
     
-    # --- Instruction: 'Apply-action'
+    # --- Instruction: 'Apply-actions'
     #     Actions:     'Push MPLS Header'
     #                  'Set Field'
     #                  'Output'

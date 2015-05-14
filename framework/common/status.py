@@ -32,7 +32,19 @@ class OperStatus(object):
     
     def set_status(self, status_code, http_resp=None):
         self.status_code = status_code
-        self.http_resp=http_resp
+        self.http_resp = http_resp
+    
+    def set_status_code(self, status_code):
+        self.status_code = status_code
+    
+    def get_status_code(self):
+        return self.status_code
+    
+    def set_status_response(self, http_resp):
+        self.http_resp = http_resp
+    
+    def get_status_response(self):
+        return self.http_resp
     
     def to_string(self):
         return self.__status_code_string()
@@ -45,9 +57,6 @@ class OperStatus(object):
         if(self.http_resp != None and self.http_resp.content != None):
             s += "\n" + self.http_resp.content
         return s
-    
-    def code(self):
-        return self.status_code
     
     def eq(self, status_code):
         if(self.status_code == status_code):

@@ -83,16 +83,16 @@ def find_key_value_in_dict(d, key):
         if k == key:
             return v
         elif isinstance(v, dict):
-            results = find_key_values_in_dict(v, key)
-            for result in results:
-                return result
+            r = find_key_value_in_dict(v, key)
+            if r != None:
+                return r
         elif isinstance(v, list):
             for item in v:
                 if isinstance(item, dict):
-                    more_results = find_key_values_in_dict(item, key)
-                    for another_result in more_results:
-                        return another_result
-    
+                    r = find_key_value_in_dict(item, key)
+                    if r != None:
+                        return r
+        
     return None
 
 def find_dict_in_list(slist, key):

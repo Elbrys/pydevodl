@@ -70,7 +70,7 @@ if __name__ == "__main__":
     flow_entry.set_flow_id(flow_id)
     flow_entry.set_flow_priority(flow_priority = 1000)
     
-    # --- Instruction: 'Apply-action'
+    # --- Instruction: 'Apply-actions'
     #     Action:      'Drop'
     instruction = Instruction(instruction_order = 0)    
     action = DropAction(action_order = 0)   

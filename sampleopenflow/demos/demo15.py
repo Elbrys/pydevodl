@@ -90,7 +90,7 @@ if __name__ == "__main__":
     flow_entry.set_flow_hard_timeout(hard_timeout = 3400)
     flow_entry.set_flow_idle_timeout(idle_timeout = 3400)
     
-    # --- Instruction: 'Apply-action'
+    # --- Instruction: 'Apply-actions'
     #     Actions:     'PushVlan'
     #                  'SetField'
     #                  'Output'

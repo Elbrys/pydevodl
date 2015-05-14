@@ -101,7 +101,7 @@ if __name__ == "__main__":
     flow_entry.set_flow_cookie(cookie=101)
     flow_entry.set_flow_cookie_mask(cookie_mask=255)
     
-    # --- Instruction: 'Apply-action'
+    # --- Instruction: 'Apply-actions'
     #     Action:      'Output' NORMAL
     instruction = Instruction(instruction_order = 0)
     action = OutputAction(action_order = 0, port = "NORMAL")

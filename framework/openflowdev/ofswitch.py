@@ -340,13 +340,14 @@ class OFSwitch(OpenflowNode):
     # 
     #---------------------------------------------------------------------------
     def get_operational_flows(self, tableid):
-        flows = {}
-        result = self.get_flows(tableid, operational=True)
-        status = result[0]
-        if(status.eq(STATUS.OK) == True):
-            flows = result[1]
-        
-        return Result(status, flows)
+        return self.get_flows(tableid, operational=True)
+#        flows = {}
+#        result = self.get_flows(tableid, operational=True)
+#        status = result[0]
+#        if(status.eq(STATUS.OK) == True):
+#            flows = result[1]
+#        
+#        return Result(status, flows)
     
     #---------------------------------------------------------------------------
     # 
@@ -354,9 +355,11 @@ class OFSwitch(OpenflowNode):
     def get_operational_flows_ovs_syntax(self, tableid, sort=None):
         ovsflows = []
         result = self.get_operational_flows(tableid)
-        status = result[0]
+#        status = result[0]
+        status = result.get_status()
         if(status.eq(STATUS.OK) == True):
-            flist = result[1]
+#            flist = result[1]
+            flist = result.get_data()
             if (sort == True):
                 flist.sort(key=self.__getPriorityKey)                
             for item in flist:
@@ -369,13 +372,14 @@ class OFSwitch(OpenflowNode):
     # 
     #---------------------------------------------------------------------------
     def get_configured_flows(self, tableid):
-        flows = {}
-        result = self.get_flows(tableid, operational=False)
-        status = result[0]
-        if(status.eq(STATUS.OK) == True):
-            flows = result[1]
-        
-        return Result(status, flows)
+        return self.get_flows(tableid, operational=False)
+#        flows = {}
+#        result = self.get_flows(tableid, operational=False)
+#        status = result[0]
+#        if(status.eq(STATUS.OK) == True):
+#            flows = result[1]
+#        
+#        return Result(status, flows)
     
     #---------------------------------------------------------------------------
     # 
@@ -408,9 +412,11 @@ class OFSwitch(OpenflowNode):
     def get_configured_flows_ovs_syntax(self, tableid, sort=None):
         ovsflows = []
         result = self.get_configured_flows(tableid)
-        status = result[0]
+#        status = result[0]
+        status = result.get_status()
         if(status.eq(STATUS.OK) == True):
-            flist = result[1]
+#            flist = result[1]
+            flist = result.get_data()
             if (sort == True):
                 flist.sort(key=self.__getPriorityKey)                
             for item in flist:
@@ -638,10 +644,44 @@ class FlowEntry(object):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def __init__(self, **flow_entry):
-        if flow_entry:
-            self.__dict__.update(flow_entry)
+    def __init__(self, flow_json=None, flow_dict=None):
+        '''
+        if flow_dict != None and isinstance(flow_dict, dict):
+            self.__dict__.update(flow_dict)
             return
+        '''
+        
+        if (flow_json != None):
+            if (isinstance(flow_json, basestring)):
+                js = string.replace(flow_json, '-', '_')
+                js = string.replace(js, 'opendaylight_flow_statistics:flow_statistics', 'flow_statistics')
+                d = json.loads(js)
+#                print d
+                for k, v in d.items():
+                    if ('match' == k):
+                        self.match = Match(v)
+                    elif ('instructions' == k):
+                        self.instructions = Instructions(v)
+                    else:
+                        setattr(self, k, v)
+                return
+            else:
+                raise TypeError("!!!Error, argument '%s' is of a wrong type (JSON string is expected)" % flow_json)
+        
+        '''
+        def from_json(self, js):
+        """ Update FlowEntry from JSON """
+        if (js != None):
+            self.__init__()
+            s = string.replace(js, '-', '_')
+            s1 = string.replace(s, 'opendaylight_flow_statistics:flow_statistics', 'flow_statistics')
+            d1 = json.loads(s1)
+            d2 = stripNone(d1)
+            self.__dict__.clear()
+            self.__dict__.update(d2)
+        else:
+            raise ValueError('no value')
+        '''
         
         ''' Unique identifier of this FlowEntry in the Controller's data store '''
         self.id = None
@@ -714,6 +754,258 @@ class FlowEntry(object):
         """ Return FlowEntry as JSON """
         return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
     
+    '''
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def from_json(self, js):
+        """ Update FlowEntry from JSON """
+        if (js != None):
+            self.__init__()
+            s = string.replace(js, '-', '_')
+            s1 = string.replace(s, 'opendaylight_flow_statistics:flow_statistics', 'flow_statistics')
+            d1 = json.loads(s1)
+            d2 = stripNone(d1)
+            self.__dict__.clear()
+            self.__dict__.update(d2)
+        else:
+            raise ValueError('no value')
+    '''
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def to_ofp_oxm_syntax(self):
+        odc = OrderedDict()
+        sc = ""
+        sm = ""
+#        d = self.__dict__
+#        print d
+#        print dir(self)
+#        print hasattr(self, 'cookie')
+        
+        # Flow Cookie
+        v = self.get_flow_cookie()
+        if (v != None):
+            odc['cookie'] = hex(v)
+        
+        # Flow Duration
+        v = self.get_duration()
+        if (v != None):
+            odc['duration'] = "{}s".format(v)
+        
+        # Flow Table ID
+        v = self.get_flow_table_id()
+        if (v != None):
+            odc['table'] = v
+        
+        # Flow Counters
+        v = self.get_pkts_cnt()
+        if (v != None):
+            odc['n_packets'] = v
+        
+        v = self.get_bytes_cnt()
+        if (v != None):
+            odc['n_bytes'] = v
+        
+        # Flow Timeouts
+        v = self.get_flow_idle_timeout()
+        if (v != None and v != 0):
+            odc['idle_timeout'] = v
+        
+        v = self.get_flow_hard_timeout()
+        if (v != None and v != 0):
+            odc['hard_timeout'] = v
+        
+        # Flow Priority
+        v = self.get_flow_priority()
+        if (v != None):
+            odc['priority'] = v
+        
+        
+        sc = json.dumps(odc, separators=(',', '='))
+        sc = sc.translate(None, '"{} ').replace(':','=')
+#        s1 = s.translate(None, '"{} ')
+
+        # Flow Match
+        m = self.get_match_fields()
+#        print "+++ m"
+#        print m
+#        print type(m)
+#        print "+++ m"
+#        exit(0)
+        
+        if (m != None):
+            odm = OrderedDict()
+
+            v = m.get_in_port()
+            if (v != None):
+                odm['in_port'] = v
+            
+            v = m.get_eth_type()
+            if (v != None):
+                odm['eth_type'] = hex(v)
+            
+            v = m.get_eth_src()
+            if (v != None):
+                odm['eth_src'] = v
+            
+            v = m.get_eth_dst()
+            if (v != None):
+                odm['eth_dst'] = v
+            
+            v = m.get_vlan_id()
+            if (v != None):
+                odm['vlan_vid'] = v
+            
+            v = m.get_vlan_pcp()
+            if (v != None):
+                odm['vlan_pcp'] = v
+            
+            v = m.get_ip_proto()
+            if (v != None):
+                odm['ip_proto'] = v
+            
+            v = m.get_ip_dscp()
+            if (v != None):
+                odm['ip_dscp'] = v
+            
+            v = m.get_ip_ecn()
+            if (v != None):
+                odm['ip_ecn'] = v
+            
+            v = m.get_icmp4_type()
+            if (v != None):
+                odm['icmpv4_type'] = v
+            
+            v = m.get_icmpv4_code()
+            if (v != None):
+                odm['icmpv4_code'] = v
+            
+            v = m.get_icmpv6_type()
+            if (v != None):
+                odm['icmpv6_type'] = v
+            
+            v = m.get_icmpv6_code()
+            if (v != None):
+                odm['icmpv6_code'] = v
+            
+            v = m.get_ipv4_src()
+            if (v != None):
+                odm['ipv4_src'] = v
+            
+            v = m.get_ipv4_dst()
+            if (v != None):
+                odm['ipv4_dst'] = v
+            
+            v = m.get_ipv6_src()
+            if (v != None):
+                odm['ipv6_src'] = v
+            
+            v = m.get_ipv6_dst()
+            if (v != None):
+                odm['ipv6_dst'] = v
+            
+            v = m.get_ipv6_flabel()
+            if (v != None):
+                odm['ipv6_flabel'] = v
+            
+            v = m.get_ipv6_exh_hdr()
+            if (v != None):
+                odm['ipv6_exthdr'] = v
+            
+            v = m.get_udp_src_port()
+            if (v != None):
+                odm['udp_src'] = v
+            
+            v = m.get_udp_dst_port()
+            if (v != None):
+                odm['udp_dst'] = v
+            
+            v = m.get_tcp_src_port()
+            if (v != None):
+                odm['tcp_src'] = v
+            
+            v = m.get_tcp_dst_port()
+            if (v != None):
+                odm['tcp_dst'] = v
+            
+            v = m.get_sctp_src_port()
+            if (v != None):
+                odm['sctp_src'] = v
+            
+            v = m.get_sctp_dst_port()
+            if (v != None):
+                odm['sctp_dst'] = v
+            
+            v = m.get_arp_opcode()
+            if (v != None):
+                odm['arp_op'] = v
+            
+            v = m.get_arp_src_transport_address()
+            if (v != None):
+                odm['arp_spa'] = v
+            
+            v = m.get_arp_tgt_transport_address()
+            if (v != None):
+                odm['arp_tpa'] = v
+            
+            v = m.get_arp_src_hw_address()
+            if (v != None):
+                odm['arp_sha'] = v
+            
+            v = m.get_arp_tgt_hw_address()
+            if (v != None):
+                odm['arp_tpa'] = v
+            
+            v = m.get_mpls_label()
+            if (v != None):
+                odm['mpls_label'] = v
+            
+            v = m.get_mpls_tc()
+            if (v != None):
+                odm['mpls_tc'] = v
+            
+            v = m.get_mpls_bos()
+            if (v != None):
+                odm['mpls_bos'] = v
+            
+            v = m.get_tunnel_id()
+            if (v != None):
+                odm['tunnel_id'] = v
+            
+            v = m.get_metadata()
+            if (v != None):
+                odm['metadata'] = v
+            
+            
+            sm = json.dumps(odm, separators=(',', '='))
+            sm = sm.translate(None, '"{} ')
+            sm = "matches:" + sm 
+
+            # Flow Instructions
+            sa = "actions:"
+            instructions = self.get_instructions_set()
+            apply_actions = instructions.get_apply_actions()
+            d = {'output' : []}
+            for item in apply_actions:
+                if (isinstance(item, OutputAction)):
+                    s = "output="
+                    s += item.get_outport()
+                    ml = item.get_max_len()
+                    if (ml != None):
+                        s += ":" + ml
+                    d['output'].append(s)
+                    
+            if d['output']:
+                sa += ",".join(d['output'])
+            
+            
+        print sc + " " + sm + " " + sa
+    
+    
+    
+    
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
@@ -729,7 +1021,7 @@ class FlowEntry(object):
         d2 = stripNone(d1)
         payload = {self._mn : d2}
         return json.dumps(payload, default=lambda o: o.__dict__, sort_keys=True, indent=4)
-        
+    
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
@@ -740,7 +1032,12 @@ class FlowEntry(object):
     # 
     #---------------------------------------------------------------------------
     def get_flow_table_id(self):
-        return self.table_id
+        res = None
+        p = 'table_id'
+        if hasattr(self, p):
+            res = self.table_id
+        
+        return res
     
     #---------------------------------------------------------------------------
     # 
@@ -800,7 +1097,12 @@ class FlowEntry(object):
     # 
     #---------------------------------------------------------------------------
     def get_flow_priority(self):
-        return self.priority
+        res = None
+        p = 'priority'
+        if hasattr(self, p):
+            res = self.priority
+        
+        return res
     
     #---------------------------------------------------------------------------
     # 
@@ -812,7 +1114,12 @@ class FlowEntry(object):
     # 
     #---------------------------------------------------------------------------
     def get_flow_hard_timeout(self):
-        return self.hard_timeout
+        res = None
+        p = 'hard_timeout'
+        if hasattr(self, p):
+            res =  self.hard_timeout
+        
+        return res
     
     #---------------------------------------------------------------------------
     # 
@@ -824,7 +1131,12 @@ class FlowEntry(object):
     # 
     #---------------------------------------------------------------------------
     def get_flow_idle_timeout(self):
-        return self.idle_timeout
+        res = None
+        p = 'idle_timeout'
+        if hasattr(self, p):
+            res = self.idle_timeout
+        
+        return res
     
     #---------------------------------------------------------------------------
     # 
@@ -836,7 +1148,10 @@ class FlowEntry(object):
     # 
     #---------------------------------------------------------------------------
     def get_flow_cookie(self):
-        return self.cookie
+        if hasattr(self, 'cookie'):
+            return self.cookie
+        else:
+            return None
     
     #---------------------------------------------------------------------------
     # 
@@ -865,10 +1180,65 @@ class FlowEntry(object):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
+    def get_duration(self):
+        res = None
+        p = 'flow_statistics'
+        if (hasattr(self, p) and isinstance(getattr(self, p), dict)):
+            p1 = 'duration'
+            v = find_key_value_in_dict(self.flow_statistics, p1)
+            if (v != None and type(v) is dict):
+                p2 = 'second'
+                p3 = 'nanosecond'
+                if (p2 in v and p3 in v):
+                    s = v['second']
+                    ns = v['nanosecond']
+                    res = float(s*1000000000 + ns)/1000000000
+        
+        return res
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_pkts_cnt(self):
+        res = None
+        p = 'flow_statistics'
+        if (hasattr(self, p) and isinstance(getattr(self, p), dict)):
+            p1 = 'packet_count'
+            v = find_key_value_in_dict(self.flow_statistics, p1)
+            if (v != None and type(v) is int):
+                res = v
+        
+        return res
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_bytes_cnt(self):
+        res = None
+        p = 'flow_statistics'
+        if (hasattr(self, p) and isinstance(getattr(self, p), dict)):
+            p1 = 'byte_count'
+            v = find_key_value_in_dict(self.flow_statistics, p1)
+            if (v != None and type(v) is int):
+                res = v
+        
+        return res
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def add_instruction(self, instruction):
         if(self.instructions == None):
             self.instructions = {'instruction': []}
         self.instructions['instruction'].append(instruction)
+
+    def get_instructions_set(self):
+        res = None
+        p = 'instructions'
+        if (hasattr(self, p)):
+            res = getattr(self, p)
+        
+        return res
     
     #---------------------------------------------------------------------------
     # 
@@ -878,6 +1248,18 @@ class FlowEntry(object):
             self.match = {}
         self.match.update(match.__dict__)
 
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_match_fields(self):
+        res = None
+        p = 'match'
+        if (hasattr(self, p)):
+            res = getattr(self, p)
+        
+        return res
+    
+
 #-------------------------------------------------------------------------------
 # 
 #-------------------------------------------------------------------------------
@@ -886,14 +1268,40 @@ class Instructions():
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def __init__(self):
+    def __init__(self, d=None):
+        if (d!=None):
+            if(isinstance(d, dict)):
+                self.instructions = {'instruction': []}
+                for k,v in d.items():
+                    if (('instruction' == k) and isinstance(v, list)):
+                        for item in v:
+                            if (isinstance(item, dict)):
+                                inst = Instruction(dictionary=item)
+                                self.add_instruction(inst)
+                return
+            else:
+                raise TypeError("!!!Error, argument '%s' is of a wrong type (dictionary is expected)" % d)
+        
         self.instructions = {'instruction': []}
     
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def add_instruction(self, instruction):
-        self.instructions.append(instruction)
+        self.instructions['instruction'].append(instruction)
+    
+    def get_apply_actions(self):
+        res = None
+        p = 'instructions'
+        if (hasattr(self, p)):
+            l = getattr(self, p)['instruction']
+            for item in l:
+                if isinstance(item, Instruction):
+                    res = item.get_apply_actions()
+                    if (res != None):
+                        break
+        
+        return res
     
 #-------------------------------------------------------------------------------
 # 
@@ -903,7 +1311,26 @@ class Instruction():
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def __init__(self, instruction_order=0):
+    def __init__(self, instruction_order=None, dictionary=None):
+        if(dictionary != None and isinstance(dictionary, dict)):
+            for k,v in dictionary.items():
+                if ('apply_actions' == k):
+                    self.apply_actions = {'action': []}
+                    p1 = 'action'
+                    if p1 in v and isinstance(v[p1], list):
+                        for a in v[p1]:
+                            if isinstance(a, dict):
+                                p2 = 'output_action'
+                                if (p2 in a):
+                                    action = OutputAction(d=a[p2]) 
+                                    self.add_apply_action(action)        
+                elif 'order':
+                    self.order = v
+                else:
+                    setattr(self, k, v)
+
+            return
+        
         self.order = instruction_order
 #  TBD      self.goto_table = {}
 #  TBD      self.write_metadata = {}
@@ -925,6 +1352,14 @@ class Instruction():
     #---------------------------------------------------------------------------
     def add_apply_action(self, action):
         self.apply_actions['action'].append(action)
+    
+    def get_apply_actions(self):
+        res = None
+        p = 'apply_actions'
+        if (hasattr(self, p)):
+            res = getattr(self, p)['action']
+        
+        return res
 
 #-------------------------------------------------------------------------------
 # 
@@ -952,7 +1387,17 @@ class OutputAction(Action):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def __init__(self, action_order=0, port=None, max_len=None):
+    def __init__(self, action_order=0, port=None, max_len=None, d=None):
+        if(d != None and isinstance(d, dict)):
+            self.output_action = {'output-node-connector' : None, 'max-length' : None }
+            for k,v in d.items():
+                if ('output_node_connector' == k):
+                    self.set_outport(v)
+                elif ('max_length' == k):
+                    self.set_max_len(v)
+            
+            return
+        
         super(OutputAction, self).__init__(action_order)
         self.output_action = {'output-node-connector' : port, 'max-length' : max_len }
     
@@ -965,8 +1410,30 @@ class OutputAction(Action):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
+    def get_outport(self):
+        res = None
+        p = 'output_action'
+        if (hasattr(self, p)):
+            res = getattr(self, p)['output-node-connector']
+        
+        return res
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def set_max_len(self, max_len):
         self.output_action['max-length'] = max_len
+        
+    def get_max_len(self):
+        res = None
+        p = 'output_action'
+        if (hasattr(self, p)):
+            v = getattr(self, p)['max-length']
+            if (v != 0):
+                res = v
+        
+        return res
+        
     
     #---------------------------------------------------------------------------
     # 
@@ -1578,16 +2045,36 @@ class LoopbackAction(Action):
 # 
 #-------------------------------------------------------------------------------
 class Match(object):
+#class Match(dict):
     """Class that represents OpenFlow flow matching attributes """
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def __init__(self):
+    def __init__(self, d=None):
+        if d != None and isinstance(d, dict):
+#            print "M1 d=%s" % d
+            for k,v in d.items():
+                if 'ethernet_match' == k:
+                    self.ethernet_match = EthernetMatch(d[k])
+                elif 'ip_match' == k:
+                    self.ip_match = IpMatch(d[k])
+                elif 'protocol_match_fields' == k:
+                    self.protocol_match_fields = ProtocolMatchFields(d[k])
+                elif 'icmpv4_match' == k:
+                    self.icmpv4_match = IcmpMatch(d[k])
+                elif 'icmpv6_match' == k:
+                    self.icmpv6_match = IcmpV6Match(d[k])
+                elif 'vlan_match' == k:
+                    self.vlan_match = VlanMatch(d[k])
+                else:
+                    setattr(self, k, v)
+            return
+        
         ''' Ingress port. Numerical representation of in-coming port, starting at 1
             (may be a physical or switch-defined logical port) '''
         self.in_port = None
         
-        ''' Physical port (in 'ofp_packet_in messages', underlying physical port when
+        ''' Physical port (in 'ofp_packet_in messages'), underlying physical port when
             packet received on a logical port) '''
         self.in_phy_port = None
         
@@ -1704,10 +2191,36 @@ class Match(object):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
+    def get_eth_type(self):
+        res = None
+        p = 'ethernet_match'
+        if (hasattr(self, p) and isinstance(getattr(self, p), EthernetMatch)):
+            em = getattr(self, p)
+            res = em.get_type()
+        
+        return res
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def set_eth_src(self, eth_src):
         if(self.ethernet_match == None):
             self.ethernet_match = EthernetMatch()
         self.ethernet_match.set_src(eth_src)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_eth_src(self):
+        res = None
+        p = 'ethernet_match'
+        if (hasattr(self, p) and isinstance(getattr(self, p), EthernetMatch)):
+            em = getattr(self, p)
+            res = em.get_src().lower()
+            if (res != None):
+                res = res.lower()
+        
+        return res
     
     #---------------------------------------------------------------------------
     # 
@@ -1720,10 +2233,36 @@ class Match(object):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
+    def get_eth_dst(self):
+        res = None
+        p = 'ethernet_match'
+        if (hasattr(self, p) and isinstance(getattr(self, p), EthernetMatch)):
+            em = getattr(self, p)
+            res = em.get_dst().lower()
+            if (res != None):
+                res = res.lower()
+        
+        return res
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def set_vlan_id(self, vlan_id):
         if(self.vlan_match == None):
             self.vlan_match = VlanMatch()
         self.vlan_match.set_vid(vlan_id)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_vlan_id(self):
+        res = None
+        p = 'vlan_match'
+        if (hasattr(self, p) and isinstance(getattr(self, p), VlanMatch)):
+            vm = getattr(self, p)
+            res = vm.get_vid()
+        
+        return res
     
     #---------------------------------------------------------------------------
     # 
@@ -1736,8 +2275,31 @@ class Match(object):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
+    def get_vlan_pcp(self):
+        res = None
+        p = 'vlan_match'
+        if (hasattr(self, p) and isinstance(getattr(self, p), VlanMatch)):
+            vm = getattr(self, p)
+            res = vm.get_pcp()
+        
+        return res
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def set_ipv4_src(self, ipv4_src):
         self.ipv4_source = ipv4_src
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_ipv4_src(self):
+        res = None
+        p = 'ipv4_source'
+        if (hasattr(self, p)):
+            res = getattr(self, p)
+        
+        return res
     
     #---------------------------------------------------------------------------
     # 
@@ -1748,14 +2310,47 @@ class Match(object):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
+    def get_ipv4_dst(self):
+        res = None
+        p = 'ipv4_destination'
+        if (hasattr(self, p)):
+            res = getattr(self, p)
+        
+        return res
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def set_ipv6_src(self, ipv6_src):
         self.ipv6_source = ipv6_src
     
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
+    def get_ipv6_src(self):
+        res = None
+        p = 'ipv6_source'
+        if (hasattr(self, p)):
+            res = getattr(self, p)
+        
+        return res
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def set_ipv6_dst(self, ipv6_dst):
         self.ipv6_destination = ipv6_dst    
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_ipv6_dst(self):
+        res = None
+        p = 'ipv6_destination'
+        if (hasattr(self, p)):
+            res = getattr(self, p)
+        
+        return res
     
     #---------------------------------------------------------------------------
     # 
@@ -1768,10 +2363,34 @@ class Match(object):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
+    def get_ipv6_flabel(self):
+        res = None
+        p = 'ipv6_label'
+        if (hasattr(self, p) and isinstance(getattr(self, p), Ipv6Label)):
+            ipl = getattr(self, p)
+            res = ipl.get_flabel()
+        
+        return res
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def set_ipv6_exh_hdr(self, ipv6_exthdr):
         if(self.ipv6_ext_header == None):
             self.ipv6_ext_header = Ipv6ExtHdr()
         self.ipv6_ext_header.set_exthdr(ipv6_exthdr)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_ipv6_exh_hdr(self):
+        res = None
+        p = 'ipv6_ext_header'
+        if (hasattr(self, p) and isinstance(getattr(self, p), Ipv6ExtHdr)):
+            eh = getattr(self, p)
+            res = eh.get_exthdr()
+        
+        return res
     
     #---------------------------------------------------------------------------
     # 
@@ -1784,10 +2403,34 @@ class Match(object):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
+    def get_ip_dscp(self):
+        res = None
+        p = 'ip_match'
+        if (hasattr(self, p) and isinstance(getattr(self, p), IpMatch)):
+            ipm = getattr(self, p)
+            res = ipm.get_ip_dscp()
+        
+        return res
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def set_ip_ecn(self, ip_ecn):
         if(self.ip_match == None):
             self.ip_match = IpMatch()
         self.ip_match.ip_ecn = ip_ecn
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_ip_ecn(self):
+        res = None
+        p = 'ip_match'
+        if (hasattr(self, p) and isinstance(getattr(self, p), IpMatch)):
+            ipm = getattr(self, p)
+            res = ipm.get_ip_ecn()
+        
+        return res
     
     #---------------------------------------------------------------------------
     # 
@@ -1800,10 +2443,14 @@ class Match(object):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    '''        
-    def ip_proto_version(self, version):
-        self.ip_match.ip_proto = version    
-    '''    
+    def get_ip_proto(self):
+        res = None
+        p = 'ip_match'
+        if (hasattr(self, p) and isinstance(getattr(self, p), IpMatch)):
+            ipm = getattr(self, p)
+            res = ipm.get_ip_proto()
+        
+        return res
     
     #---------------------------------------------------------------------------
     # 
@@ -1814,8 +2461,30 @@ class Match(object):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
+    def get_udp_src_port(self):
+        res = None
+        p = 'udp_source_port'
+        if hasattr(self, p):
+            res = getattr(self, p)
+        
+        return res
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def set_udp_dst_port(self, udp_dst_port):
         self.udp_destination_port = udp_dst_port
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_udp_dst_port(self):
+        res = None
+        p = 'udp_destination_port'
+        if hasattr(self, p):
+            res = getattr(self, p)
+ 
+        return res
     
     #---------------------------------------------------------------------------
     # 
@@ -1826,20 +2495,61 @@ class Match(object):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
+    def get_tcp_src_port(self):
+        res = None
+        p = 'tcp_source_port'
+        if hasattr(self, p):
+            res = getattr(self, p)
+        
+        return res
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def set_tcp_dst_port(self, tcp_dst_port):
         self.tcp_destination_port = tcp_dst_port        
     
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def set_sctp_src(self, sctp_port):
+    def get_tcp_dst_port(self):
+        res = None
+        p = 'tcp_destination_port'
+        if hasattr(self, p):
+            res = getattr(self, p)
+        
+        return res
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_sctp_src_port(self, sctp_port):
         self.sctp_source_port = sctp_port
     
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def sctp_dst(self, sctp_port):
+    def get_sctp_src_port(self):
+        res = None
+        p = 'sctp_source_port'
+        if hasattr(self, p):
+            res = getattr(self, p)
+        
+        return res
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_sctp_dst_port(self, sctp_port):
         self.sctp_destination_port = sctp_port
+    
+    def get_sctp_dst_port(self):
+        res = None
+        p = 'sctp_destination_port'
+        if hasattr(self, p):
+            res = getattr(self, p)
+        
+        return res
     
     #---------------------------------------------------------------------------
     # 
@@ -1852,10 +2562,34 @@ class Match(object):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
+    def get_icmp4_type(self):
+        res = None
+        p = 'icmpv4_match'
+        if (hasattr(self, p) and isinstance(getattr(self, p), IcmpMatch)):
+            icm = getattr(self, p)
+            res = icm.get_type()
+        
+        return res
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def set_icmpv4_code(self, icmpv4_code):
         if(self.icmpv4_match == None):
             self.icmpv4_match = IcmpMatch()
         self.icmpv4_match.set_code(icmpv4_code)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_icmpv4_code(self):
+        res = None
+        p = 'icmpv4_match'
+        if (hasattr(self, p) and isinstance(getattr(self, p), IcmpMatch)):
+            icm = getattr(self, p)
+            res = icm.get_code()
+        
+        return res
     
     #---------------------------------------------------------------------------
     # 
@@ -1868,10 +2602,34 @@ class Match(object):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
+    def get_icmpv6_type(self):
+        res = None
+        p = 'icmpv6_match'
+        if (hasattr(self, p) and isinstance(getattr(self, p), IcmpV6Match)):
+            icm = getattr(self, p)
+            res = icm.get_type()
+        
+        return res
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def set_icmpv6_code(self, icmpv6_code):
         if(self.icmpv6_match == None):
             self.icmpv6_match = IcmpV6Match()
         self.icmpv6_match.set_code(icmpv6_code)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_icmpv6_code(self):
+        res = None
+        p = 'icmpv6_match'
+        if (hasattr(self, p) and isinstance(getattr(self, p), IcmpV6Match)):
+            icm = getattr(self, p)
+            res = icm.get_code()
+        
+        return res
     
     #---------------------------------------------------------------------------
     # 
@@ -1882,8 +2640,31 @@ class Match(object):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
+    def get_in_port(self):
+        res = None
+        p = 'in_port'
+        if hasattr(self, p):
+            res = getattr(self, p)
+            res = res.rsplit(':', 1)[-1]
+        
+        return res
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def set_in_phy_port(self, in_phy_port):
         self.in_phy_port = in_phy_port
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_in_phy_port(self):
+        res = None
+        p = 'in_phy_port'
+        if hasattr(self, p):
+            res = getattr(self, p)
+        
+        return res
     
     #---------------------------------------------------------------------------
     # 
@@ -1894,14 +2675,47 @@ class Match(object):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
+    def get_arp_opcode(self):
+        res = None
+        p = 'arp_op'
+        if hasattr(self, p):
+            res = getattr(self, p)
+        
+        return res
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def set_arp_src_transport_address(self, arp_src_tp_addr):
         self.arp_source_transport_address = arp_src_tp_addr       
     
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
+    def get_arp_src_transport_address(self):
+        res = None
+        p = 'arp_source_transport_address'
+        if hasattr(self, p):
+            res = getattr(self, p)
+        
+        return res
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def set_arp_tgt_transport_address(self, arp_tgt_tp_addr):
         self.arp_target_transport_address = arp_tgt_tp_addr
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_arp_tgt_transport_address(self):
+        res = None
+        p = 'arp_target_transport_address'
+        if hasattr(self, p):
+            res = getattr(self, p)
+        
+        return res
     
     #---------------------------------------------------------------------------
     # 
@@ -1914,6 +2728,17 @@ class Match(object):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
+    def get_arp_src_hw_address(self):
+        res = None
+        p = 'arp_source_hardware_address'
+        if hasattr(self, p):
+            res = getattr(self, p)['address']
+        
+        return res
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def set_arp_tgt_hw_address(self, arp_tgt_hw_addr):
         if(self.arp_target_hardware_address == None):
             self.arp_target_hardware_address = {}
@@ -1922,10 +2747,33 @@ class Match(object):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def set_mpls_lable(self, mpls_label):
+    def get_arp_tgt_hw_address(self):
+        res = None
+        p = 'arp_target_hardware_address'
+        if hasattr(self, p):
+            res = getattr(self, p)['address']
+        
+        return res
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_mpls_label(self, mpls_label):
         if(self.protocol_match_fields == None):
             self.protocol_match_fields = ProtocolMatchFields()
-        self.protocol_match_fields.set_mpls_lable(mpls_label)
+        self.protocol_match_fields.set_mpls_label(mpls_label)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_mpls_label(self):
+        res = None
+        p = 'protocol_match_fields'
+        if (hasattr(self, p) and isinstance(getattr(self, p), ProtocolMatchFields)):
+            pm = getattr(self, p)
+            res = pm.get_mpls_label()
+        
+        return res
     
     #---------------------------------------------------------------------------
     # 
@@ -1938,6 +2786,18 @@ class Match(object):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
+    def get_mpls_tc(self):
+        res = None
+        p = 'protocol_match_fields'
+        if (hasattr(self, p) and isinstance(getattr(self, p), ProtocolMatchFields)):
+            pm = getattr(self, p)
+            res = pm.get_mpls_tc()
+        
+        return res
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def set_mpls_bos(self, mpls_bos):
         if(self.protocol_match_fields == None):
             self.protocol_match_fields = ProtocolMatchFields()
@@ -1946,10 +2806,34 @@ class Match(object):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
+    def get_mpls_bos(self):
+        res = None
+        p = 'protocol_match_fields'
+        if (hasattr(self, p) and isinstance(getattr(self, p), ProtocolMatchFields)):
+            pm = getattr(self, p)
+            res = pm.get_mpls_bos()
+        
+        return res
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def set_tunnel_id(self, tunnel_id):
         if(self.tunnel == None):
             self.tunnel = Tunnel()
-        self.tunnel.tunnel_id = tunnel_id
+        self.tunnel.set_id(tunnel_id)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_tunnel_id(self):
+        res = None
+        p = 'tunnel'
+        if (hasattr(self, p) and isinstance(getattr(self, p), Tunnel)):
+            t = getattr(self, p)
+            res = t.get_id()
+        
+        return res
     
     #---------------------------------------------------------------------------
     # 
@@ -1962,10 +2846,34 @@ class Match(object):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
+    def get_metadata(self):
+        res = None
+        p = 'metadata'
+        if (hasattr(self, p) and isinstance(getattr(self, p), Metadata)):
+            m = getattr(self, p)
+            res = m.get_metadata()
+        
+        return res
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def set_metadata_mask(self, metadata_mask):
         if(self.metadata == None):
             self.metadata = Metadata()
         self.metadata.set_metadata_mask(metadata_mask)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_metadata_mask(self):
+        res = None
+        p = 'metadata'
+        if (hasattr(self, p) and isinstance(getattr(self, p), Metadata)):
+            m = getattr(self, p)
+            res = m.get_metadata_mask()
+        
+        return res
 
 #-------------------------------------------------------------------------------
 # 
@@ -1975,7 +2883,11 @@ class EthernetMatch(Match):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def __init__(self):
+    def __init__(self, d=None):
+        if d != None and isinstance(d, dict):
+            self.__dict__.update(d)
+            return        
+        
         self.ethernet_type = None
         self.ethernet_source = None
         self.ethernet_destination = None
@@ -1983,26 +2895,68 @@ class EthernetMatch(Match):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def set_type(self, ether_type):
+    def set_type(self, eth_type):
         if(self.ethernet_type == None):
             self.ethernet_type = {}
-        self.ethernet_type['type'] = ether_type
+        self.ethernet_type['type'] = eth_type
     
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def set_src(self, ether_src):
+    def get_type(self):
+        res = None
+        p = 'ethernet_type'
+        if (hasattr(self, p) and isinstance(getattr(self, p), dict)):
+            d = getattr(self, p)
+            p1 = 'type'
+            if (p1 in d):
+                res = d[p1]
+        
+        return res
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_src(self, eth_src):
         if(self.ethernet_source == None):
             self.ethernet_source = {}
-        self.ethernet_source['address'] = ether_src
+        self.ethernet_source['address'] = eth_src
     
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def set_dst(self, ether_dst):
+    def get_src(self):
+        res = None
+        p = 'ethernet_source'
+        if (hasattr(self, p) and isinstance(getattr(self, p), dict)):
+            d = getattr(self, p)
+            p1 = 'address'
+            if (p1 in d):
+                res = d[p1]
+        
+        return res
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_dst(self, eth_dst):
         if(self.ethernet_destination == None):
             self.ethernet_destination = {}
-        self.ethernet_destination['address'] = ether_dst
+        self.ethernet_destination['address'] = eth_dst
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_dst(self):
+        res = None
+        p = 'ethernet_destination'
+        if (hasattr(self, p) and isinstance(getattr(self, p), dict)):
+            d = getattr(self, p)
+            p1 = 'address'
+            if (p1 in d):
+                res = d[p1]
+        
+        return res
 
 #-------------------------------------------------------------------------------
 # 
@@ -2012,7 +2966,15 @@ class VlanMatch(Match):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def __init__(self):
+    def __init__(self, d=None):
+        if d != None and isinstance(d, dict):
+            for k,v in d.items():
+                if ('vlan_id' == k):
+                    self.vlan_id = VlanId(v)
+                else:
+                    setattr(self, k, v)
+            return        
+        
         ''' VLAN-ID from 802.1Q header '''
         self.vlan_id = None
         
@@ -2030,8 +2992,31 @@ class VlanMatch(Match):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
+    def get_vid(self):
+        res = None
+        p = 'vlan_id'
+        if (hasattr(self, p) and isinstance(getattr(self, p), VlanId)):
+            vm =  getattr(self, p)
+            res = vm.get_vid()
+        
+        return res
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def set_pcp(self, pcp):
         self.vlan_pcp = pcp
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_pcp(self):
+        res = None
+        p = 'vlan_pcp'
+        if (hasattr(self, p)):
+            res = getattr(self, p)
+        
+        return res
 
 #-------------------------------------------------------------------------------
 # 
@@ -2042,7 +3027,12 @@ class VlanId(VlanMatch):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def __init__(self):
+    def __init__(self, d=None):
+        if d != None and isinstance(d, dict):
+            for k,v in d.items():
+                setattr(self, k, v)
+            return        
+        
         ''' VLAN-ID from 802.1Q header '''
         self.vlan_id = None
         
@@ -2053,6 +3043,14 @@ class VlanId(VlanMatch):
     def set_vid(self, vid):
         self.vlan_id = vid
         self.vlan_id_present = True
+    
+    def get_vid(self):
+        res = None
+        p = 'vlan_id'
+        if (hasattr(self, p)):
+            res = getattr(self, p)
+        
+        return res
 
 #-------------------------------------------------------------------------------
 # 
@@ -2062,7 +3060,12 @@ class IcmpMatch(Match):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def __init__(self):
+    def __init__(self, d=None):
+        if d != None and isinstance(d, dict):
+            for k,v in d.items():
+                setattr(self, k, v)
+            return
+       
         ''' ICMP type '''
         self.icmpv4_type = None
     
@@ -2078,8 +3081,30 @@ class IcmpMatch(Match):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
+    def get_type(self):
+        res = None
+        p = 'icmpv4_type'
+        if (hasattr(self, p)):
+            res = getattr(self, p)
+        
+        return res
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def set_code(self, icmp_code):
         self.icmpv4_code = icmp_code
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_code(self):
+        res = None
+        p = 'icmpv4_code'
+        if (hasattr(self, p)):
+            res = getattr(self, p)
+        
+        return res
 
 #-------------------------------------------------------------------------------
 # 
@@ -2089,7 +3114,12 @@ class IcmpV6Match(Match):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def __init__(self):
+    def __init__(self, d=None):
+        if d != None and isinstance(d, dict):
+            for k,v in d.items():
+                setattr(self, k, v)
+            return
+        
         ''' ICMPv6 type '''
         self.icmpv6_type = None
     
@@ -2105,8 +3135,30 @@ class IcmpV6Match(Match):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
+    def get_type(self):
+        res = None
+        p = 'icmpv6_type'
+        if (hasattr(self, p)):
+            res = getattr(self, p)
+        
+        return res
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def set_code(self, icmpv6_code):
         self.icmpv6_code = icmpv6_code
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_code(self):
+        res = None
+        p = 'icmpv6_code'
+        if (hasattr(self, p)):
+            res = getattr(self, p)
+        
+        return res
 
 #-------------------------------------------------------------------------------
 # 
@@ -2116,16 +3168,51 @@ class IpMatch(Match):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def __init__(self):
+    def __init__(self, d=None):
+        if d != None and isinstance(d, dict):
+            for k,v in d.items():
+                setattr(self, k, v)
+            return
+        
         ''' "IP DSCP (6 bits in ToS field) '''
         self.ip_dscp = None
         
         ''' IP ECN (2 bits in ToS field) '''
         self.ip_ecn = None
         
-        ''' IP protocol (IPv4 or IPv6 Protocol Number)'''
-        self.ip_proto = None
-
+        ''' IPv4 or IPv6 Protocol Number '''
+        self.ip_protocol = None
+    
+    def set_ip_dscp(self, ip_dscp):
+        self.ip_dscp = ip_dscp
+    
+    def get_ip_dscp(self):
+        res = None
+        p = 'ip_dscp'
+        if hasattr(self, p):
+            res = getattr(self, p)
+        return res
+    
+    def set_ip_ecn(self, ip_ecn):
+        self.ip_ecn = ip_ecn
+    
+    def get_ip_ecn(self):
+        res = None
+        p = 'ip_ecn'
+        if hasattr(self, p):
+            res = getattr(self, p)
+        return res
+    
+    def set_ip_proto(self, ip_proto):
+        self.ip_protocol = ip_proto
+    
+    def get_ip_proto(self):
+        res = None
+        p = 'ip_protocol'
+        if hasattr(self, p):
+            res = getattr(self, p)
+        return res
+    
 #-------------------------------------------------------------------------------
 # 
 #-------------------------------------------------------------------------------
@@ -2148,8 +3235,30 @@ class Ipv6Label(Match):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
+    def get_flabel(self):
+        res = None
+        p = 'ipv6_flabel'
+        if (hasattr(self, p)):
+            res = getattr(self, p)
+        
+        return res
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def set_flabel_mask(self, flabel_mask):
         self.flabel_mask = flabel_mask
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_flabel_mask(self):
+        res = None
+        p = 'flabel_mask'
+        if (hasattr(self, p)):
+            res = getattr(self, p)
+        
+        return res
 
 #-------------------------------------------------------------------------------
 # 
@@ -2173,8 +3282,30 @@ class Ipv6ExtHdr(Match):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
+    def get_exthdr(self):
+        res = None
+        p = 'ipv6_exthdr'
+        if (hasattr(self, p)):
+            res = getattr(self, p)
+        
+        return res
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def set_exthdr_mask(self, exthdr_mask):
         self.ipv6_exthdr_mask = exthdr_mask
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_exthdr_mask(self):
+        res = None
+        p = 'ipv6_exthdr_mask'
+        if (hasattr(self, p)):
+            res = getattr(self, p)
+        
+        return res
 
 #-------------------------------------------------------------------------------
 # 
@@ -2184,7 +3315,12 @@ class ProtocolMatchFields(Match):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def __init__(self):
+    def __init__(self, d=None):
+        if d != None and isinstance(d, dict):
+            for k,v in d.items():
+                setattr(self, k, v)
+            return
+        
         ''' The LABEL in the first MPLS shim header '''
         self.mpls_label = None
         
@@ -2200,8 +3336,19 @@ class ProtocolMatchFields(Match):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def set_mpls_lable(self, mpls_lable):
-        self.mpls_label = mpls_lable
+    def set_mpls_label(self, mpls_label):
+        self.mpls_label = mpls_label
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_mpls_label(self):
+        res = None
+        p = 'mpls_label'
+        if (hasattr(self, p)):
+            res = getattr(self, p)
+        
+        return res
     
     #---------------------------------------------------------------------------
     # 
@@ -2212,8 +3359,30 @@ class ProtocolMatchFields(Match):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
+    def get_mpls_tc(self, mpls_tc):
+        res = None
+        p = 'mpls_tc'
+        if (hasattr(self, p)):
+            res = getattr(self, p)
+        
+        return res
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def set_mpls_bos(self, mpls_bos):
         self.mpls_bos = mpls_bos
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_mpls_bos(self, mpls_bos):
+        res = None
+        p = 'mpls_bos'
+        if (hasattr(self, p)):
+            res = getattr(self, p)
+        
+        return res
 
 #-------------------------------------------------------------------------------
 # 
@@ -2272,7 +3441,24 @@ class Tunnel(Match):
     def __init__(self):
         ''' Metadata associated with a logical port'''
         self.tunnel_id = None
-
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_id(self, tunnel_id):
+        self.tunnel_id = tunnel_id
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_id(self):
+        res = None
+        p = 'tunnel_id'
+        if (hasattr(self, p)):
+            res = getattr(self, p)
+        
+        return res
+    
 #-------------------------------------------------------------------------------
 # 
 #-------------------------------------------------------------------------------
@@ -2290,12 +3476,35 @@ class Metadata(Match):
     #---------------------------------------------------------------------------
     def set_metadata(self, metadata):
         self.metadata = metadata
-
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_metadata(self):
+        res = None
+        p = 'metadata'
+        if (hasattr(self, p)):
+            res = getattr(self, p)
+        
+        return res
+    
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def set_metadata_mask(self, metadata_mask):
         self.metadata_mask = metadata_mask
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_metadata_mask(self):
+        res = None
+        p = 'metadata_mask'
+        if (hasattr(self, p)):
+            res = getattr(self, p)
+        
+        return res
+
 
 ''' Test code - START '''
 if __name__ == "__main__":

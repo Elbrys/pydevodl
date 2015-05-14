@@ -107,7 +107,7 @@ if __name__ == "__main__":
     flow_entry.set_flow_strict(False)
     flow_entry.set_flow_install_hw(False)
     
-    # --- Instruction: 'Apply-action'
+    # --- Instruction: 'Apply-actions'
     #     Actions:     'Output'
     instruction = Instruction(instruction_order = 0)
     action = OutputAction(action_order = 0, port = output_port)

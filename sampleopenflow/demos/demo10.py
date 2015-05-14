@@ -107,7 +107,7 @@ if __name__ == "__main__":
     flow_entry.set_flow_idle_timeout(0)
     flow_entry.set_flow_priority(flow_priority = 1008)
     
-    # --- Instruction: 'Apply-action'
+    # --- Instruction: 'Apply-actions'
     #     Action:      'Output' NORMAL
     instruction = Instruction(instruction_order = 0)
     action = OutputAction(action_order = 0, port = "NORMAL")

@@ -85,7 +85,7 @@ if __name__ == "__main__":
     flow_entry.set_flow_id(flow_id)
     flow_entry.set_flow_priority(flow_priority = 1005)
     
-    # --- Instruction: 'Apply-action'
+    # --- Instruction: 'Apply-actions'
     #     Action:      'Output' to CONTROLLER
     instruction = Instruction(instruction_order = 0)
     action = OutputAction(action_order = 0, port = "CONTROLLER", max_len=60)
