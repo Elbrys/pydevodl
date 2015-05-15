@@ -103,7 +103,7 @@ if __name__ == "__main__":
     match = Match()    
     match.set_eth_type(eth_type)
     match.set_in_port(in_port)
-    match.set_mpls_lable(mpls_label)
+    match.set_mpls_label(mpls_label)
     flow_entry.add_match(match)        
     
     
