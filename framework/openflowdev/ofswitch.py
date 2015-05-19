@@ -1,7 +1,31 @@
 """
+Copyright (c) 2015
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+ - Redistributions of source code must retain the above copyright notice,
+   this list of conditions and the following disclaimer.
+-  Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.
+-  Neither the name of the copyright holder nor the names of its contributors
+   may be used to endorse or promote products derived from this software
+   without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSEARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES;LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 @authors: Sergei Garbuzov
 @status: Development
-@version: 1.0.0
+@version: 1.1.0
 
 ofswitch.py: OpenFlow switch properties and methods
 
@@ -266,6 +290,19 @@ class OFSwitch(OpenflowNode):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
+    def delete_flows(self, flow_table_id):
+        result = self.get_configured_FlowEntries(flow_table_id)
+        status = result.get_status()
+        if(status.eq(STATUS.OK) == True):
+            data = result.get_data()
+            for fe in data:
+                self.delete_flow(flow_table_id, fe.get_flow_id())
+        
+        return Result(status, None)    
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def get_port_detail_info(self, portnum):
         status = OperStatus()
         info = {}
@@ -283,7 +320,8 @@ class OFSwitch(OpenflowNode):
         elif (resp.status_code == 200):
             dictionary = json.loads(resp.content)
             try:
-                vlist = dictionary['node-connector']
+                p = 'node-connector'
+                vlist = dictionary[p]
                 if (len(vlist) != 0 and (type(vlist[0]) is dict)):
                     info = vlist[0]
                     status.set_status(STATUS.OK)
@@ -341,45 +379,12 @@ class OFSwitch(OpenflowNode):
     #---------------------------------------------------------------------------
     def get_operational_flows(self, tableid):
         return self.get_flows(tableid, operational=True)
-#        flows = {}
-#        result = self.get_flows(tableid, operational=True)
-#        status = result[0]
-#        if(status.eq(STATUS.OK) == True):
-#            flows = result[1]
-#        
-#        return Result(status, flows)
-    
-    #---------------------------------------------------------------------------
-    # 
-    #---------------------------------------------------------------------------
-    def get_operational_flows_ovs_syntax(self, tableid, sort=None):
-        ovsflows = []
-        result = self.get_operational_flows(tableid)
-#        status = result[0]
-        status = result.get_status()
-        if(status.eq(STATUS.OK) == True):
-#            flist = result[1]
-            flist = result.get_data()
-            if (sort == True):
-                flist.sort(key=self.__getPriorityKey)                
-            for item in flist:
-                f = self.odl_to_ovs_flow_syntax(item)
-                ovsflows.append(f)
-        
-        return Result(status, ovsflows)
     
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def get_configured_flows(self, tableid):
         return self.get_flows(tableid, operational=False)
-#        flows = {}
-#        result = self.get_flows(tableid, operational=False)
-#        status = result[0]
-#        if(status.eq(STATUS.OK) == True):
-#            flows = result[1]
-#        
-#        return Result(status, flows)
     
     #---------------------------------------------------------------------------
     # 
@@ -398,9 +403,17 @@ class OFSwitch(OpenflowNode):
         elif(resp.content == None):
             status.set_status(STATUS.CTRL_INTERNAL_ERROR)
         elif (resp.status_code == 200):
-#            print resp.content
-            flow = json.loads(resp.content)
-            status.set_status(STATUS.OK)
+            dictionary = json.loads(resp.content)
+            try:
+                p1 = 'flow-node-inventory:flow'
+                vlist = dictionary[p1]
+                if (len(vlist) != 0 and (type(vlist[0]) is dict)):
+                    flow = vlist[0]
+                    status.set_status(STATUS.OK)
+                else:
+                    status.set_status(STATUS.DATA_NOT_FOUND)
+            except () as e:
+                status.set_status(STATUS.DATA_NOT_FOUND)
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
         
@@ -409,28 +422,42 @@ class OFSwitch(OpenflowNode):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def __build_ovs_action_list(self, alist):
-        al = []
+    def get_FlowEntries(self, tableid, operational=True):
+        flows = [] # list of 'FlowEntry objects
+        result = self.get_flows(tableid, operational)
+        status = result.get_status()
+        if(status.eq(STATUS.OK) == True):
+            data = result.get_data()
+            for item in data:
+                fe = FlowEntry(flow_dict = item)
+                flows.append(fe)
         
-        for item in alist:
-            if ('output-action' in item):
-                a = ActionOutput()
-                a.update_from_list(item)
-                al.append(a)
-
-        return al
+        return Result(status, flows)
     
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def __getOrderKey(self, item):
-        return item.order
+    def get_operational_FlowEntries(self, flow_table_id):
+        return self.get_FlowEntries(flow_table_id, True)
     
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def __getPriorityKey(self, item):
-        return item['priority']
+    def get_configured_FlowEntries(self, flow_table_id):
+        return self.get_FlowEntries(flow_table_id, False)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_configured_FlowEntry(self, flow_table_id, flow_id):
+        flowEntry = None
+        result = self.get_configured_flow(flow_table_id, flow_id)
+        status = result.get_status()
+        if(status.eq(STATUS.OK) == True):
+            d = result.get_data()
+            flowEntry = FlowEntry(flow_dict = d)
+        
+        return Result(status, flowEntry)
 
 #---------------------------------------------------------------------------
 # 
@@ -443,17 +470,17 @@ class ActionOutput():
     def __init__(self, port=None, length=None, order=None):        
         self.type = 'output'
         self.order = order
-        self.action = {'port': port, 'max-len': length}
+        self.action = {'port': port, 'max_len': length}
     
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def update(self, port=None, length=None, order=None):
-        self.action = {'port': port, 'max-len': length}
+        self.action = {'port': port, 'max_len': length}
         if(port != None):
             self.action['port'] = port
         if(length != None):
-            self.action['max-len'] = length
+            self.action['max_len'] = length
         if(order != None):
             self.order = order
     
@@ -461,12 +488,12 @@ class ActionOutput():
     # 
     #---------------------------------------------------------------------------
     def update_from_list(self, data):
-        if(data != None and type(data) is dict and ('output-action' in data)):
+        if(data != None and type(data) is dict and ('output_action' in data)):
             self.type = 'output'
             self.order = find_key_value_in_dict(data, 'order')
-            self.action = {'port': None, 'max-len': None}
-            self.action['port'] = find_key_value_in_dict(data, 'output-node-connector')
-            self.action['max-len'] = find_key_value_in_dict(data, 'max-length')
+            self.action = {'port': None, 'max_len': None}
+            self.action['port'] = find_key_value_in_dict(data, 'output_node_connector')
+            self.action['max_len'] = find_key_value_in_dict(data, 'max_length')
     
     #---------------------------------------------------------------------------
     # 
@@ -474,7 +501,7 @@ class ActionOutput():
     def to_string(self):
         s = ""
         p = self.action['port']
-        l = self.action['max-len']
+        l = self.action['max_len']
         if(p != None and l != None):
             if(p == 'CONTROLLER'):
                 s = '{}:{}'.format(p, l)
@@ -494,42 +521,16 @@ class FlowEntry(object):
     # 
     #---------------------------------------------------------------------------
     def __init__(self, flow_json=None, flow_dict=None):
-        '''
-        if flow_dict != None and isinstance(flow_dict, dict):
-            self.__dict__.update(flow_dict)
+        assert_msg = "[FlowEntry] either '%s' or '%s' should be used, " \
+                     "not both" % ('flow_json', 'flow_dict')
+        assert(((flow_json != None) and (flow_dict != None)) == False), assert_msg
+        if (flow_dict != None):
+            self.__init_from_dict__(flow_dict)
             return
-        '''
         
         if (flow_json != None):
-            if (isinstance(flow_json, basestring)):
-                js = string.replace(flow_json, '-', '_')
-                js = string.replace(js, 'opendaylight_flow_statistics:flow_statistics', 'flow_statistics')
-                d = json.loads(js)
-                for k, v in d.items():
-                    if ('match' == k):
-                        self.match = Match(v)
-                    elif ('instructions' == k):
-                        self.instructions = Instructions(v)
-                    else:
-                        setattr(self, k, v)
-                return
-            else:
-                raise TypeError("!!!Error, argument '%s' is of a wrong type (JSON string is expected)" % flow_json)
-        
-        '''
-        def from_json(self, js):
-        """ Update FlowEntry from JSON """
-        if (js != None):
-            self.__init__()
-            s = string.replace(js, '-', '_')
-            s1 = string.replace(s, 'opendaylight_flow_statistics:flow_statistics', 'flow_statistics')
-            d1 = json.loads(s1)
-            d2 = stripNone(d1)
-            self.__dict__.clear()
-            self.__dict__.update(d2)
-        else:
-            raise ValueError('no value')
-        '''
+            self.__init_from_json__(flow_json)
+            return
         
         ''' Unique identifier of this FlowEntry in the Controller's data store '''
         self.id = None
@@ -592,8 +593,41 @@ class FlowEntry(object):
         '''  Flow match fields '''
         self.match = None
         
-        ''' Instructions to be executed when a flow matches this entry flow match fields '''
-        self.instructions = None
+        ''' Instructions to be executed when a flow matches this flow entry match fields '''
+        self.instructions = {'instruction': []}
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init_from_json__(self, s):
+        if (s != None and isinstance(s, basestring)):
+            self.instructions = {'instruction': []}
+            js = string.replace(s, '-', '_')
+            js = string.replace(js, 'opendaylight_flow_statistics:flow_statistics', 'flow_statistics')
+            d = json.loads(js)
+            for k, v in d.items():
+                if ('match' == k):
+                    match = Match(v)
+                    self.add_match(match)
+                elif ('instructions' == k):
+                    instructions = Instructions(v)
+                    self.add_instructions(instructions)
+                else:
+                    setattr(self, k, v)
+        else:
+            raise TypeError("[FlowEntry] wrong argument type '%s'"
+                            " (JSON 'string' is expected)" % type(s))
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init_from_dict__(self, d):
+        if (d != None and isinstance(d, dict)):
+            js = json.dumps(d)
+            self.__init_from_json__(js)
+        else:
+            raise TypeError("[FlowEntry] wrong argument type '%s'"
+                            " ('dict' is expected)" % type(d))
     
     #---------------------------------------------------------------------------
     # 
@@ -602,23 +636,23 @@ class FlowEntry(object):
         """ Return FlowEntry as JSON """
         return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
     
-    '''
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def from_json(self, js):
-        """ Update FlowEntry from JSON """
-        if (js != None):
-            self.__init__()
-            s = string.replace(js, '-', '_')
-            s1 = string.replace(s, 'opendaylight_flow_statistics:flow_statistics', 'flow_statistics')
-            d1 = json.loads(s1)
-            d2 = stripNone(d1)
-            self.__dict__.clear()
-            self.__dict__.update(d2)
-        else:
-            raise ValueError('no value')
-    '''
+    def get_payload(self):
+        """ Return FlowEntry as a payload for the HTTP request body """
+        s = self.to_json()
+        # Convert all 'underscored' keywords to 'dash-separated' form used
+        # by ODL YANG models naming conventions
+        s = string.replace(s, '_', '-')
+        # Following are exceptions from the common ODL rules for having all
+        # multi-part keywords in YANG models being hash separated
+        s = string.replace(s, 'table-id', 'table_id')
+        s = string.replace(s, 'cookie-mask', 'cookie_mask')
+        d1 = json.loads(s)
+        d2 = stripNone(d1)
+        payload = {self._mn : d2}
+        return json.dumps(payload, default=lambda o: o.__dict__, sort_keys=True, indent=4)
     
     #---------------------------------------------------------------------------
     # 
@@ -657,11 +691,11 @@ class FlowEntry(object):
         
         # Flow Timeouts
         v = self.get_flow_idle_timeout()
-        if (v != None and v != 0):
+        if (v != None):
             odc['idle_timeout'] = v
         
         v = self.get_flow_hard_timeout()
-        if (v != None and v != 0):
+        if (v != None):
             odc['hard_timeout'] = v
         
         # Flow Priority
@@ -673,7 +707,7 @@ class FlowEntry(object):
         sc = sc.translate(None, '"{} ').replace(':','=')
         
         # Flow Match
-        m = self.get_match_fields()        
+        m = self.get_match_fields()
         if (m != None):
             odm = OrderedDict()
             
@@ -819,83 +853,72 @@ class FlowEntry(object):
             
             sm = json.dumps(odm, separators=(',', '='))
             sm = sm.translate(None, '"{} ')
-            sm = "matches=[" + sm + "]"
+            sm = "matches={" + sm + "}"
 
         # Flow Instructions
-        instructions = self.get_instructions_set()
-        apply_actions = instructions.get_apply_actions()
-        output_list = []
-        push_vlan_list = []
-        pop_vlan_list = []
-        push_mpls_list = []
-        pop_mpls_list = []
-        set_field_list = []
-        drop_list = []
-        for item in apply_actions:
-            if (isinstance(item, OutputAction)):
-                s = "output="
-                s += item.get_outport()
-                ml = item.get_max_len()
-                if (ml != None):
-                    s += ":" + str(ml)
-                output_list.append(s)
-            elif (isinstance(item, PushVlanHeaderAction)):
-                s = "push_vlan="
-                eth_type = item.get_eth_type()
-                s += str(hex(eth_type))
-                push_vlan_list.append(s)                    
-            elif (isinstance(item, PopVlanHeaderAction)):
-                s = "pop_vlan"
-                pop_vlan_list.append(s)
-
-            elif (isinstance(item, PushMplsHeaderAction)):
-                s = "push_mpls="
-                eth_type = item.get_eth_type()
-                s += str(hex(eth_type))
-                push_mpls_list.append(s)                    
-            elif (isinstance(item, PopMplsHeaderAction)):
-                s = "pop_mpls"
-                pop_mpls_list.append(s)
-            elif (isinstance(item, SetFieldAction)):
-                mpls_label = item.get_mpls_label()
-                if (mpls_label != None):
-                    s = "set_mpls_label=%s" % mpls_label
-                    set_field_list.append(s)
-                vlan_id = item.get_vlan_id()
-                if (vlan_id != None):
-                    s = "set_vlan_vid=%s" % vlan_id
-                    set_field_list.append(s)
-            elif (isinstance(item, DropAction)):
-                s = "drop"
-                drop_list.append(s)
-            
-            sa = "actions=["
-            actions_list = pop_mpls_list + push_mpls_list + \
-                           pop_vlan_list + push_vlan_list + \
-                           set_field_list + drop_list + output_list
-            if(actions_list):
-                sa += ",".join(actions_list)
-            sa += "]"
+        apply_actions_list = []
+        instructions = self.get_instructions()        
+        for instruction in instructions:
+            if instruction.is_apply_actions_type():                
+                output_list = []
+                push_vlan_list = []
+                pop_vlan_list = []
+                push_mpls_list = []
+                pop_mpls_list = []
+                set_field_list = []
+                drop_list = []
+                apply_actions = instruction.get_apply_actions()
+                for action in apply_actions:
+                    if (isinstance(action, OutputAction)):
+                        s = "output="
+                        port = action.get_outport()
+                        s += str(port)
+                        ml = action.get_max_len()
+                        if (ml != None):
+                            s += ":" + str(ml)
+                        output_list.append(s)
+                    elif (isinstance(action, PushVlanHeaderAction)):
+                        s = "push_vlan="
+                        eth_type = action.get_eth_type()
+                        s += str(hex(eth_type))
+                        push_vlan_list.append(s)                    
+                    elif (isinstance(action, PopVlanHeaderAction)):
+                        s = "pop_vlan"
+                        pop_vlan_list.append(s)
+                    elif (isinstance(action, PushMplsHeaderAction)):
+                        s = "push_mpls="
+                        eth_type = action.get_eth_type()
+                        s += str(hex(eth_type))
+                        push_mpls_list.append(s)                    
+                    elif (isinstance(action, PopMplsHeaderAction)):
+                        s = "pop_mpls"
+                        pop_mpls_list.append(s)
+                    elif (isinstance(action, SetFieldAction)):
+                        mpls_label = action.get_mpls_label()
+                        if (mpls_label != None):
+                            s = "set_mpls_label=%s" % mpls_label
+                            set_field_list.append(s)
+                        vlan_id = action.get_vlan_id()
+                        if (vlan_id != None):
+                            s = "set_vlan_vid=%s" % vlan_id
+                            set_field_list.append(s)
+                    elif (isinstance(action, DropAction)):
+                        s = "drop"
+                        drop_list.append(s)
+                    
+                apply_actions_list = pop_mpls_list + push_mpls_list + \
+                                     pop_vlan_list + push_vlan_list + \
+                                     set_field_list + drop_list + output_list
+        
+        sa = "actions={"
+        actions_list = apply_actions_list
+        if(actions_list):
+            sa += ",".join(actions_list)
+        sa += "}"
         
         res = sc + " " + sm + " " + sa
 #        print res
         return res
-    
-    #---------------------------------------------------------------------------
-    # 
-    #---------------------------------------------------------------------------
-    def get_payload(self):
-        """ Return FlowEntry as a payload for the HTTP request body """
-        s = self.to_json()        
-        s = string.replace(s, '_', '-')
-        # Following are exceptions from the common ODL rules for having all
-        # multi-part keywords in YANG modules being hash separated
-        s = string.replace(s, 'table-id', 'table_id')
-        s = string.replace(s, 'cookie-mask', 'cookie_mask')
-        d1 = json.loads(s)
-        d2 = stripNone(d1)
-        payload = {self._mn : d2}
-        return json.dumps(payload, default=lambda o: o.__dict__, sort_keys=True, indent=4)
     
     #---------------------------------------------------------------------------
     # 
@@ -1102,27 +1125,51 @@ class FlowEntry(object):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def add_instruction(self, instruction):
-        if(self.instructions == None):
-            self.instructions = {'instruction': []}
-        self.instructions['instruction'].append(instruction)
-
-    def get_instructions_set(self):
+    def add_instruction(self, instruction): 
+        if isinstance(instruction, Instruction):
+            self.instructions['instruction'].append(instruction)
+        else:
+            raise TypeError("!!!Error, argument '%s' is of a wrong type "
+                            "('Instruction' instance is expected)" % instruction)
+            
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_instructions(self):
         res = None
         p = 'instructions'
         if (hasattr(self, p)):
-            res = getattr(self, p)
+            attr = getattr(self, p)
+            p2 = 'instruction'
+            if (isinstance(attr, dict) and p2 in attr):
+                res = attr[p2]
         
         return res
     
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
+    def add_instructions(self, instructions):
+        if isinstance(instructions, Instructions):
+            l = instructions.get_instructions()
+            for instruction in l:
+                self.add_instruction(instruction)
+        else:
+            raise TypeError("!!!Error, argument '%s' is of a wrong type "
+                            "('Instructions' instance is expected)" % instructions)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def add_match(self, match):
-        if(self.match == None):
-            self.match = {}
-        self.match.update(match.__dict__)
-
+        if isinstance(match, Match):
+            if(hasattr(self, 'match') and self.match != None):
+                assert(False), "[FlowEntry] 'match' attribute is already set"
+            self.match = match
+        else:
+            raise TypeError("!!!Error, argument '%s' is of a wrong type "
+                            "('Match' instance is expected)" % match)
+    
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
@@ -1144,40 +1191,45 @@ class Instructions():
     # 
     #---------------------------------------------------------------------------
     def __init__(self, d=None):
-        if (d!=None):
-            if(isinstance(d, dict)):
-                self.instructions = {'instruction': []}
-                for k,v in d.items():
-                    if (('instruction' == k) and isinstance(v, list)):
-                        for item in v:
-                            if (isinstance(item, dict)):
-                                inst = Instruction(dictionary=item)
-                                self.add_instruction(inst)
-                return
-            else:
-                raise TypeError("!!!Error, argument '%s' is of a wrong type (dictionary is expected)" % d)
+        if (d != None):
+            self.__init_from_dict__(d)
+            return
         
-        self.instructions = {'instruction': []}
+        self.instructions = []
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init_from_dict__(self, d):
+        if (d != None and isinstance(d, dict)):
+            self.instructions = []
+            for k,v in d.items():
+                if (('instruction' == k) and isinstance(v, list)):
+                    for item in v:
+                        if (isinstance(item, dict)):
+                            inst = Instruction(d=item)
+                            self.add_instruction(inst)
+        else:
+            raise TypeError("!!!Error, argument '%s' is of a wrong type "
+                            "('dict' is expected)" % d)
     
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def add_instruction(self, instruction):
-        self.instructions['instruction'].append(instruction)
+        self.instructions.append(instruction)
     
-    def get_apply_actions(self):
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_instructions(self):
         res = None
         p = 'instructions'
         if (hasattr(self, p)):
-            l = getattr(self, p)['instruction']
-            for item in l:
-                if isinstance(item, Instruction):
-                    res = item.get_apply_actions()
-                    if (res != None):
-                        break
-        
-        return res
-    
+            res = getattr(self, p)
+            
+        return res    
+
 #-------------------------------------------------------------------------------
 # 
 #-------------------------------------------------------------------------------
@@ -1187,6 +1239,22 @@ class Instruction():
     # 
     #---------------------------------------------------------------------------
     def __init__(self, instruction_order=None, d=None):
+        if (d != None):
+            self.__init_from_dict__(d)
+            return
+        
+        self.order = instruction_order
+#  TBD      self.goto_table = {}
+#  TBD      self.write_metadata = {}
+#  TBD      self.write_actions = {}
+        self.apply_actions = {'action': []}
+#  TBD      self.clear_actions = {}
+#  TBD      self.meter = {}
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init_from_dict__(self, d):
         if(d != None and isinstance(d, dict)):
             for k,v in d.items():
                 if ('apply_actions' == k):
@@ -1229,24 +1297,9 @@ class Instruction():
                     self.order = v
                 else:
                     setattr(self, k, v)
-
-            return
-        
-        self.order = instruction_order
-#  TBD      self.goto_table = {}
-#  TBD      self.write_metadata = {}
-#  TBD      self.write_actions = {}
-        self.apply_actions = {'action': []}
-#  TBD      self.clear_actions = {}
-#  TBD      self.meter = {}
-    
-    '''
-    #---------------------------------------------------------------------------
-    # 
-    #---------------------------------------------------------------------------
-    def add_action(self, action):
-        self.actions.append(action)
-    '''
+        else:
+            raise TypeError("[Instruction] wrong argument type '%s'"
+                            " ('dict' is expected)" % type(d))
     
     #---------------------------------------------------------------------------
     # 
@@ -1254,11 +1307,25 @@ class Instruction():
     def add_apply_action(self, action):
         self.apply_actions['action'].append(action)
     
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def get_apply_actions(self):
         res = None
         p = 'apply_actions'
         if (hasattr(self, p)):
             res = getattr(self, p)['action']
+        
+        return res
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def is_apply_actions_type(self):
+        res = False
+        p = 'apply_actions'
+        if (hasattr(self, p)):
+            res = True
         
         return res
 
@@ -1290,28 +1357,34 @@ class OutputAction(Action):
     #---------------------------------------------------------------------------
     def __init__(self, action_order=0, port=None, max_len=None, d=None):
         if(d != None):
-            if (isinstance(d, dict)):
-                self.output_action = {'output-node-connector' : None, 'max-length' : None }
-                for k,v in d.items():
-                    if ('output_node_connector' == k):
-                        self.set_outport(v)
-                    elif ('max_length' == k):
-                        self.set_max_len(v)
-                    else:
-                        print "[OutputAction] TBD"
-                
-                return
-            else:
-                raise TypeError("!!!Error, argument '%s' is of a wrong type (dictionary is expected)" % d)
+            self.__init_from_dict__(d)
+            return
         
         super(OutputAction, self).__init__(action_order)
-        self.output_action = {'output-node-connector' : port, 'max-length' : max_len }
+        self.output_action = {'output_node_connector' : port, 'max_length' : max_len }
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init_from_dict__(self,d):
+        if(d != None and isinstance(d, dict)):
+            self.output_action = {'output_node_connector' : None, 'max_length' : None }
+            for k,v in d.items():
+                if ('output_node_connector' == k):
+                    self.set_outport(v)
+                elif ('max_length' == k):
+                    self.set_max_len(v)
+                else:
+                    print "[OutputAction] TBD"
+        else:
+            raise TypeError("!!!Error, argument '%s' is of a wrong type "
+                            "('dict' is expected)" % d)
     
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def set_outport(self, port):
-        self.output_action['output-node-connector'] = port
+        self.output_action['output_node_connector'] = port
     
     #---------------------------------------------------------------------------
     # 
@@ -1320,7 +1393,7 @@ class OutputAction(Action):
         res = None
         p = 'output_action'
         if (hasattr(self, p)):
-            res = getattr(self, p)['output-node-connector']
+            res = getattr(self, p)['output_node_connector']
         
         return res
     
@@ -1328,7 +1401,7 @@ class OutputAction(Action):
     # 
     #---------------------------------------------------------------------------
     def set_max_len(self, max_len):
-        self.output_action['max-length'] = max_len
+        self.output_action['max_length'] = max_len
     
     #---------------------------------------------------------------------------
     # 
@@ -1337,7 +1410,7 @@ class OutputAction(Action):
         res = None
         p = 'output_action'
         if (hasattr(self, p)):
-            v = getattr(self, p)['max-length']
+            v = getattr(self, p)['max_length']
             if (v != 0):
                 res = v
         
@@ -1363,7 +1436,7 @@ class SetQueueAction(Action):
     #---------------------------------------------------------------------------
     def __init__(self, order=None, queue=None, queue_id=None):
         super(SetQueueAction, self).__init__(order)
-        self.set_queue_action = {'queue': queue, 'queue-id': queue_id}
+        self.set_queue_action = {'queue': queue, 'queue_id': queue_id}
     
     #---------------------------------------------------------------------------
     # 
@@ -1415,7 +1488,7 @@ class GroupAction(Action):
     #---------------------------------------------------------------------------
     def __init__(self, order=None, group=None, group_id=None):
         super(GroupAction, self).__init__(order)
-        self.group_action = {'group': group, 'group-id': group_id}
+        self.group_action = {'group': group, 'group_id': group_id}
     
     #---------------------------------------------------------------------------
     # 
@@ -1439,13 +1512,13 @@ class SetVlanIdAction(Action):
     #---------------------------------------------------------------------------
     def __init__(self, order=None, vid=None):
         super(SetVlanIdAction, self).__init__(order)
-        self.set_vlan_id_action = {'vlan-id' : vid}
+        self.set_vlan_id_action = {'vlan_id' : vid}
     
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def set_vid(self, vid):
-        self.set_vlan_id_action['vlan-id'] = vid
+        self.set_vlan_id_action['vlan_id'] = vid
 
 #-------------------------------------------------------------------------------
 # 
@@ -1457,13 +1530,13 @@ class SetVlanPCPAction(Action):
     #---------------------------------------------------------------------------
     def __init__(self, order=None, vlan_pcp=None):
         super(SetVlanPCPAction, self).__init__(order)
-        self.set_vlan_pcp_action = {'vlan-pcp' : vlan_pcp}
+        self.set_vlan_pcp_action = {'vlan_pcp' : vlan_pcp}
     
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def set_vlan_pcp(self, vlan_pcp):
-        self.set_vlan_pcp_action['vlan-pcp'] = vlan_pcp
+        self.set_vlan_pcp_action['vlan_pcp'] = vlan_pcp
 
 #-------------------------------------------------------------------------------
 # 
@@ -1484,13 +1557,13 @@ class SetVlanCfiAction(Action):
     #---------------------------------------------------------------------------
     def __init__(self, order=None, vlan_cfi=None):
         super(SetVlanCfiAction, self).__init__(order)
-        self.set_vlan_cfi_action = {'vlan-cfi' : vlan_cfi}
+        self.set_vlan_cfi_action = {'vlan_cfi' : vlan_cfi}
     
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def set_vlan_cfi(self, vlan_cfi):
-        self.set_vlan_cfi_action['vlan-cfi'] = vlan_cfi
+        self.set_vlan_cfi_action['vlan_cfi'] = vlan_cfi
 
 #-------------------------------------------------------------------------------
 # 
@@ -1616,33 +1689,40 @@ class SetTpDstAction(Action):
 # 
 #-------------------------------------------------------------------------------
 class PushVlanHeaderAction(Action):
-    ''' Push a new VLAN header onto the packet. The 'ethernet-type' is used as
-        the Ethertype for the tag. Only 'ethernet-type' 0x8100 and 0x88a8 should
-        be used. '''
+    ''' Push a new VLAN header onto the packet. The 'ethernet_type' is used as
+        the Ethernet Type for the tag, only 0x8100 or 0x88a8 values should be
+        used.  '''
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def __init__(self, action_order=0, eth_type=None, tag=None, pcp=None, cfi=None, vid=None, d=None):
+    def __init__(self, action_order=None, eth_type=None, tag=None, pcp=None, cfi=None, vid=None, d=None):
         if (d != None):
-            if (isinstance(d, dict)):
-                self.push_vlan_action = {'ethernet-type': None, 'tag': None, 'pcp': None, 'cfi': None, 'vlan-id': None }
-                for k,v in d.items():
-                    if ('ethernet_type' == k):
-                        self.set_eth_type(v)
-                    else:
-                        print "[PushVlanHeaderAction] TBD"
-                return
-            else:
-                raise TypeError("!!!Error, argument '%s' is of a wrong type (dictionary is expected)" % d)
+            self.__init_from_dict__(d)
+            return
         
         super(PushVlanHeaderAction, self).__init__(action_order)
-        self.push_vlan_action = {'ethernet-type': eth_type, 'tag': tag, 'pcp': pcp, 'cfi': cfi, 'vlan-id': vid }
+        self.push_vlan_action = {'ethernet_type': eth_type, 'tag': tag, 'pcp': pcp, 'cfi': cfi, 'vlan_id': vid }
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init_from_dict__(self, d):
+        if (d != None and isinstance(d, dict)):
+            self.push_vlan_action = {'ethernet_type': None, 'tag': None, 'pcp': None, 'cfi': None, 'vlan_id': None }
+            for k,v in d.items():
+                if ('ethernet_type' == k):
+                    self.set_eth_type(v)
+                else:
+                    print "[PushVlanHeaderAction] TBD"
+        else:
+            raise TypeError("!!!Error, argument '%s' is of a wrong type "
+                            "('dict' is expected)" % d)
     
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def set_eth_type(self, eth_type):
-        self.push_vlan_action['ethernet-type'] = eth_type
+        self.push_vlan_action['ethernet_type'] = eth_type
     
     #---------------------------------------------------------------------------
     # 
@@ -1651,7 +1731,7 @@ class PushVlanHeaderAction(Action):
         res = None
         p = 'push_vlan_action'
         if (hasattr(self, p)):
-            res = getattr(self, p)['ethernet-type']
+            res = getattr(self, p)['ethernet_type']
         
         return res
     
@@ -1677,7 +1757,7 @@ class PushVlanHeaderAction(Action):
     # 
     #---------------------------------------------------------------------------
     def set_vid(self, vid):
-        self.output_action['vlan-id'] = vid
+        self.output_action['vlan_id'] = vid
     
     #---------------------------------------------------------------------------
     # 
@@ -1693,42 +1773,48 @@ class PopVlanHeaderAction(Action):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def __init__(self, order=None):
-        super(PopVlanHeaderAction, self).__init__(order)
+    def __init__(self, action_order=None):
+        super(PopVlanHeaderAction, self).__init__(action_order)
         self.pop_vlan_action = {}
 
 #-------------------------------------------------------------------------------
 # 
 #-------------------------------------------------------------------------------
 class PushMplsHeaderAction(Action):
-    ''' Push a new MPLS shim header onto the packet. The 'ethernet-type' is used
-        as the Ethertype for the tag. Only Ethertype 0x8847 and 0x8848 should be
+    ''' Push a new MPLS shim header onto the packet. The 'ethernet_type' is used
+        as the Ethernet Type for the tag, only 0x8847 or 0x8848 values should be
         used. '''
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def __init__(self, action_order=0, ethernet_type=None, d=None):
+    def __init__(self, action_order=None, ethernet_type=None, d=None):
         if (d != None):
-            if (isinstance(d, dict)):
-                self.push_mpls_action = {'ethernet-type': None}
-                for k,v in d.items():
-                    if ('ethernet_type' == k):
-                        self.set_eth_type(v)
-                else:
-                    print "[PushMplsHeaderAction] TBD"
-                
-                return
-            else:
-                raise TypeError("!!!Error, argument '%s' is of a wrong type (dictionary is expected)" % d)
+            self.__init_from_dict__(d)
+            return
         
         super(PushMplsHeaderAction, self).__init__(action_order)
-        self.push_mpls_action = {'ethernet-type': ethernet_type}
+        self.push_mpls_action = {'ethernet_type': ethernet_type}
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init_from_dict__(self, d):
+        if (d != None and isinstance(d, dict)):
+            self.push_mpls_action = {'ethernet_type': None}
+            for k,v in d.items():
+                if ('ethernet_type' == k):
+                    self.set_eth_type(v)
+            else:
+                print "[PushMplsHeaderAction] TBD"
+        else:
+            raise TypeError("!!!Error, argument '%s' is of a wrong type "
+                            "('dict' is expected)" % d)
     
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def set_eth_type(self, eth_type):
-        self.push_mpls_action['ethernet-type'] = eth_type
+        self.push_mpls_action['ethernet_type'] = eth_type
     
     #---------------------------------------------------------------------------
     # 
@@ -1737,7 +1823,7 @@ class PushMplsHeaderAction(Action):
         res = None
         p = 'push_mpls_action'
         if (hasattr(self, p)):
-            res = getattr(self, p)['ethernet-type']
+            res = getattr(self, p)['ethernet_type']
         
         return res
 
@@ -1746,44 +1832,44 @@ class PushMplsHeaderAction(Action):
 #-------------------------------------------------------------------------------
 class PopMplsHeaderAction(Action):
     ''' Pop the outer-most MPLS tag or shim header from the packet.
-        The 'ethernet-type' is used as the Ethertype for the resulting packet
-        (Ethertype for the MPLS payload). '''
+        The 'ethernet_type' is used as the Ethernet Type for the resulting packet
+        (Ethernet Type for the MPLS payload). '''
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def __init__(self, action_order=0, ethernet_type=None):
         super(PopMplsHeaderAction, self).__init__(action_order)
-        self.pop_mpls_action = {'ethernet-type': ethernet_type}
+        self.pop_mpls_action = {'ethernet_type': ethernet_type}
     
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def set_eth_type(self, eth_type):
-        self.pop_mpls_action['ethernet-type'] = eth_type
+        self.pop_mpls_action['ethernet_type'] = eth_type
 
 #-------------------------------------------------------------------------------
 # 
 #-------------------------------------------------------------------------------
 class PushPBBHeaderAction(Action):
     ''' Push a new PBB service instance header (I-TAG TCI) onto the packet.
-        The Ethertype is used as the Ethertype for the tag. Only Ethertype
-        0x88E7 should be used 
+        The 'ethernet_type' is used as the Ethernet Type for the tag. Only
+        Ethernet Type  0x88E7 should be used 
         PBB - Provider Backbone Bridges is an Ethernet data-plane technology
               (also known as MAC-in-MAC) that involves encapsulating an
               Ethernet datagram inside another one with new source and
-              destination addresses '''
+              destination addresses. '''
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def __init__(self, order=0, ethernet_type=None):
         super(PushPBBHeaderAction, self).__init__(order)
-        self.push_pbb_action = {'ethernet-type': ethernet_type}
+        self.push_pbb_action = {'ethernet_type': ethernet_type}
     
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def set_eth_type(self, ethernet_type):
-        self.push_pbb_action['ethernet-type'] = ethernet_type
+        self.push_pbb_action['ethernet_type'] = ethernet_type
 
 #-------------------------------------------------------------------------------
 # 
@@ -1794,7 +1880,7 @@ class PopPBBHeaderAction(Action):
         PBB - Provider Backbone Bridges is an Ethernet data-plane technology
               (also known as MAC-in-MAC) that involves encapsulating an
               Ethernet datagram inside another one with new source and
-              destination addresses '''
+              destination addresses. '''
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
@@ -1807,19 +1893,19 @@ class PopPBBHeaderAction(Action):
 #-------------------------------------------------------------------------------
 class SetMplsTTLAction(Action):
     ''' Replace the existing MPLS TTL. Only applies to packets with an existing
-        MPLS shim header '''
+        MPLS shim header. '''
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def __init__(self, order=0, mpls_ttl=None):
         super(SetMplsTTLAction, self).__init__(order)
-        self.set_mpls_ttl_action = {'mpls-ttl': mpls_ttl}
+        self.set_mpls_ttl_action = {'mpls_ttl': mpls_ttl}
     
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def set_mpls_ttl(self, mpls_ttl):
-        self.set_mpls_ttl_action['mpls-ttl'] = mpls_ttl
+        self.set_mpls_ttl_action['mpls_ttl'] = mpls_ttl
 
 #-------------------------------------------------------------------------------
 # 
@@ -1845,13 +1931,13 @@ class SetNwTTLAction(Action):
     #---------------------------------------------------------------------------
     def __init__(self, order=0, ip_ttl=None):
         super(SetNwTTLAction, self).__init__(order)
-        self.set_nw_ttl_action = {'nw-ttl': ip_ttl}
+        self.set_nw_ttl_action = {'nw_ttl': ip_ttl}
     
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def set_ip_ttl(self, ip_ttl):
-        self.set_nw_ttl_action['nw-ttl'] = ip_ttl
+        self.set_nw_ttl_action['nw_ttl'] = ip_ttl
 
 #-------------------------------------------------------------------------------
 # 
@@ -1914,21 +2000,28 @@ class SetFieldAction(Action):
     #---------------------------------------------------------------------------
     def __init__(self, action_order=None, d=None):
         if (d != None):
-            if (isinstance(d, dict)):
-                self.set_field = {'vlan_match': None, 'protocol_match_fields' :None}
-                for k,v in d.items():
-                    if ('vlan_match' == k):
-                        self.set_field[k] = VlanMatch(v)
-                    elif ('protocol_match_fields' == k):
-                        self.set_field[k] = ProtocolMatchFields(v)
-                    else:
-                        print "[SetFieldAction] TBD"
-                return
-            else:
-                raise TypeError("!!!Error, argument '%s' is of a wrong type (dictionary is expected)" % d)
+            self.__init_from_dict__(d)
+            return
         
         super(SetFieldAction, self).__init__(action_order)
         self.set_field = {'vlan_match': None, 'protocol_match_fields' :None}
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init_from_dict__(self,d):
+        if (d != None and isinstance(d, dict)):
+            self.set_field = {'vlan_match': None, 'protocol_match_fields' :None}
+            for k,v in d.items():
+                if ('vlan_match' == k):
+                    self.set_field[k] = VlanMatch(v)
+                elif ('protocol_match_fields' == k):
+                    self.set_field[k] = ProtocolMatchFields(v)
+                else:
+                    print "[SetFieldAction] TBD"
+        else:
+            raise TypeError("!!!Error, argument '%s' is of a wrong type "
+                            "(dictionary is expected)" % d)
     
     #---------------------------------------------------------------------------
     # 
@@ -2045,22 +2138,8 @@ class Match(object):
     # 
     #---------------------------------------------------------------------------
     def __init__(self, d=None):
-        if d != None and isinstance(d, dict):
-            for k,v in d.items():
-                if 'ethernet_match' == k:
-                    self.ethernet_match = EthernetMatch(d[k])
-                elif 'ip_match' == k:
-                    self.ip_match = IpMatch(d[k])
-                elif 'protocol_match_fields' == k:
-                    self.protocol_match_fields = ProtocolMatchFields(d[k])
-                elif 'icmpv4_match' == k:
-                    self.icmpv4_match = IcmpMatch(d[k])
-                elif 'icmpv6_match' == k:
-                    self.icmpv6_match = IcmpV6Match(d[k])
-                elif 'vlan_match' == k:
-                    self.vlan_match = VlanMatch(d[k])
-                else:
-                    setattr(self, k, v)
+        if (d != None):
+            self.__init_from_dict__(d)
             return
         
         ''' Ingress port. Numerical representation of in-coming port, starting at 1
@@ -2172,6 +2251,30 @@ class Match(object):
         
         ''' Table metadata (used to pass information between tables) '''
         self.metadata = None
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init_from_dict__(self, d):
+        if d != None and isinstance(d, dict):
+            for k,v in d.items():
+                if 'ethernet_match' == k:
+                    self.ethernet_match = EthernetMatch(d[k])
+                elif 'ip_match' == k:
+                    self.ip_match = IpMatch(d[k])
+                elif 'protocol_match_fields' == k:
+                    self.protocol_match_fields = ProtocolMatchFields(d[k])
+                elif 'icmpv4_match' == k:
+                    self.icmpv4_match = IcmpMatch(d[k])
+                elif 'icmpv6_match' == k:
+                    self.icmpv6_match = IcmpV6Match(d[k])
+                elif 'vlan_match' == k:
+                    self.vlan_match = VlanMatch(d[k])
+                else:
+                    setattr(self, k, v)
+        else:
+            raise TypeError("[Match] wrong argument type '%s'"
+                            " ('dict is expected)" % type(d))
     
     #---------------------------------------------------------------------------
     # 
@@ -2536,6 +2639,9 @@ class Match(object):
     def set_sctp_dst_port(self, sctp_port):
         self.sctp_destination_port = sctp_port
     
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def get_sctp_dst_port(self):
         res = None
         p = 'sctp_destination_port'
@@ -2638,7 +2744,9 @@ class Match(object):
         p = 'in_port'
         if hasattr(self, p):
             res = getattr(self, p)
-            res = res.rsplit(':', 1)[-1]
+            if (res != None):
+                res = str(res)
+                res = res.rsplit(':', 1)[-1]
         
         return res
     
@@ -2725,7 +2833,9 @@ class Match(object):
         res = None
         p = 'arp_source_hardware_address'
         if hasattr(self, p):
-            res = getattr(self, p)['address']
+            v = getattr(self, p)
+            if (v != None):
+                res = v['address']
         
         return res
     
@@ -2744,7 +2854,9 @@ class Match(object):
         res = None
         p = 'arp_target_hardware_address'
         if hasattr(self, p):
-            res = getattr(self, p)['address']
+            v = getattr(self, p)
+            if (v != None):
+                res = v['address']
         
         return res
     
@@ -2877,13 +2989,24 @@ class EthernetMatch(Match):
     # 
     #---------------------------------------------------------------------------
     def __init__(self, d=None):
-        if d != None and isinstance(d, dict):
-            self.__dict__.update(d)
+        if (d != None):
+            self.__init_from_dict__(d)
             return        
         
         self.ethernet_type = None
         self.ethernet_source = None
         self.ethernet_destination = None
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init_from_dict__(self, d):
+        if (d != None and isinstance(d, dict)):
+            for k,v in d.items():
+                setattr(self, k, v)
+        else:
+            raise TypeError("[Match] wrong argument type '%s'"
+                            " ('dict is expected)" % type(d))
     
     #---------------------------------------------------------------------------
     # 
@@ -2960,12 +3083,8 @@ class VlanMatch(Match):
     # 
     #---------------------------------------------------------------------------
     def __init__(self, d=None):
-        if d != None and isinstance(d, dict):
-            for k,v in d.items():
-                if ('vlan_id' == k):
-                    self.vlan_id = VlanId(v)
-                else:
-                    setattr(self, k, v)
+        if (d != None):
+            self.__init_from_dict__(d)
             return        
         
         ''' VLAN-ID from 802.1Q header '''
@@ -2973,6 +3092,20 @@ class VlanMatch(Match):
         
         ''' VLAN-PCP from 802.1Q header '''
         self.vlan_pcp = None
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init_from_dict__(self, d):
+        if d != None and isinstance(d, dict):
+            for k,v in d.items():
+                if ('vlan_id' == k):
+                    self.vlan_id = VlanId(v)
+                else:
+                    setattr(self, k, v)
+        else:
+            raise TypeError("!!!Error, argument '%s' is of a wrong type "
+                            "('dict' is expected)" % d)    
     
     #---------------------------------------------------------------------------
     # 
@@ -3021,9 +3154,8 @@ class VlanId(VlanMatch):
     # 
     #---------------------------------------------------------------------------
     def __init__(self, d=None):
-        if d != None and isinstance(d, dict):
-            for k,v in d.items():
-                setattr(self, k, v)
+        if (d != None):
+            self.__init_from_dict__(d)
             return        
         
         ''' VLAN-ID from 802.1Q header '''
@@ -3032,6 +3164,17 @@ class VlanId(VlanMatch):
         ''' Flag that indicates that 'vlan_id' value is set and matching is
             only for packets with VID equal to 'vlan_id' value '''
         self.vlan_id_present = False
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init_from_dict__(self, d):
+        if d != None and isinstance(d, dict):
+            for k,v in d.items():
+                setattr(self, k, v)
+        else:
+            raise TypeError("!!!Error, argument '%s' is of a wrong type "
+                            "('dict' is expected)" % d)
     
     #---------------------------------------------------------------------------
     # 
@@ -3060,9 +3203,8 @@ class IcmpMatch(Match):
     # 
     #---------------------------------------------------------------------------
     def __init__(self, d=None):
-        if d != None and isinstance(d, dict):
-            for k,v in d.items():
-                setattr(self, k, v)
+        if (d != None):
+            self.__init_from_dict__(d)
             return
        
         ''' ICMP type '''
@@ -3070,6 +3212,17 @@ class IcmpMatch(Match):
     
         ''' ICMP code '''
         self.icmpv4_code = None
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init_from_dict__(self, d):
+        if d != None and isinstance(d, dict):
+            for k,v in d.items():
+                setattr(self, k, v)
+        else:
+            raise TypeError("!!!Error, argument '%s' is of a wrong type "
+                            "('dict' is expected)" % d)
     
     #---------------------------------------------------------------------------
     # 
@@ -3114,16 +3267,26 @@ class IcmpV6Match(Match):
     # 
     #---------------------------------------------------------------------------
     def __init__(self, d=None):
-        if d != None and isinstance(d, dict):
-            for k,v in d.items():
-                setattr(self, k, v)
+        if (d != None):
+            self.__init_from_dict__(d)
             return
         
         ''' ICMPv6 type '''
         self.icmpv6_type = None
-    
+        
         ''' ICMPv6 code '''
         self.icmpv6_code = None
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init_from_dict__(self, d):
+        if (d != None and isinstance(d, dict)):
+            for k,v in d.items():
+                setattr(self, k, v)
+        else:
+            raise TypeError("!!!Error, argument '%s' is of a wrong type "
+                            "('dict' is expected)" % d)
     
     #---------------------------------------------------------------------------
     # 
@@ -3168,9 +3331,8 @@ class IpMatch(Match):
     # 
     #---------------------------------------------------------------------------
     def __init__(self, d=None):
-        if d != None and isinstance(d, dict):
-            for k,v in d.items():
-                setattr(self, k, v)
+        if (d != None):
+            self.__init_from_dict__(d)
             return
         
         ''' "IP DSCP (6 bits in ToS field) '''
@@ -3181,6 +3343,17 @@ class IpMatch(Match):
         
         ''' IPv4 or IPv6 Protocol Number '''
         self.ip_protocol = None
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init_from_dict__(self, d):
+        if (d != None and isinstance(d, dict)):
+            for k,v in d.items():
+                setattr(self, k, v)
+        else:
+            raise TypeError("!!!Error, argument '%s' is of a wrong type "
+                            "('dict' is expected)" % d)
     
     #---------------------------------------------------------------------------
     # 
@@ -3333,9 +3506,8 @@ class ProtocolMatchFields(Match):
     # 
     #---------------------------------------------------------------------------
     def __init__(self, d=None):
-        if d != None and isinstance(d, dict):
-            for k,v in d.items():
-                setattr(self, k, v)
+        if (d != None):
+            self.__init_from_dict__(d)
             return
         
         ''' The LABEL in the first MPLS shim header '''
@@ -3349,6 +3521,17 @@ class ProtocolMatchFields(Match):
         
         ''' The I-SID in the first PBB service instance tag '''
         self.pbb = None
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init_from_dict__(self, d):
+        if (d != None and isinstance(d, dict)):
+            for k,v in d.items():
+                setattr(self, k, v)
+        else:
+            raise TypeError("!!!Error, argument '%s' is of a wrong type "
+                            "('dict' is expected)" % d)
     
     #---------------------------------------------------------------------------
     # 
