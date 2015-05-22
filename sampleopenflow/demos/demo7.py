@@ -16,7 +16,7 @@ modification, are permitted provided that the following conditions are met:
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSEARE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
 DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
 FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
 DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
@@ -78,7 +78,7 @@ if __name__ == "__main__":
     #                 Input Port
     #     NOTE: Ethernet type must be 2048 (0x800) -> IPv4 protocol
     eth_type = ETH_TYPE_IPv4
-    eth_src = "00:1a:1b:00:22:aa"   
+    eth_src = "00:1a:1b:00:22:aa"
     eth_dst = "00:2b:00:60:ff:f1"
     ipv4_src = "44.44.44.1/24"
     ipv4_dst = "55.55.55.1/16"
@@ -93,7 +93,7 @@ if __name__ == "__main__":
            "                Ethernet Destination Address (%s)\n" 
            "                IPv4 Source Address (%s)\n"
            "                IPv4 Destination Address (%s)\n" 
-           "                Input Port (%s)"               % (hex(eth_type), eth_src, 
+           "                Input Port (%s)"               % (hex(eth_type), eth_src,
                                                               eth_dst, ipv4_src, ipv4_dst,
                                                               input_port))
     print ("        Action: Output (CONTROLLER)")
@@ -125,7 +125,7 @@ if __name__ == "__main__":
     #                  Input Port    
     match = Match()
     match.set_eth_type(eth_type)
-    match.set_eth_src(eth_src)    
+    match.set_eth_src(eth_src)
     match.set_eth_dst(eth_dst)
     match.set_ipv4_src(ipv4_src)
     match.set_ipv4_dst(ipv4_dst)
@@ -147,7 +147,7 @@ if __name__ == "__main__":
         exit(0)
     
     
-    print ("\n")    
+    print ("\n")
     print ("<<< Get configured flow from the Controller")    
     time.sleep(rundelay)
     result = ofswitch.get_configured_flow(table_id, flow_id)

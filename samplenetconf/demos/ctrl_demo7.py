@@ -16,7 +16,7 @@ modification, are permitted provided that the following conditions are met:
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSEARE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
 DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
 FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
 DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
@@ -44,7 +44,7 @@ if __name__ == "__main__":
     if(load_dict_from_file(f, d) == False):
         print("Config file '%s' read error: " % f)
         exit()
-
+    
     try:
         ctrlIpAddr = d['ctrlIpAddr']
         ctrlPortNum = d['ctrlPortNum']
@@ -58,7 +58,7 @@ if __name__ == "__main__":
     print ("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
     print ("<<< Demo Start")
     print ("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
-
+    
     rundelay = 5
     
     print ("\n")
@@ -67,7 +67,7 @@ if __name__ == "__main__":
     ctrl = Controller(ctrlIpAddr, ctrlPortNum, ctrlUname, ctrlPswd)
     print ("'Controller':")
     print ctrl.to_json()
-
+    
     
     print "\n"
     print ("<<< Show operational state of a particular configuration module on the Controller")
@@ -83,9 +83,9 @@ if __name__ == "__main__":
         print json.dumps(slist, default=lambda o: o.__dict__, sort_keys=True, indent=4)
     else:
         print ("\n")
-        print ("!!!Demo terminated, reason: %s" % status.brief())        
+        print ("!!!Demo terminated, reason: %s" % status.brief())
         exit(0)
-
+    
     
     print ("\n")
     print (">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")

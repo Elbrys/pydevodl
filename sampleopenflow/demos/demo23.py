@@ -16,7 +16,7 @@ modification, are permitted provided that the following conditions are met:
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSEARE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
 DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
 FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
 DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
@@ -116,7 +116,7 @@ if __name__ == "__main__":
     instruction = Instruction(instruction_order = 0)    
     action = SetFieldAction(action_order = 0)
     action.set_mpls_label(new_mpls_label)
-    instruction.add_apply_action(action)        
+    instruction.add_apply_action(action)
     action = OutputAction(action_order = 1, port = 2)
     instruction.add_apply_action(action)
     flow_entry.add_instruction(instruction)
@@ -124,11 +124,11 @@ if __name__ == "__main__":
     # --- Match Fields: Ethernet Type
     #                   Input Port
     #                   MPLS Label
-    match = Match()    
+    match = Match()
     match.set_eth_type(eth_type)
     match.set_in_port(in_port)
     match.set_mpls_label(mpls_label)
-    flow_entry.add_match(match)        
+    flow_entry.add_match(match)
     
     
     print ("\n")
@@ -146,7 +146,7 @@ if __name__ == "__main__":
     
     
     print ("\n")    
-    print ("<<< Get configured flow from the Controller")    
+    print ("<<< Get configured flow from the Controller")
     time.sleep(rundelay)
     result = ofswitch.get_configured_flow(table_id, flow_id)
     status = result.get_status()

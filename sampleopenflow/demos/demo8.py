@@ -16,7 +16,7 @@ modification, are permitted provided that the following conditions are met:
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSEARE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
 DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
 FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
 DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
@@ -80,7 +80,7 @@ if __name__ == "__main__":
     #                 Input Port
     #     NOTE: Ethernet type MUST be 2048 (0x800) -> IPv4 protocol
     eth_type = ETH_TYPE_IPv4
-    eth_src = "00:1c:01:00:23:aa"   
+    eth_src = "00:1c:01:00:23:aa"
     eth_dst = "00:02:02:60:ff:fe"
     ipv4_src = "10.0.245.1/24"
     ipv4_dst = "192.168.1.123/16"
@@ -100,7 +100,7 @@ if __name__ == "__main__":
            "                IPv4 Destination Address (%s)\n"
            "                IP Protocol Number (%s)\n"
            "                IP DSCP (%s)\n"
-           "                Input Port (%s)"               % (hex(eth_type), eth_src, 
+           "                Input Port (%s)"               % (hex(eth_type), eth_src,
                                                               eth_dst, ipv4_src, ipv4_dst,
                                                               ip_proto, ip_dscp,
                                                               input_port))
@@ -134,7 +134,7 @@ if __name__ == "__main__":
     #                   IP Protocol Number
     #                   IP DSCP
     #                   Input Port
-    match = Match()    
+    match = Match()
     match.set_eth_type(eth_type)
     match.set_eth_src(eth_src)
     match.set_eth_dst(eth_dst)
@@ -142,7 +142,7 @@ if __name__ == "__main__":
     match.set_ipv4_dst(ipv4_dst)
     match.set_ip_proto(ip_proto)
     match.set_ip_dscp(ip_dscp)
-    match.set_in_port(input_port)    
+    match.set_in_port(input_port)
     flow_entry.add_match(match)
     
     
@@ -160,8 +160,8 @@ if __name__ == "__main__":
         exit(0)
     
     
-    print ("\n")    
-    print ("<<< Get configured flow from the Controller")    
+    print ("\n")
+    print ("<<< Get configured flow from the Controller")
     time.sleep(rundelay)
     result = ofswitch.get_configured_flow(table_id, flow_id)
     status = result.get_status()

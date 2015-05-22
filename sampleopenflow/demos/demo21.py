@@ -16,7 +16,7 @@ modification, are permitted provided that the following conditions are met:
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSEARE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
 DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
 FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
 DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
@@ -149,18 +149,18 @@ if __name__ == "__main__":
     #                   TCP Source Port
     #                   TCP Destination Port
     #                   Metadata
-    match = Match()    
+    match = Match()
     match.set_eth_type(eth_type)
     match.set_ip_dscp(ip_dscp)
-    match.set_ip_ecn(ip_ecn)   
+    match.set_ip_ecn(ip_ecn)
     match.set_ipv6_src(ipv6_src )
     match.set_ipv6_dst(ipv6_dst)
     match.set_ipv6_flabel(ipv6_flabel)
-    match.set_ipv6_exh_hdr(ipv6_exthdr)  
+    match.set_ipv6_exh_hdr(ipv6_exthdr)
     match.set_ip_proto(ip_proto)
     match.set_tcp_src_port(tcp_src_port)
     match.set_tcp_dst_port(tcp_dst_port)
-    match.set_metadata(metadata)    
+    match.set_metadata(metadata)
     flow_entry.add_match(match)
     
     
@@ -179,7 +179,7 @@ if __name__ == "__main__":
     
     
     print ("\n")    
-    print ("<<< Get configured flow from the Controller")    
+    print ("<<< Get configured flow from the Controller")
     time.sleep(rundelay)
     result = ofswitch.get_configured_flow(table_id, flow_id)
     status = result.get_status()

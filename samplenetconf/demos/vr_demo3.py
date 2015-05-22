@@ -16,7 +16,7 @@ modification, are permitted provided that the following conditions are met:
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSEARE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
 DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
 FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
 DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
@@ -75,7 +75,7 @@ if __name__ == "__main__":
     
     
     print ("\n")
-    time.sleep(rundelay)    
+    time.sleep(rundelay)
     result = ctrl.add_netconf_node(vrouter)
     status = result.get_status()
     if(status.eq(STATUS.OK) == True):
@@ -123,7 +123,7 @@ if __name__ == "__main__":
         print ("'%s' NETCONF node was successfully removed from the Controller" % nodeName)
     else:
         print ("\n")
-        print ("!!!Demo terminated, reason: %s" % status.brief())        
+        print ("!!!Demo terminated, reason: %s" % status.brief())
         exit(0)
     
     
@@ -131,4 +131,3 @@ if __name__ == "__main__":
     print (">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
     print (">>> Demo End")
     print (">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-    

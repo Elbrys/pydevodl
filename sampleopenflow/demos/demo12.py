@@ -16,7 +16,7 @@ modification, are permitted provided that the following conditions are met:
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSEARE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
 DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
 FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
 DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
@@ -70,7 +70,7 @@ if __name__ == "__main__":
     
     ctrl = Controller(ctrlIpAddr, ctrlPortNum, ctrlUname, ctrlPswd)
     ofswitch = OFSwitch(ctrl, nodeName)
-
+    
     # --- Flow Match: Ethernet Source Address
     #                 Ethernet Destination Address
     #                 ARP Operation
@@ -100,7 +100,7 @@ if __name__ == "__main__":
            "                ARP Source IPv4 Address (%s)\n"
            "                ARP Target IPv4 Address (%s)\n"
            "                ARP Source Hardware Address (%s)\n"
-           "                ARP Target Hardware Address (%s)"   % (hex(eth_type), eth_src, 
+           "                ARP Target Hardware Address (%s)"   % (hex(eth_type), eth_src,
                                                                    eth_dst, arp_opcode,
                                                                    arp_src_ipv4_addr,
                                                                    arp_tgt_ipv4_addr,
@@ -163,7 +163,7 @@ if __name__ == "__main__":
     
     
     print ("\n")    
-    print ("<<< Get configured flow from the Controller")    
+    print ("<<< Get configured flow from the Controller")
     time.sleep(rundelay)
     result = ofswitch.get_configured_flow(table_id, flow_id)
     status = result.get_status()

@@ -16,7 +16,7 @@ modification, are permitted provided that the following conditions are met:
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSEARE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
 DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
 FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
 DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
@@ -105,7 +105,7 @@ if __name__ == "__main__":
            "                IP DSCP (%s)\n"
            "                TCP Source Port Number (%s)\n"
            "                TCP Destination Port Number (%s)\n"
-           "                Input Port (%s)"               % (hex(eth_type), eth_src, 
+           "                Input Port (%s)"               % (hex(eth_type), eth_src,
                                                               eth_dst, ipv4_src, ipv4_dst,
                                                               ip_proto, ip_dscp,
                                                               tcp_src_port, tcp_dst_port,
@@ -143,7 +143,7 @@ if __name__ == "__main__":
     #                   TCP Source Port Number
     #                   TCP Destination Port Number
     #                   Input Port
-    match = Match()    
+    match = Match()
     match.set_eth_type(eth_type)
     match.set_eth_src(eth_src)
     match.set_eth_dst(eth_dst)
@@ -153,7 +153,7 @@ if __name__ == "__main__":
     match.set_ip_dscp(ip_dscp)
     match.set_tcp_src_port(tcp_src_port)
     match.set_tcp_dst_port(tcp_dst_port)
-    match.set_in_port(input_port)    
+    match.set_in_port(input_port)
     flow_entry.add_match(match)
     
     
@@ -171,8 +171,8 @@ if __name__ == "__main__":
         exit(0)
     
     
-    print ("\n")    
-    print ("<<< Get configured flow from the Controller")    
+    print ("\n")
+    print ("<<< Get configured flow from the Controller")
     time.sleep(rundelay)
     result = ofswitch.get_configured_flow(table_id, flow_id)
     status = result.get_status()

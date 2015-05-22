@@ -14,7 +14,7 @@ modification, are permitted provided that the following conditions are met:
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSEARE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
 DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
 FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
 DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
@@ -44,19 +44,20 @@ from framework.common.utils import find_key_values_in_dict
 from framework.common.utils import replace_str_value_in_dict
 from framework.common.utils import find_key_value_in_dict
 from framework.common.utils import find_dict_in_list
-from framework.common.utils import stripNone
-    
+from framework.common.utils import strip_none
+
 #-------------------------------------------------------------------------------
 # 
 #-------------------------------------------------------------------------------
 class OFSwitch(OpenflowNode):
-    """Class that represents an instance of 'OpenFlow Switch' (OpenFlow capable device)."""
+    """ Class that represents an instance of 'OpenFlow Switch'
+        (OpenFlow capable device). """
     
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def __init__(self, ctrl=None, name=None, dpid=None):
-        """Initializes this object properties."""
+        """ Initializes this object properties. """
         super(OFSwitch, self).__init__(ctrl, name)
         self.dpid = dpid
         self.ports=[]
@@ -65,15 +66,16 @@ class OFSwitch(OpenflowNode):
     # 
     #---------------------------------------------------------------------------
     def to_string(self):
-        """Returns string representation of this object."""
+        """ Returns string representation of this object. """
         return str(vars(self))
     
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def to_json(self):
-        """Returns JSON representation of this object."""
-        return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4) 
+        """ Returns JSON representation of this object. """
+        return json.dumps(self, default=lambda o: o.__dict__, 
+                          sort_keys=True, indent=4) 
     
     #---------------------------------------------------------------------------
     # 
@@ -130,7 +132,7 @@ class OFSwitch(OpenflowNode):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def get_features_info(self):        
+    def get_features_info(self):
         status = OperStatus()
         info = {}
         ctrl = self.ctrl
@@ -156,7 +158,10 @@ class OFSwitch(OpenflowNode):
             status.set_status(STATUS.HTTP_ERROR, resp)
         
         return Result(status, info)
-        
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def get_ports_list(self):
         status = OperStatus()
         plist = []
@@ -189,13 +194,16 @@ class OFSwitch(OpenflowNode):
         
         return Result(status, plist)
         
+    #---------------------------------------------------------------------------
+    # TBD
+    #---------------------------------------------------------------------------
     def get_port_brief_info(self, portnum):
         pass
     
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def get_ports_brief_info(self):        
+    def get_ports_brief_info(self):
         status = OperStatus()
         info = []
         ctrl = self.ctrl
@@ -298,7 +306,7 @@ class OFSwitch(OpenflowNode):
             for fe in data:
                 self.delete_flow(flow_table_id, fe.get_flow_id())
         
-        return Result(status, None)    
+        return Result(status, None)
     
     #---------------------------------------------------------------------------
     # 
@@ -372,7 +380,7 @@ class OFSwitch(OpenflowNode):
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
         
-        return Result(status, flows)        
+        return Result(status, flows)
     
     #---------------------------------------------------------------------------
     # 
@@ -467,7 +475,7 @@ class ActionOutput():
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def __init__(self, port=None, length=None, order=None):        
+    def __init__(self, port=None, length=None, order=None):
         self.type = 'output'
         self.order = order
         self.action = {'port': port, 'max_len': length}
@@ -571,7 +579,7 @@ class FlowEntry(object):
         ''' This FlowEntry name in the FlowTable (internal Controller's inventory attribute) '''
         self.flow_name = None
         
-        ''' This FlowEntry identifier in the FlowTable (internal Controller's inventory attribute) '''    
+        ''' This FlowEntry identifier in the FlowTable (internal Controller's inventory attribute) '''
         self.id = None
         
         ''' ??? (internal Controller's inventory attribute) '''
@@ -650,7 +658,7 @@ class FlowEntry(object):
         s = string.replace(s, 'table-id', 'table_id')
         s = string.replace(s, 'cookie-mask', 'cookie_mask')
         d1 = json.loads(s)
-        d2 = stripNone(d1)
+        d2 = strip_none(d1)
         payload = {self._mn : d2}
         return json.dumps(payload, default=lambda o: o.__dict__, sort_keys=True, indent=4)
     
@@ -857,9 +865,9 @@ class FlowEntry(object):
 
         # Flow Instructions
         apply_actions_list = []
-        instructions = self.get_instructions()        
+        instructions = self.get_instructions()
         for instruction in instructions:
-            if instruction.is_apply_actions_type():                
+            if instruction.is_apply_actions_type():
                 output_list = []
                 push_vlan_list = []
                 pop_vlan_list = []
@@ -881,7 +889,7 @@ class FlowEntry(object):
                         s = "push_vlan="
                         eth_type = action.get_eth_type()
                         s += str(hex(eth_type))
-                        push_vlan_list.append(s)                    
+                        push_vlan_list.append(s)
                     elif (isinstance(action, PopVlanHeaderAction)):
                         s = "pop_vlan"
                         pop_vlan_list.append(s)
@@ -889,7 +897,7 @@ class FlowEntry(object):
                         s = "push_mpls="
                         eth_type = action.get_eth_type()
                         s += str(hex(eth_type))
-                        push_mpls_list.append(s)                    
+                        push_mpls_list.append(s)
                     elif (isinstance(action, PopMplsHeaderAction)):
                         s = "pop_mpls"
                         pop_mpls_list.append(s)
@@ -1265,9 +1273,9 @@ class Instruction():
                             if isinstance(a, dict):
                                 p2 = 'output_action'
                                 p3 = 'push_vlan_action'
-                                p4 = 'pop_vlan_action'                                
+                                p4 = 'pop_vlan_action'
                                 p5 = 'push_mpls_action'
-                                p6 = 'pop_mpls_action'                                
+                                p6 = 'pop_mpls_action'
                                 p7 = 'set_field'
                                 p8 = 'drop_action'
                                 if (p2 in a):
@@ -1275,16 +1283,16 @@ class Instruction():
                                     self.add_apply_action(action)
                                 elif (p3 in a):
                                     action = PushVlanHeaderAction(d=a[p3])
-                                    self.add_apply_action(action)                                    
+                                    self.add_apply_action(action)
                                 elif (p4 in a):
                                     action = PopVlanHeaderAction()
                                     self.add_apply_action(action)
                                 elif (p5 in a):
                                     action = PushMplsHeaderAction(d=a[p5])
-                                    self.add_apply_action(action)                                    
+                                    self.add_apply_action(action)
                                 elif (p6 in a):
                                     action = PopMplsHeaderAction()
-                                    self.add_apply_action(action)                                    
+                                    self.add_apply_action(action)
                                 elif (p7 in a):
                                     action = SetFieldAction(d=a[p7])
                                     self.add_apply_action(action)
@@ -2004,14 +2012,14 @@ class SetFieldAction(Action):
             return
         
         super(SetFieldAction, self).__init__(action_order)
-        self.set_field = {'vlan_match': None, 'protocol_match_fields' :None}
+        self.set_field = {'vlan_match': None, 'protocol_match_fields' : None}
     
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def __init_from_dict__(self,d):
         if (d != None and isinstance(d, dict)):
-            self.set_field = {'vlan_match': None, 'protocol_match_fields' :None}
+            self.set_field = {'vlan_match': None, 'protocol_match_fields' : None}
             for k,v in d.items():
                 if ('vlan_match' == k):
                     self.set_field[k] = VlanMatch(v)

@@ -16,7 +16,7 @@ modification, are permitted provided that the following conditions are met:
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSEARE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
 DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
 FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
 DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
@@ -96,11 +96,11 @@ if __name__ == "__main__":
     
     match = Match()
     match.set_eth_type(ETH_TYPE_ARP)
-    match.set_eth_src("00:11:22:33:44:55")    
+    match.set_eth_src("00:11:22:33:44:55")
     match.set_eth_dst("aa:bb:cc:dd:ee:ff")
     flow_entry.add_match(match)
     
-    flowEntries.append(flow_entry)    
+    flowEntries.append(flow_entry)
     
     # Sample flow entry
     flow_entry = FlowEntry()
@@ -118,7 +118,7 @@ if __name__ == "__main__":
     flow_entry.add_instruction(instruction)
     
     match = Match()
-    match.set_eth_type(ETH_TYPE_IPv4)     
+    match.set_eth_type(ETH_TYPE_IPv4)
     match.set_ipv4_src("1.2.3.4/32")
     match.set_ipv4_dst("192.168.1.11/32")
     flow_entry.add_match(match)
@@ -186,7 +186,7 @@ if __name__ == "__main__":
     flow_entry.add_instruction(instruction)
     
     match = Match()
-    match.set_eth_type(ETH_TYPE_ARP)    
+    match.set_eth_type(ETH_TYPE_ARP)
     match.set_vlan_id(998)
     match.set_in_port(in_port = 110)
     
@@ -228,7 +228,7 @@ if __name__ == "__main__":
     flow_entry.add_instruction(instruction)
     
     match = Match()
-    match.set_eth_type(ETH_TYPE_IPv4)    
+    match.set_eth_type(ETH_TYPE_IPv4)
     match.set_vlan_id(998)
     match.set_in_port(in_port = 110)
     
@@ -257,7 +257,7 @@ if __name__ == "__main__":
     flow_entry.add_instruction(instruction)
     
     match = Match()
-    match.set_eth_type(ETH_TYPE_ARP)    
+    match.set_eth_type(ETH_TYPE_ARP)
     match.set_vlan_id(100)
     match.set_in_port(111)
     
@@ -286,7 +286,7 @@ if __name__ == "__main__":
     flow_entry.add_instruction(instruction)
     
     match = Match()
-    match.set_eth_type(ETH_TYPE_IPv4)    
+    match.set_eth_type(ETH_TYPE_IPv4)
     match.set_vlan_id(100)
     match.set_in_port(111)
     
@@ -296,7 +296,7 @@ if __name__ == "__main__":
     
     
     print ("\n")
-    print ("<<< Remove configured flows from the Controller")    
+    print ("<<< Remove configured flows from the Controller")
     ofswitch.delete_flows(flow_table_id)
     
     
@@ -331,13 +331,13 @@ if __name__ == "__main__":
         print "\n"
         print ("<<< Removing all flows from the Controller")
         ofswitch.delete_flows(flow_table_id)
-        exit(0)                
+        exit(0)
     
     
     print ("\n")
     print ("<<< Get configured flows from the Controller")    
     time.sleep(rundelay)
-   
+    
     
     print ("\n")
     print ("<<< Configured flows:")
@@ -355,7 +355,7 @@ if __name__ == "__main__":
         
     
     print ("\n")
-    print ("<<< Get configured flows by IDs from the Controller:")    
+    print ("<<< Get configured flows by IDs from the Controller:")
     time.sleep(rundelay)
     for i in range(flow_id_base, flow_id):
         result = ofswitch.get_configured_FlowEntry(flow_table_id, i)
@@ -375,7 +375,7 @@ if __name__ == "__main__":
     
        
     print ("\n")
-    print ("<<< Remove configured flows from the Controller")    
+    print ("<<< Remove configured flows from the Controller")
     ofswitch.delete_flows(flow_table_id)
     
     

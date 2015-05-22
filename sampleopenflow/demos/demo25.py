@@ -16,7 +16,7 @@ modification, are permitted provided that the following conditions are met:
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSEARE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
 DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
 FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
 DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
@@ -160,7 +160,7 @@ if __name__ == "__main__":
     
     match = Match()
     
-    match.set_eth_type(arp_eth_type)    
+    match.set_eth_type(arp_eth_type)
     match.set_vlan_id(customer_vlan_id)
     match.set_in_port(in_port = customer_port)
     
@@ -239,7 +239,7 @@ if __name__ == "__main__":
     
     match = Match()
     
-    match.set_eth_type(ip_eth_type)    
+    match.set_eth_type(ip_eth_type)
     match.set_vlan_id(customer_vlan_id)
     match.set_in_port(in_port = customer_port)
     
@@ -297,7 +297,7 @@ if __name__ == "__main__":
     flow_entry3.add_instruction(instruction)
     
     match = Match()
-    match.set_eth_type(arp_eth_type)    
+    match.set_eth_type(arp_eth_type)
     match.set_vlan_id(provider_vlan_id)
     match.set_in_port(provider_port)
     
@@ -355,7 +355,7 @@ if __name__ == "__main__":
     flow_entry4.add_instruction(instruction)
     
     match = Match()
-    match.set_eth_type(ip_eth_type)    
+    match.set_eth_type(ip_eth_type)
     match.set_vlan_id(provider_vlan_id)
     match.set_in_port(provider_port)
     
@@ -376,7 +376,7 @@ if __name__ == "__main__":
         exit(0)
     
     
-    print ("\n")    
+    print ("\n")
     print ("<<< Get configured flows from the Controller")
     time.sleep(rundelay)
     for i in range(first_flow_id, flow_id+1):
@@ -399,7 +399,7 @@ if __name__ == "__main__":
     time.sleep(rundelay)
     delete_flows(ofswitch, table_id, range(first_flow_id, flow_id+1))
 
-        
+    
     print ("\n")
     print (">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
     print (">>> Demo End")
