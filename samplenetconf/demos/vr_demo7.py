@@ -33,7 +33,8 @@ import time
 import json
 
 from framework.controller.controller import Controller
-from framework.netconfdev.vrouter.vrouter5600 import VRouter5600, Firewall, Rules, Rule
+from framework.netconfdev.vrouter.vrouter5600 import VRouter5600
+from framework.netconfdev.vrouter.firewall import Firewall, Rules, Rule
 from framework.common.status import STATUS
 from framework.common.utils import load_dict_from_file
 
@@ -141,15 +142,16 @@ if __name__ == "__main__":
     print "\n"
     fwName2 = "DROP-ICMP"
     print (">>> Create new firewall instance '%s' on '%s' " % (fwName2, nodeName))
-    time.sleep(rundelay)    
-    firewall2 = Firewall()    
-    rules = Rules(fwName2)    
+    time.sleep(rundelay)
+    firewall2 = Firewall()
+    rules = Rules(fwName2)
     rulenum = 40
     rule = Rule(rulenum)
     rule.add_action("drop")
     rule.add_icmp_typename("ping")
     rules.add_rule(rule)
-    firewall2.add_rules(rules)    
+    firewall2.add_rules(rules)
+    print firewall2.to_json()
     result = vrouter.create_firewall_instance(firewall2)
     status = result.get_status()
     if(status.eq(STATUS.OK) == True):

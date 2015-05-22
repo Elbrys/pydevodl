@@ -14,7 +14,7 @@ modification, are permitted provided that the following conditions are met:
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSEARE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
 DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
 FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
 DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
@@ -46,48 +46,82 @@ STATUS = enum('OK', 'CONN_ERROR',
               'NODE_NOT_FOUND', 'NODE_CONFIGURED',                   
               'HTTP_ERROR', 'MALFORM_DATA', 'UNKNOWN')
 
+#-------------------------------------------------------------------------------
+# Class 'OperStatus'
+#-------------------------------------------------------------------------------
 class OperStatus(object):
     """Operational status of completed HTTP session"""
     """and methods for easy parsing of the status data."""
+
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def __init__(self, status_code=None, http_resp=None):
         """Initializes this object properties."""
         self.status_code = status_code
         self.http_resp = http_resp
     
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def set_status(self, status_code, http_resp=None):
         self.status_code = status_code
         self.http_resp = http_resp
     
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def set_status_code(self, status_code):
         self.status_code = status_code
     
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def get_status_code(self):
         return self.status_code
     
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def set_status_response(self, http_resp):
         self.http_resp = http_resp
     
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def get_status_response(self):
         return self.http_resp
     
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def to_string(self):
         return self.__status_code_string()
     
     def brief(self):
         return self.__status_code_string()
     
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def detailed(self):
         s = self.brief()
         if(self.http_resp != None and self.http_resp.content != None):
             s += "\n" + self.http_resp.content
         return s
     
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def eq(self, status_code):
         if(self.status_code == status_code):
             return True
         else:
             return False
     
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def __status_code_string(self):
         if (self.status_code == STATUS.OK):
             return "Success"

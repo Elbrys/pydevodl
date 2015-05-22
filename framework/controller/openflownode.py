@@ -14,7 +14,7 @@ modification, are permitted provided that the following conditions are met:
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSEARE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
 DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
 FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
 DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
@@ -33,18 +33,22 @@ openflownode.py: Controller's OpenFlow node specific properties
 """
 import json
 
+#-------------------------------------------------------------------------------
+# Class 'OpenflowNode'
+#-------------------------------------------------------------------------------
 class OpenflowNode(object):
-    """Class that represents a NETCONF capable server device."""
+    """ Class that represents a NETCONF capable server device. """
     
     def __init__(self, controller=None, nodeName=None):
-        """Initializes this object properties."""
+        """ Initializes this object properties. """
         self.ctrl = controller
         self.name = nodeName
     
     def to_string(self):
-        """Returns string representation of this object."""
+        """ Returns string representation of this object. """
         return str(vars(self))
 
     def to_json(self):
-        """Returns JSON representation of this object."""
+        """ Returns JSON representation of this object. """
         return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+    

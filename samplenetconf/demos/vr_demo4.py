@@ -33,7 +33,8 @@ import time
 import json
 
 from framework.controller.controller import Controller
-from framework.netconfdev.vrouter.vrouter5600 import VRouter5600, Firewall, Rules, Rule
+from framework.netconfdev.vrouter.vrouter5600 import VRouter5600
+from framework.netconfdev.vrouter.firewall import Firewall, Rules, Rule
 from framework.common.status import STATUS
 from framework.common.utils import load_dict_from_file
 

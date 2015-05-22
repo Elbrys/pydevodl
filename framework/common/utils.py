@@ -14,7 +14,7 @@ modification, are permitted provided that the following conditions are met:
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSEARE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
 DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
 FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
 DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
@@ -37,8 +37,9 @@ import time
 import string
 import yaml
 
-debug_count = 0
-
+#-------------------------------------------------------------------------------
+# 
+#-------------------------------------------------------------------------------
 def remove_empty_from_dict(d):
     if type(d) is dict:
         return dict((k, remove_empty_from_dict(v)) for k, v in d.iteritems() if v and remove_empty_from_dict(v))
@@ -48,22 +49,28 @@ def remove_empty_from_dict(d):
         return d
 
 
-def stripNone(data):
+#-------------------------------------------------------------------------------
+# 
+#-------------------------------------------------------------------------------
+def strip_none(data):
     if isinstance(data, dict):
-        res = {k:stripNone(v) for k, v in data.items() if k != None and v != None}
+        res = {k:strip_none(v) for k, v in data.items() if k != None and v != None}
         return res
     elif isinstance(data, list):
-        res = [stripNone(item) for item in data if item != None]
+        res = [strip_none(item) for item in data if item != None]
         return res
     elif isinstance(data, tuple):
-        res = tuple(stripNone(item) for item in data if item != None)
+        res = tuple(strip_none(item) for item in data if item != None)
         return res
     elif isinstance(data, set):
-        res = {stripNone(item) for item in data if item != None}
+        res = {strip_none(item) for item in data if item != None}
         return res
     else:
         return data
 
+#-------------------------------------------------------------------------------
+# 
+#-------------------------------------------------------------------------------
 def load_dict_from_file(f, d):
     try:
         with open(f, 'r') as f:
@@ -75,6 +82,9 @@ def load_dict_from_file(f, d):
         print("Error: failed to read file '%s'" % f)
         return False
 
+#-------------------------------------------------------------------------------
+# 
+#-------------------------------------------------------------------------------
 def find_key_values_in_dict(d, key):
     """
     Searches a dictionary (with nested lists and dictionaries)
@@ -98,6 +108,9 @@ def find_key_values_in_dict(d, key):
     
     return values
 
+#-------------------------------------------------------------------------------
+# 
+#-------------------------------------------------------------------------------
 def find_key_value_in_dict(d, key):
     """
     Searches a dictionary (with nested lists and dictionaries)
@@ -119,6 +132,9 @@ def find_key_value_in_dict(d, key):
         
     return None
 
+#-------------------------------------------------------------------------------
+# 
+#-------------------------------------------------------------------------------
 def find_dict_in_list(slist, key):
     for item in slist:
         if (type(item) is dict and item.has_key(key)):
@@ -137,8 +153,26 @@ def replace_str_value_in_dict(d, old, new):
         d = string.replace(d, old, new)
         return d
     else:
-        return d    
+        return d
 
+#-------------------------------------------------------------------------------
+# 
+#-------------------------------------------------------------------------------
+def dict_keys_underscored_to_dashed(d):
+    new_dict = {}
+    for k, v in d.iteritems():
+        if isinstance(v, dict):
+            v = dict_keys_underscored_to_dashed(v)
+        elif isinstance(v, list):
+            v = [dict_keys_underscored_to_dashed(i) for i in v if i and dict_keys_underscored_to_dashed(i)]
+        
+        new_dict[k.replace('_', '-')] = v
+    
+    return new_dict
+
+#-------------------------------------------------------------------------------
+# 
+#-------------------------------------------------------------------------------
 def progress_wait_secs(msg=None, waitTime=None, sym="."):
     if (waitTime != None):
 #        sys.stdout.write ("(waiting for %s seconds) " % waitTime)
@@ -151,4 +185,3 @@ def progress_wait_secs(msg=None, waitTime=None, sym="."):
             sys.stdout.flush() #<- makes python print it anyway
             time.sleep(1)
         sys.stdout.write ("\n")
-
