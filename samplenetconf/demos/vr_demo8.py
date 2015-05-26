@@ -120,13 +120,15 @@ if __name__ == "__main__":
         
     print "\n"
     print (">>> Create new VPN configuration on '%s'" % (nodeName))
-    description = "Remote Access VPN Configuration Example"
+    description = "Remote Access VPN Configuration Example - L2TP/IPsec with Pre-Shared Key"
     external_ipaddr = "12.34.56.78"
     nexthop_ipaddr = "12.34.56.254"
     nat_traversal = True
     nat_allow_network = "192.168.100.0/24"
     client_ip_pool_start = "192.168.100.11"
     client_ip_pool_end = "192.168.100.210"
+    ipsec_auth_mode = "pre-shared-secret"
+    ipsec_auth_secret = "!secrettext!"
     l2tp_auth_mode = "local"
     uname1="user1"
     upswd1="user1_password"
@@ -146,7 +148,8 @@ if __name__ == "__main__":
            "   - NAT_traversal                        : '%s'\n"
            "   - NAT allowed networks                 : '%s'\n"
            "   - Client addresses pool (start/end)    : '%s'/'%s'\n"
-           "   - Authentication  mode                 : '%s'\n"
+           "   - IPsec authentication (mode/secret)   : '%s'/'%s'\n"
+           "   - L2TP authentication  mode            : '%s'\n"
            "   - Allowed users (name/password)        : '%s'/'%s'\n"
            "                                            '%s'/'%s'\n"
            "                                            '%s'/'%s'\n"
@@ -157,6 +160,7 @@ if __name__ == "__main__":
               "enabled" if nat_traversal else "disabled",
               nat_allow_network,
               client_ip_pool_start, client_ip_pool_end,
+              ipsec_auth_mode, ipsec_auth_secret,
               l2tp_auth_mode,
               uname1, upswd1,
               uname2, upswd2,
@@ -198,6 +202,10 @@ if __name__ == "__main__":
     vpn.set_l2tp_remote_access_client_ip_pool(start=client_ip_pool_start,
                                               end=client_ip_pool_end)
     
+    # Set the IPsec authentication mode to 'pre-shared-secret'.
+    vpn.set_l2tp_remote_access_ipsec_auth(mode=ipsec_auth_mode,
+                                          secret=ipsec_auth_secret)
+    
     # Set the L2TP remote access authentication mode to local.
     vpn.set_l2tp_remote_access_user_auth_mode(l2tp_auth_mode)
     
@@ -219,7 +227,7 @@ if __name__ == "__main__":
     
     
     print "\n"
-    print (">>> VPN configuration to be applied on '%s'" % (nodeName))
+    print (">>> VPN configuration to be applied to the '%s'" % (nodeName))
     print vpn.get_payload()
     time.sleep(rundelay)
     result = vrouter.set_vpn_cfg(vpn)

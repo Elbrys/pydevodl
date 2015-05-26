@@ -791,7 +791,11 @@ class VRouter5600(NetconfNode):
         
         return Result(status, cfg)
     
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def delete_vpn_cfg(self):
+        """ Delete VPN configuration of the VRouter5600. """
         status = OperStatus()
         url_ext = "vyatta-security:security/vyatta-security-vpn-ipsec:vpn"
         
