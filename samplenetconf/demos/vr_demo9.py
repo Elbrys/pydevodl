@@ -116,19 +116,22 @@ if __name__ == "__main__":
         ctrl.delete_netconf_node(vrouter)
         exit(0)
         
-       
         
     print "\n"
     print (">>> Create new VPN configuration on the '%s'" % (nodeName))
-    description = "Remote Access VPN Configuration Example - L2TP/IPsec with Pre-Shared Key"
+    description = "Remote Access VPN Configuration Example - L2TP/IPsec with X.509 Certificates"
     external_ipaddr = "12.34.56.78"
     nexthop_ipaddr = "12.34.56.254"
     nat_traversal = True
     nat_allow_network = "192.168.100.0/24"
     client_ip_pool_start = "192.168.100.11"
     client_ip_pool_end = "192.168.100.210"
-    ipsec_auth_mode = "pre-shared-secret"
-    ipsec_auth_secret = "!secrettext!"
+    ipsec_auth_mode = "x509"
+    ca_cert_file = '/config/auth/ca.crt'
+    srv_crt_file = '/config/auth/r1.crt'
+    crl_file = '/config/auth/r1.crl'
+    srv_key_file = '/config/auth/r1.key'
+    srv_key_pswd = "testpassword"
     l2tp_auth_mode = "local"
     uname1="user1"
     upswd1="user1_password"
@@ -136,11 +139,6 @@ if __name__ == "__main__":
     upswd2="user2_password"
     uname3="user3"
     upswd3="user3_password"
-    dns_srv1 = "192.168.100.1"
-    dns_srv2 = "192.168.100.2"
-    wins_srv1 = "192.168.100.3"
-    wins_srv2 = "192.168.100.4"
-    mtu = "16384"
     print (" VPN options to be set:\n"
            "   - Configuration description            : '%s'\n"
            "   - Server external address              : '%s'\n"
@@ -148,28 +146,41 @@ if __name__ == "__main__":
            "   - NAT_traversal                        : '%s'\n"
            "   - NAT allowed networks                 : '%s'\n"
            "   - Client addresses pool (start/end)    : '%s'/'%s'\n"
-           "   - IPsec authentication (mode/secret)   : '%s'/'%s'\n"
+           "   - IPsec authentication mode            : '%s'\n"
+           
+           "   - CA Certificate location              : '%s'\n"
+           "   - Server Certificate location          : '%s'\n"
+           "   - Certificate Revocation List location : '%s'\n"
+           "   - Server Key file location             : '%s'\n"
+           "   - Server Key file password             : '%s'\n"
+           
            "   - L2TP authentication  mode            : '%s'\n"
            "   - Allowed users (name/password)        : '%s'/'%s'\n"
            "                                            '%s'/'%s'\n"
-           "                                            '%s'/'%s'\n"
-           "   - DNS servers (primary/secondary)      : '%s'/'%s'\n"
-           "   - WINS servers (primary/secondary)     : '%s'/'%s'\n"
-           "   - Maximum Transmission Unit            : '%s'\n"
+           "                                            '%s'/'%s'"
            % (description, external_ipaddr, nexthop_ipaddr,
               "enabled" if nat_traversal else "disabled",
               nat_allow_network,
               client_ip_pool_start, client_ip_pool_end,
-              ipsec_auth_mode, ipsec_auth_secret,
+              ipsec_auth_mode,
+              ca_cert_file,
+              srv_crt_file,
+              crl_file,
+              srv_key_file,
+              srv_key_pswd,
               l2tp_auth_mode,
               uname1, upswd1,
               uname2, upswd2,
-              uname3, upswd3,
-              dns_srv1, dns_srv2,
-              wins_srv1, wins_srv2,
-              mtu
+              uname3, upswd3
               )
            )
+    print (" NOTE: For this demo to succeed the following files must exist on the '%s'\n"
+           "       (empty files can be created for the sake of the demo):\n"
+           "         %s\n"
+           "         %s\n"
+           "         %s\n"
+           "         %s" 
+           % (nodeName, ca_cert_file, srv_crt_file, crl_file, srv_key_file))
     
     
     time.sleep(rundelay)
@@ -183,7 +194,7 @@ if __name__ == "__main__":
     # This VPN configuration description
     vpn.set_l2tp_remote_access_description(description)
     
-    # Enable NAT traversal
+    # Enable NAT traversal (this is mandatory)
     vpn.set_nat_traversal(nat_traversal)
     
     # Set the allowed subnets
@@ -201,11 +212,23 @@ if __name__ == "__main__":
     vpn.set_l2tp_remote_access_client_ip_pool(start=client_ip_pool_start,
                                               end=client_ip_pool_end)
     
-    # Set the IPsec authentication mode to 'pre-shared-secret'
+    # Set the IPsec authentication mode to 'x509'
     vpn.set_l2tp_remote_access_ipsec_auth_mode(mode=ipsec_auth_mode)
     
-    # Set the 'pre-shared-secret' value
-    vpn.set_l2tp_remote_access_ipsec_auth_pre_shared_secret(secret=ipsec_auth_secret)
+    # Specify the location of the CA certificate
+    vpn.set_l2tp_remote_access_ipsec_auth_ca_cert_file(ca_cert_file)
+    
+    # Specify the location of the server certificate
+    vpn.set_l2tp_remote_access_ipsec_auth_srv_cert_file(srv_crt_file)
+    
+    # Specify the location of the certificate revocation list (CRL) file
+    vpn.set_l2tp_remote_access_ipsec_auth_crl_file(path=crl_file)
+    
+    # Specify the location of the server key file
+    vpn.set_l2tp_remote_access_ipsec_auth_srv_key_file(srv_key_file)
+    
+    # Specify the password for the server key file
+    vpn.set_l2tp_remote_access_ipsec_auth_srv_key_pswd(srv_key_pswd)
     
     # Set the L2TP remote access user authentication mode to 'local'
     vpn.set_l2tp_remote_access_user_auth_mode(l2tp_auth_mode)
@@ -214,18 +237,6 @@ if __name__ == "__main__":
     vpn.set_l2tp_remote_access_user(name=uname1, pswd=upswd1)
     vpn.set_l2tp_remote_access_user(name=uname2, pswd=upswd2)
     vpn.set_l2tp_remote_access_user(name=uname3, pswd=upswd3)
-    
-    # Set 'primary' and 'secondary' DNS servers
-    vpn.set_l2tp_remote_access_primary_dns_server(dns_srv1)
-    vpn.set_l2tp_remote_access_secondary_dns_server(dns_srv2)
-    
-    # Set 'primary' and 'secondary' WINS servers
-    vpn.set_l2tp_remote_access_primary_wins_server(wins_srv1)
-    vpn.set_l2tp_remote_access_secondary_wins_server(wins_srv2)
-    
-    # Set Maximum Transmission Unit (MTU <128..16384>)
-    vpn.set_l2tp_remote_access_mtu(mtu)
-    
     
     print "\n"
     print (">>> VPN configuration to be applied to the '%s'" % (nodeName))
@@ -260,10 +271,10 @@ if __name__ == "__main__":
         print ("!!!Demo terminated, reason: %s" % status.detailed())
         ctrl.delete_netconf_node(vrouter)
         exit(0)
-        
-        
+    
+    
     print "\n"
-    print ("<<< Delete VPN configuration from the '%s'" % (nodeName))
+    print ("<<< Delete VPN configuration on the '%s'" % (nodeName))
     result = vrouter.delete_vpn_cfg()
     status = result.get_status()
     if(status.eq(STATUS.OK) == True):

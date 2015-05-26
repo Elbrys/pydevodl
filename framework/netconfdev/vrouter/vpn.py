@@ -145,9 +145,44 @@ class Vpn():
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def set_l2tp_remote_access_ipsec_auth(self, mode, secret):
+    def set_l2tp_remote_access_ipsec_auth_mode(self, mode):
         self.l2tp.remote_access.set_ipsec_mode(mode)
-        self.l2tp.remote_access.set_ipsec_pre_shared_secret(secret)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_l2tp_remote_access_ipsec_auth_pre_shared_secret(self, secret):
+            self.l2tp.remote_access.set_ipsec_pre_shared_secret(secret)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_l2tp_remote_access_ipsec_auth_ca_cert_file(self, path):
+        self.l2tp.remote_access.ipsec_settings.authentication.set_ca_cert_file(path)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_l2tp_remote_access_ipsec_auth_crl_file(self, path):
+        self.l2tp.remote_access.ipsec_settings.authentication.set_crl_file(path)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_l2tp_remote_access_ipsec_auth_srv_cert_file(self, path):
+        self.l2tp.remote_access.ipsec_settings.authentication.set_srv_cert_file(path)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_l2tp_remote_access_ipsec_auth_srv_key_file(self, path):
+        self.l2tp.remote_access.ipsec_settings.authentication.set_srv_key_file(path)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_l2tp_remote_access_ipsec_auth_srv_key_pswd(self, pswd):
+        self.l2tp.remote_access.ipsec_settings.authentication.set_srv_key_pswd(pswd)
     
     #---------------------------------------------------------------------------
     # 
@@ -220,7 +255,7 @@ class Vpn():
 #-------------------------------------------------------------------------------
 class Ipsec(Vpn):
     ''' Class representing VPN IP security (IPsec) configuration
-        Helper class of the 'Vpn' class '''
+        Helper sub-class of the 'Vpn' class '''
     
     #---------------------------------------------------------------------------
     # 
@@ -293,7 +328,7 @@ class Ipsec(Vpn):
 #-------------------------------------------------------------------------------
 class L2tp(Vpn):    
     ''' Class representing VPN Layer 2 Tunneling Protocol (L2TP) configuration
-        Helper class of the 'Vpn' class '''
+        Helper sub-class of the 'Vpn' class '''
     
     def __init__(self):
         self.remote_access = RemoteAccess()
@@ -302,7 +337,7 @@ class L2tp(Vpn):
 # 
 #-------------------------------------------------------------------------------
 class RemoteAccess(L2tp):
-    ''' Helper class of the 'L2tp' class '''
+    ''' Helper sub-class of the 'L2tp' class '''
     
     #---------------------------------------------------------------------------
     # 
@@ -341,8 +376,38 @@ class RemoteAccess(L2tp):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def set_ipsec_pre_shared_secret(self,secret):
-        self.ipsec_settings.set_secret(secret)
+    def set_ipsec_pre_shared_secret(self, secret):
+        self.ipsec_settings.set_pre_shared_secret(secret)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_ipsec_ca_cert_file(self, path):
+        self.ipsec_settings.authentication.set_ca_cert_file(path)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_ipsec_srv_cert_file(self, path):
+        self.ipsec_settings.authentication.set_srv_cert_file(path)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_ipsec_crl_file(self, path):
+        self.ipsec_settings.authentication.set_crl_file(path)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_ipsec_srv_key_file(self, path):
+        self.ipsec_settings.authentication.set_srv_key_file(path)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_ipsec_srv_key_pswd(self, pswd):
+        self.ipsec_settings.authentication.set_srv_key_pswd(pswd)
     
     #---------------------------------------------------------------------------
     # 
@@ -414,8 +479,7 @@ class RemoteAccess(L2tp):
 # 
 #-------------------------------------------------------------------------------
 class Authentication(RemoteAccess):
-    ''' Helper class of the 'RemoteAccess' class '''
-    
+    ''' Helper sub-class of the 'RemoteAccess' class '''
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
@@ -440,32 +504,131 @@ class Authentication(RemoteAccess):
 # 
 #-------------------------------------------------------------------------------
 class IpSecSettings(RemoteAccess):
-    ''' Helper class of the 'RemoteAccess' class '''
+    ''' Helper sub-class of the 'RemoteAccess' class '''
     
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def __init__(self):
-        self.authentication = {'mode': None, 'pre_shared_secret' : None}
+        self.authentication = IpSecAuthentication()
     
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def set_mode(self, mode):
-        self.authentication['mode'] = mode
+        self.authentication.set_mode(mode)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_pre_shared_secret(self, secret):
+        self.authentication.set_secret(secret)
+
+class IpSecAuthentication(IpSecSettings):
+    ''' Helper sub-class of the 'IpSecSettings' class '''
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init__(self):
+        self.mode = None
+        self.pre_shared_secret = None
+        self.x509 = Certificate()
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_mode(self, mode):
+        self.mode = mode
     
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def set_secret(self, secret):
-        self.authentication['pre_shared_secret'] = secret
+        self.pre_shared_secret = secret
+        
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_ca_cert_file(self, path):
+        self.x509.set_ca_cert_file(path)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_srv_cert_file(self, path):
+        self.x509.set_srv_cert_file(path)
+        
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_crl_file(self, path):
+        self.x509.set_crl_file(path)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_srv_key_file(self, path):
+        self.x509.set_srv_key_file(path)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_srv_key_pswd(self, pswd):
+        self.x509.set_srv_key_pswd(pswd)
+
+class Certificate(IpSecAuthentication):
+    ''' Helper sub-class of the 'IpSecAuthentication' class '''
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init__(self):
+        ''' File containing the X.509 certificate for the Certificate Authority (CA) '''
+        self.ca_cert_file = None
+        ''' File containing the X.509 Certificate Revocation List (CRL) '''
+        self.crl_file = None
+        ''' File containing the X.509 certificate for the remote access VPN server '''
+        self.server_cert_file = None
+        ''' File containing the private key for the X.509 certificate for the remote access VPN server '''
+        self.server_key_file = None
+        ''' Password that protects the private key '''
+        self.server_key_password = None
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_ca_cert_file (self, path):
+        self.ca_cert_file = path
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_crl_file(self, path):
+        self.crl_file = path
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_srv_cert_file(self, path):
+        self.server_cert_file = path
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_srv_key_file(self, path):
+        self.server_key_file = path
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_srv_key_pswd(self, pswd):
+        self.server_key_password = pswd
 
 #-------------------------------------------------------------------------------
 # 
 #-------------------------------------------------------------------------------
 class RsaKeys(Vpn):
     ''' Class representing VPN RSA keys configuration 
-        Helper class of the 'Vpn' class '''
+        Helper sub-class of the 'Vpn' class '''
     
     #---------------------------------------------------------------------------
     # 
