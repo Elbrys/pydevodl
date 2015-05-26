@@ -201,6 +201,8 @@ class VRouter5600(NetconfNode):
         elif (resp.status_code == 200):
             cfg = resp.content
             status.set_status(STATUS.OK)
+        elif (resp.status_code == 404):
+            status.set_status(STATUS.DATA_NOT_FOUND, resp)
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
         
@@ -782,8 +784,31 @@ class VRouter5600(NetconfNode):
         elif (resp.status_code == 200):
             cfg = resp.content
             status.set_status(STATUS.OK)
+        elif (resp.status_code == 404):
+            status.set_status(STATUS.DATA_NOT_FOUND, resp)
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
         
         return Result(status, cfg)
+    
+    def delete_vpn_cfg(self):
+        status = OperStatus()
+        url_ext = "vyatta-security:security/vyatta-security-vpn-ipsec:vpn"
+        
+        ctrl = self.ctrl
+        myname = self.name
+        url = ctrl.get_ext_mount_config_url(myname)
+        url += url_ext
+        
+        resp = ctrl.http_delete_request(url, data=None, headers=None)
+        if(resp == None):
+            status.set_status(STATUS.CONN_ERROR)
+        elif(resp.content == None):
+            status.set_status(STATUS.CTRL_INTERNAL_ERROR)
+        elif (resp.status_code == 200):
+            status.set_status(STATUS.OK)
+        else:
+            status.set_status(STATUS.HTTP_ERROR, resp)
+        
+        return Result(status, None)
     

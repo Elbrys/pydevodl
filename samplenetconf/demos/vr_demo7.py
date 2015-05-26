@@ -72,7 +72,7 @@ if __name__ == "__main__":
     print ("\n")
     
     ifName = "dp0p1p7"
-    ctrl = Controller(ctrlIpAddr, ctrlPortNum, ctrlUname, ctrlPswd)    
+    ctrl = Controller(ctrlIpAddr, ctrlPortNum, ctrlUname, ctrlPswd)
     vrouter = VRouter5600(ctrl, nodeName, nodeIpAddr, nodePortNum, nodeUname, nodePswd)
     print ("<<< 'Controller': %s, '%s': %s" % (ctrlIpAddr, nodeName, nodeIpAddr))
     
@@ -111,24 +111,28 @@ if __name__ == "__main__":
         cfg = result.get_data()
         data = json.loads(cfg)
         print json.dumps(data, indent=4)
+    elif (status.eq(STATUS.DATA_NOT_FOUND) == True):
+        print ("No firewalls configuration found")
     else:
         print ("\n")
         print ("!!!Demo terminated, reason: %s" % status.brief().lower())
+        ctrl.delete_netconf_node(vrouter)
         exit(0)
     
     
     print "\n"
     fwName1 = "ACCEPT-SRC-IPADDR"
     print (">>> Create new firewall instance '%s' on '%s' " % (fwName1, nodeName))
-    time.sleep(rundelay)    
-    firewall1 = Firewall()    
-    rules = Rules(fwName1)    
+    firewall1 = Firewall()
+    rules = Rules(fwName1)
     rulenum = 30
     rule = Rule(rulenum)
     rule.add_action("accept")
-    rule.add_source_address("172.22.17.108")    
+    rule.add_source_address("172.22.17.108")
     rules.add_rule(rule)
     firewall1.add_rules(rules)
+    print firewall1.to_json()
+    time.sleep(rundelay)
     result = vrouter.create_firewall_instance(firewall1)
     status = result.get_status()
     if(status.eq(STATUS.OK) == True):
@@ -142,7 +146,6 @@ if __name__ == "__main__":
     print "\n"
     fwName2 = "DROP-ICMP"
     print (">>> Create new firewall instance '%s' on '%s' " % (fwName2, nodeName))
-    time.sleep(rundelay)
     firewall2 = Firewall()
     rules = Rules(fwName2)
     rulenum = 40
@@ -152,6 +155,7 @@ if __name__ == "__main__":
     rules.add_rule(rule)
     firewall2.add_rules(rules)
     print firewall2.to_json()
+    time.sleep(rundelay)
     result = vrouter.create_firewall_instance(firewall2)
     status = result.get_status()
     if(status.eq(STATUS.OK) == True):
@@ -181,7 +185,7 @@ if __name__ == "__main__":
     
     print("\n")
     print ("<<< Apply firewall '%s' to inbound traffic and '%s' to outbound traffic on the '%s' dataplane interface" % (fwName1, fwName2, ifName))
-    time.sleep(rundelay)    
+    time.sleep(rundelay)
     result = vrouter.set_dataplane_interface_firewall(ifName, fwName1, fwName2)
     status = result.get_status()
     if(status.eq(STATUS.OK) == True):
@@ -210,7 +214,7 @@ if __name__ == "__main__":
     
     print("\n")
     print ("<<< Remove firewall settings from the '%s' dataplane interface" % (ifName))
-    time.sleep(rundelay)    
+    time.sleep(rundelay)
     result = vrouter.delete_dataplane_interface_firewall(ifName)
     status = result.get_status()
     if(status.eq(STATUS.OK) == True):
@@ -240,7 +244,7 @@ if __name__ == "__main__":
     print "\n"
     print (">>> Remove firewall instance '%s' from '%s' " % (fwName1, nodeName))
     time.sleep(rundelay)
-    result = vrouter.delete_firewall_instance(firewall1)  
+    result = vrouter.delete_firewall_instance(firewall1)
     status = result.get_status()
     if(status.eq(STATUS.OK) == True):
         print ("Firewall instance '%s' was successfully deleted" % fwName1)
@@ -253,7 +257,7 @@ if __name__ == "__main__":
     print "\n"
     print (">>> Remove firewall instance '%s' from '%s' " % (fwName2, nodeName))
     time.sleep(rundelay)
-    result = vrouter.delete_firewall_instance(firewall2)  
+    result = vrouter.delete_firewall_instance(firewall2)
     status = result.get_status()
     if(status.eq(STATUS.OK) == True):
         print ("Firewall instance '%s' was successfully deleted" % fwName2)
@@ -281,7 +285,7 @@ if __name__ == "__main__":
     
     print "\n"
     print (">>> Remove '%s' NETCONF node from the Controller" % nodeName)
-    time.sleep(rundelay)    
+    time.sleep(rundelay)
     result = ctrl.delete_netconf_node(vrouter)
     status = result.get_status()
     if(status.eq(STATUS.OK)):
