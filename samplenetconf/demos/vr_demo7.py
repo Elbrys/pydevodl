@@ -58,6 +58,7 @@ if __name__ == "__main__":
         nodePortNum = d['nodePortNum']
         nodeUname = d['nodeUname']
         nodePswd = d['nodePswd']
+        ifName = d['interfaceName']
     except:
         print ("Failed to get Controller device attributes")
         exit(0)
@@ -71,7 +72,6 @@ if __name__ == "__main__":
     
     print ("\n")
     
-    ifName = "dp0p1p7"
     ctrl = Controller(ctrlIpAddr, ctrlPortNum, ctrlUname, ctrlPswd)
     vrouter = VRouter5600(ctrl, nodeName, nodeIpAddr, nodePortNum, nodeUname, nodePswd)
     print ("<<< 'Controller': %s, '%s': %s" % (ctrlIpAddr, nodeName, nodeIpAddr))

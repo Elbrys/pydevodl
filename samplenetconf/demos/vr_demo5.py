@@ -57,6 +57,7 @@ if __name__ == "__main__":
         nodePortNum = d['nodePortNum']
         nodeUname = d['nodeUname']
         nodePswd = d['nodePswd']
+        ifName = d['interfaceName']
     except:
         print ("Failed to get Controller device attributes")
         exit(0)
@@ -114,7 +115,6 @@ if __name__ == "__main__":
     
     
     print("\n")
-    ifName = "dp0p1p7"
     print ("<<< Show '%s' dataplane interface configuration on the '%s'" % (ifName,nodeName))
     time.sleep(rundelay)
     result = vrouter.get_dataplane_interface_cfg(ifName)
