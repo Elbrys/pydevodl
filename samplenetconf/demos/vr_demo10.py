@@ -119,66 +119,6 @@ if __name__ == "__main__":
     
     print "\n"
     print (">>> Create new VPN configuration on the '%s'" % (nodeName))
-    description = "Remote Access VPN Configuration Example - L2TP/IPsec with X.509 Certificates"
-    external_ipaddr = "12.34.56.78"
-    nexthop_ipaddr = "12.34.56.254"
-    nat_traversal = True
-    nat_allow_network = "192.168.100.0/24"
-    client_ip_pool_start = "192.168.100.11"
-    client_ip_pool_end = "192.168.100.210"
-    ipsec_auth_mode = "x509"
-    ca_cert_file = '/config/auth/ca.crt'
-    srv_crt_file = '/config/auth/r1.crt'
-    crl_file = '/config/auth/r1.crl'
-    srv_key_file = '/config/auth/r1.key'
-    srv_key_pswd = "testpassword"
-    l2tp_auth_mode = "local"
-    uname1="user1"
-    upswd1="user1_password"
-    uname2="user2"
-    upswd2="user2_password"
-    uname3="user3"
-    upswd3="user3_password"
-    print (" VPN options to be set:\n"
-           "   - Configuration description            : '%s'\n"
-           "   - Server external address              : '%s'\n"
-           "   - Next hop router address              : '%s'\n"
-           "   - NAT_traversal                        : '%s'\n"
-           "   - NAT allowed networks                 : '%s'\n"
-           "   - Client addresses pool (start/end)    : '%s'/'%s'\n"
-           "   - IPsec authentication mode            : '%s'\n"
-           "   - CA Certificate location              : '%s'\n"
-           "   - Server Certificate location          : '%s'\n"
-           "   - Certificate Revocation List location : '%s'\n"
-           "   - Server Key file location             : '%s'\n"
-           "   - Server Key file password             : '%s'\n"
-           "   - L2TP authentication  mode            : '%s'\n"
-           "   - Allowed users (name/password)        : '%s'/'%s'\n"
-           "                                            '%s'/'%s'\n"
-           "                                            '%s'/'%s'"
-           % (description, external_ipaddr, nexthop_ipaddr,
-              "enabled" if nat_traversal else "disabled",
-              nat_allow_network,
-              client_ip_pool_start, client_ip_pool_end,
-              ipsec_auth_mode,
-              ca_cert_file,
-              srv_crt_file,
-              crl_file,
-              srv_key_file,
-              srv_key_pswd,
-              l2tp_auth_mode,
-              uname1, upswd1,
-              uname2, upswd2,
-              uname3, upswd3
-              )
-           )
-    print (" NOTE: For this demo to succeed the following files must exist on the '%s'\n"
-           "       (empty files can be created for the sake of the demo):\n"
-           "         %s\n"
-           "         %s\n"
-           "         %s\n"
-           "         %s" 
-           % (nodeName, ca_cert_file, srv_crt_file, crl_file, srv_key_file))
     
     
     time.sleep(rundelay)
@@ -189,57 +129,111 @@ if __name__ == "__main__":
     #-------------------------------------------------------------------------
     vpn = Vpn()
     
-    # This VPN configuration description
-    vpn.set_l2tp_remote_access_description(description)
+    #-------------------------------------------------------------------------
+    # Create and configure Internet Key Exchange (IKE) group
+    #-------------------------------------------------------------------------
+    ike_grp_name = "IKE-1W"
+    proposal_num = 1
     
-    # Enable NAT traversal (this is mandatory)
-    vpn.set_nat_traversal(nat_traversal)
+    # Set the encryption cipher for proposal 1
+    # (enumeration: 'aes128', 'aes256', '3des')
+    encryption_cipher = 'aes256'
+    vpn.set_ipsec_ike_group_proposal_encryption(ike_grp_name, proposal_num, encryption_cipher)
     
-    # Set the allowed subnets
-    vpn.set_nat_allow_network(nat_allow_network)
+    # Set the hash algorithm for proposal 1
+    # (enumeration: 'md5', 'sha1')
+    hash_algorith = 'sha1'
+    vpn.set_ipsec_ike_group_proposal_hash(ike_grp_name, proposal_num, hash_algorith)
     
-    # Bind the L2TP server to the external IP address
-    vpn.set_l2tp_remote_access_outside_address(external_ipaddr)
+    # Set the encryption cipher for proposal 2
+    # (enumeration: 'aes128', 'aes256', '3des')
+    proposal_num = 2
+    encryption_cipher = 'aes128'
+    vpn.set_ipsec_ike_group_proposal_encryption(ike_grp_name, proposal_num, encryption_cipher)
     
-    # Set the next hop IP address for reaching the VPN clients
-    vpn.set_l2tp_remote_access_outside_nexthop(nexthop_ipaddr)
+    # Set the hash algorithm for proposal 2
+    # (enumeration: 'md5', 'sha1')
+    hash_algorith = 'sha1'
+    vpn.set_ipsec_ike_group_proposal_hash(ike_grp_name, proposal_num, hash_algorith)
     
-    # Set up the pool of IP addresses that remote VPN connections will assume.
-    # In this example we make 100 addresses available (from .11 to .210) on
-    # subnet  192.168.100.0/24
-    vpn.set_l2tp_remote_access_client_ip_pool(start=client_ip_pool_start,
-                                              end=client_ip_pool_end)
+    # Set the lifetime for the whole IKE group
+    lifetime = 3600
+    vpn.set_ipsec_ike_group_lifetime(ike_grp_name, lifetime)
     
-    # Set the IPsec authentication mode to 'x509'
-    vpn.set_l2tp_remote_access_ipsec_auth_mode(mode=ipsec_auth_mode)
+    #-------------------------------------------------------------------------
+    # Create and configure Encapsulating Security Payload (ESP) group
+    #-------------------------------------------------------------------------
+    esp_grp_name = "ESP-1W"
+#    vpn.set_ipsec_esp_group(esp_grp_name)
     
-    # Specify the location of the CA certificate
-    vpn.set_l2tp_remote_access_ipsec_auth_ca_cert_file(ca_cert_file)
+    # Set ESP-group proposal
+    # (enumeration: 'aes128', 'aes256', '3des')
+    proposal_num = 1
+#   vpn.set_ipsec_esp_group_proposal(esp_grp_name, proposal_num)
     
-    # Specify the location of the server certificate
-    vpn.set_l2tp_remote_access_ipsec_auth_srv_cert_file(srv_crt_file)
+    # Set the encryption cipher for proposal 1
+    # (enumeration: 'aes128', 'aes256', '3des')
+    encryption_cipher = 'aes256'
+    vpn.set_ipsec_esp_group_proposal_encryption(esp_grp_name, proposal_num, encryption_cipher)
     
-    # Specify the location of the certificate revocation list (CRL) file
-    vpn.set_l2tp_remote_access_ipsec_auth_crl_file(path=crl_file)
+    # Set the hash algorithm for proposal 1
+    # (enumeration: 'md5', 'sha1')
+    hash_algorith = 'sha1'
+    vpn.set_ipsec_esp_group_proposal_hash(esp_grp_name, proposal_num, hash_algorith)
     
-    # Specify the location of the server key file
-    vpn.set_l2tp_remote_access_ipsec_auth_srv_key_file(srv_key_file)
+    # Set the encryption cipher for proposal 2
+    # (enumeration: 'aes128', 'aes256', '3des')
+    proposal_num = 2
+    encryption_cipher = '3des'
+    vpn.set_ipsec_esp_group_proposal_encryption(esp_grp_name, proposal_num, encryption_cipher)
     
-    # Specify the password for the server key file
-    vpn.set_l2tp_remote_access_ipsec_auth_srv_key_pswd(srv_key_pswd)
+    # Set the hash algorithm for proposal 2
+    # (enumeration: 'md5', 'sha1')
+    hash_algorith = 'md5'
+    vpn.set_ipsec_esp_group_proposal_hash(esp_grp_name, proposal_num, hash_algorith)
     
-    # Set the L2TP remote access user authentication mode to 'local'
-    vpn.set_l2tp_remote_access_user_auth_mode(l2tp_auth_mode)
+    # Set the lifetime for the whole ESP group
+    lifetime = 1800
+    vpn.set_ipsec_esp_group_lifetime(esp_grp_name, lifetime)
     
-    # Set the L2TP remote access user credentials ('username'/'password')
-    vpn.set_l2tp_remote_access_user(name=uname1, pswd=upswd1)
-    vpn.set_l2tp_remote_access_user(name=uname2, pswd=upswd2)
-    vpn.set_l2tp_remote_access_user(name=uname3, pswd=upswd3)
+    #-------------------------------------------------------------------------
+    # Configure connection to a remote peer
+    #-------------------------------------------------------------------------
+    peer_node = "192.0.2.33"
+    description = "VPN peer configuration example"
+    vpn.set_ipsec_site_to_site_peer_description( peer_node, description)
+    
+    # Set authentication mode to 'pre-shared-secret' and provide the 'secret'
+    # that will be used to generate encryption keys
+    secret = 'test_key_1'
+    vpn.set_ipsec_site_to_site_peer_auth_preshared_secret(peer_node, secret)
+    
+    # Specify the default ESP group for all tunnels
+    esp_group_name = 'ESP-1W'
+    vpn.set_ipsec_site_to_site_peer_default_esp_group(peer_node, esp_group_name)
+    
+    # Specify the IKE group
+    ike_group_name = 'IKE-1W'
+    vpn.set_ipsec_site_to_site_peer_ike_group(peer_node, ike_group_name)
+    
+    # Identify the IP address on the vRouter to be used for this connection
+    local_address = '192.0.2.1'
+    vpn.set_ipsec_site_to_site_peer_local_address(peer_node, local_address)
+    
+    # Create a tunnel configuration and provide local and remote subnets
+    # for this tunnel
+    tunnel = 1
+    local_prefix = '192.168.40.0/24'
+    remote_prefix = '192.168.60.0/24'
+    vpn.set_ipsec_site_to_site_peer_tunnel_local_prefix(peer_node, tunnel, local_prefix)
+    vpn.set_ipsec_site_to_site_peer_tunnel_remote_prefix(peer_node, tunnel, remote_prefix)
+    
     
     print "\n"
     print (">>> VPN configuration to be applied to the '%s'" % (nodeName))
     print vpn.get_payload()
     time.sleep(rundelay)
+    
     result = vrouter.set_vpn_cfg(vpn)
     status = result.get_status()
     if(status.eq(STATUS.OK) == True):
@@ -268,6 +262,9 @@ if __name__ == "__main__":
         print ("!!!Demo terminated, reason: %s" % status.detailed())
         ctrl.delete_netconf_node(vrouter)
         exit(0)
+    
+    
+    time.sleep(rundelay)
     
     
     print "\n"

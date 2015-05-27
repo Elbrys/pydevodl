@@ -115,7 +115,6 @@ if __name__ == "__main__":
         print ("!!!Demo terminated, reason: %s" % status.detailed())
         ctrl.delete_netconf_node(vrouter)
         exit(0)
-        
        
         
     print "\n"
@@ -175,9 +174,9 @@ if __name__ == "__main__":
     time.sleep(rundelay)
     
     
-    # 
+    #-------------------------------------------------------------------------
     # Encode VPN configuration options by using 'Vpn' object
-    #
+    #-------------------------------------------------------------------------
     vpn = Vpn()
     
     # This VPN configuration description
@@ -253,8 +252,7 @@ if __name__ == "__main__":
         cfg = result.get_data()
         data = json.loads(cfg)
         print json.dumps(data, indent=4)
-    elif (status.eq(STATUS.DATA_NOT_FOUND) == True):
-        print ("No VPN configuration found")
+        print ("<<< VPN configuration was successfully read")
     else:
         print ("\n")
         print ("!!!Demo terminated, reason: %s" % status.detailed())

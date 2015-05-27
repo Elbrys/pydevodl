@@ -249,6 +249,145 @@ class Vpn():
     #---------------------------------------------------------------------------
     def set_l2tp_remote_access_mtu(self, mtu):
         self.l2tp.remote_access.set_mtu(mtu)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_ipsec_esp_group_lifetime(self, esp_grp_name, lifetime):
+        esp_grp = self._find_create_esp_group(esp_grp_name)
+        assert (isinstance(esp_grp, EspGroup))
+        esp_grp.set_lifetime(lifetime)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_ipsec_esp_group_proposal_encryption(self, esp_grp_name,
+                                                proposal_num,
+                                                encryption_cipher):
+        esp_grp = self._find_create_esp_group(esp_grp_name)
+        assert (isinstance(esp_grp, EspGroup))
+        esp_grp.set_proposal_encryption(proposal_num, encryption_cipher)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_ipsec_esp_group_proposal_hash(self, esp_grp_name,
+                                          proposal_num,
+                                          hash_algorith):
+        esp_grp = self._find_create_esp_group(esp_grp_name)
+        assert (isinstance(esp_grp, EspGroup))
+        esp_grp.set_proposal_hash(proposal_num, hash_algorith)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def _find_create_esp_group(self, esp_grp_name):
+        esp_grp = None
+        for item in self.ipsec.esp_group:
+            if (item.tagnode == esp_grp_name):
+                esp_grp = item
+                break
+        
+        if (esp_grp == None):
+            esp_grp = EspGroup(esp_grp_name)
+            self.ipsec.esp_group.append(esp_grp)
+        
+        return esp_grp
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_ipsec_ike_group_lifetime(self, ike_grp_name, lifetime):
+        ike_grp = self._find_create_ike_group(ike_grp_name)
+        assert (isinstance(ike_grp, IkeGroup))
+        ike_grp.set_lifetime(lifetime)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_ipsec_ike_group_proposal_encryption(self, ike_grp_name,
+                                                proposal_num,
+                                                encryption_cipher):
+        ike_grp = self._find_create_ike_group(ike_grp_name)
+        assert (isinstance(ike_grp, IkeGroup))
+        ike_grp.set_proposal_encryption(proposal_num, encryption_cipher)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_ipsec_ike_group_proposal_hash(self, ike_grp_name,
+                                          proposal_num,
+                                          hash_algorith):
+        ike_grp = self._find_create_ike_group(ike_grp_name)
+        assert (isinstance(ike_grp, IkeGroup))
+        ike_grp.set_proposal_hash(proposal_num, hash_algorith)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_ipsec_ike_group_proposal_dh_group(self, ike_grp_name,
+                                              proposal_num,
+                                              dh_group):
+        ike_grp = self._find_create_ike_group(ike_grp_name)
+        assert (isinstance(ike_grp, IkeGroup))
+        ike_grp.set_proposal_dh_group(proposal_num, dh_group)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def _find_create_ike_group(self, ike_grp_name):
+        ike_grp = None
+        for item in self.ipsec.ike_group:
+            if (item.tagnode == ike_grp_name):
+                ike_grp = item
+                break
+        
+        if (ike_grp == None):
+            ike_grp = IkeGroup(ike_grp_name)
+            self.ipsec.ike_group.append(ike_grp)
+        
+        return ike_grp
+    
+    def set_ipsec_site_to_site_peer_description(self, peer_node, description):
+        self.ipsec.site_to_site.set_peer_description(peer_node, description)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_ipsec_site_to_site_peer_auth_preshared_secret(self, peer_node, secret):
+        self.ipsec.site_to_site.set_peer_auth_preshared_secret(peer_node, secret)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_ipsec_site_to_site_peer_local_address(self, peer_node, local_address):
+        self.ipsec.site_to_site.set_peer_local_address(peer_node, local_address)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_ipsec_site_to_site_peer_default_esp_group(self, peer_node, esp_group):
+        self.ipsec.site_to_site.set_peer_default_esp_group(peer_node, esp_group)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_ipsec_site_to_site_peer_ike_group(self, peer_node, ike_group):
+        self.ipsec.site_to_site.set_peer_ike_group(peer_node, ike_group)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_ipsec_site_to_site_peer_tunnel_local_prefix(self, peer_node, tunnel,
+                                                        local_prefix):
+        self.ipsec.site_to_site.set_peer_tunnel_local_prefix(peer_node, tunnel, local_prefix)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_ipsec_site_to_site_peer_tunnel_remote_prefix(self, peer_node, tunnel,
+                                                         remote_prefix):
+        self.ipsec.site_to_site.set_peer_tunnel_remote_prefix(peer_node, tunnel, remote_prefix)
 
 #-------------------------------------------------------------------------------
 # 
@@ -293,7 +432,7 @@ class Ipsec(Vpn):
         
         ''' Site to site VPN 
             (instance of 'SiteToSite' class)'''
-        self.site_to_site = None
+        self.site_to_site = SiteToSite()
     
     #---------------------------------------------------------------------------
     # 
@@ -322,6 +461,374 @@ class Ipsec(Vpn):
             self.nat_networks = {'allowed_network': []}
         d = {'tagnode' : ipnet}
         self.nat_networks['allowed_network'].append(d)
+
+#-------------------------------------------------------------------------------
+# 
+#-------------------------------------------------------------------------------
+class EspGroup(Ipsec):
+    ''' Helper sub-class for 'Ipsec' class '''
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init__(self, esp_grp_name):
+        self.tagnode = esp_grp_name
+        self.lifetime = None
+        self.proposal = []
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_lifetime(self, lifetime):
+        self.lifetime = lifetime
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_proposal_encryption(self, proposal_num, encryption_cipher):
+        proposal = self._find_create_proposal(proposal_num)
+        assert (isinstance(proposal, EspProposal))
+        proposal._set_encryption(encryption_cipher)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_proposal_hash(self, proposal_num, hash_algorith):
+        proposal = self._find_create_proposal(proposal_num)
+        assert (isinstance(proposal, EspProposal))
+        proposal._set_hash(hash_algorith)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def _find_create_proposal(self, proposal_num):
+        proposal = None
+        for item in self.proposal:
+            if (item.tagnode == proposal_num):
+                proposal = item
+                break
+        
+        if (proposal == None):
+            proposal = EspProposal(proposal_num)
+            self.proposal.append(proposal)
+        
+        return proposal
+
+#-------------------------------------------------------------------------------
+# 
+#-------------------------------------------------------------------------------
+class EspProposal(EspGroup):
+    ''' Helper sub-class for 'EspGroup' class '''
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init__(self, proposal_num):
+        self.tagnode = proposal_num
+        self.encryption = None
+        self.hash = None
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def _set_encryption(self, encryption_cipher):
+        self.encryption = encryption_cipher
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def _set_hash(self, hash_algorith):
+        self.hash = hash_algorith
+
+#-------------------------------------------------------------------------------
+# 
+#-------------------------------------------------------------------------------
+class IkeGroup(Ipsec):
+    ''' Helper sub-class for 'Ipsec' class '''
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init__(self, ike_grp_name):
+        self.tagnode = ike_grp_name
+        self.lifetime = None
+        self.proposal = []
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_lifetime(self, lifetime):
+        self.lifetime = lifetime
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_proposal_encryption(self, proposal_num, encryption_cipher):
+        proposal = self._find_create_proposal(proposal_num)
+        assert (isinstance(proposal, IkeProposal))
+        proposal._set_encryption(encryption_cipher)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_proposal_hash(self, proposal_num, hash_algorith):
+        proposal = self._find_create_proposal(proposal_num)
+        assert (isinstance(proposal, IkeProposal))
+        proposal._set_hash(hash_algorith)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_proposal_dh_group(self, proposal_num, dh_group):
+        proposal = self._find_create_proposal(proposal_num)
+        assert (isinstance(proposal, IkeProposal))
+        proposal._set_dh_group(dh_group)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def _find_create_proposal(self, proposal_num):
+        proposal = None
+        for item in self.proposal:
+            if (item.tagnode == proposal_num):
+                proposal = item
+                break
+        
+        if (proposal == None):
+            proposal = IkeProposal(proposal_num)
+            self.proposal.append(proposal)
+        
+        return proposal
+
+#-------------------------------------------------------------------------------
+# 
+#-------------------------------------------------------------------------------
+class IkeProposal(IkeGroup):
+    ''' Helper sub-class for 'IkeGroup' class '''
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init__(self, proposal_num):
+        self.tagnode = proposal_num
+        self.encryption = None
+        self.hash = None
+        self.dh_group = None
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def _set_encryption(self, encryption_cipher):
+        self.encryption = encryption_cipher
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def _set_hash(self, hash_algorith):
+        self.hash = hash_algorith
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def _set_dh_group(self, dh_group):
+        self.dh_group = dh_group
+
+#-------------------------------------------------------------------------------
+# 
+#-------------------------------------------------------------------------------
+class SiteToSite(Ipsec):
+    ''' Helper sub-class of the 'Ipsec' class '''
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init__(self):
+        self.peer = []
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_peer_description(self, peer_node, description):
+        peer = self._find_create_peer(peer_node)
+        assert (isinstance(peer, Peer))
+        peer.set_description(description)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_peer_auth_preshared_secret(self, peer_node, secret):
+        peer = self._find_create_peer(peer_node)
+        assert (isinstance(peer, Peer))
+        peer.set_auth_pre_shared_secret(secret)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_peer_local_address(self, peer_node, local_address):
+        peer = self._find_create_peer(peer_node)
+        assert (isinstance(peer, Peer))
+        peer.set_local_address(local_address)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_peer_default_esp_group(self, peer_node, esp_group):
+        peer = self._find_create_peer(peer_node)
+        assert (isinstance(peer, Peer))
+        peer.set_default_esp_group(esp_group)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_peer_ike_group(self, peer_node, ike_group):
+        peer = self._find_create_peer(peer_node)
+        assert (isinstance(peer, Peer))
+        peer.set_ike_group(ike_group)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_peer_tunnel_local_prefix(self, peer_node, tunnel_id, local_prefix):
+        peer = self._find_create_peer(peer_node)
+        assert (isinstance(peer, Peer))
+        peer.set_tunnel_local_prefix(tunnel_id, local_prefix)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_peer_tunnel_remote_prefix(self, peer_node, tunnel_id, remote_prefix):
+        peer = self._find_create_peer(peer_node)
+        assert (isinstance(peer, Peer))
+        peer.set_tunnel_remote_prefix(tunnel_id, remote_prefix)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def _find_create_peer(self, peer_node):
+        peer = None
+        for item in self.peer:
+            if (item.tagnode == peer_node):
+                peer = item
+                break
+        
+        if (peer == None):
+            peer = Peer(peer_node)
+            self.peer.append(peer)
+        
+        return peer
+
+#-------------------------------------------------------------------------------
+# 
+#-------------------------------------------------------------------------------
+class Peer():
+    ''' Helper sub-class of the 'SiteToSite' class'''
+    def __init__(self, peer_node):
+        self.tagnode = peer_node
+        self.description = None
+        self.authentication = PeerAuthentication()
+        self.default_esp_group = None
+        self.ike_group = None
+        self.local_address = None
+        self.tunnel = []
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_description(self, description):
+        self.description = description
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_auth_pre_shared_secret(self, secret):
+        self.authentication.set_pre_shared_secret(secret)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_local_address(self, local_address):
+        self.local_address = local_address
+        
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_default_esp_group(self, esp_group):
+        self.default_esp_group = esp_group
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_ike_group(self, ike_group):
+        self.ike_group = ike_group
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_tunnel_local_prefix(self, tunnel_id, local_prefix):
+        tunnel = self._find_create_tunnel(tunnel_id)
+        assert (isinstance(tunnel, Tunnel))
+        tunnel.set_local(local_prefix)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_tunnel_remote_prefix(self, tunnel_id, remote_prefix):
+        tunnel = self._find_create_tunnel(tunnel_id)
+        assert (isinstance(tunnel, Tunnel))
+        tunnel.set_remote(remote_prefix)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def _find_create_tunnel(self, tunnel_id):
+        tunnel = None
+        for item in self.tunnel:
+            if (item.tagnode == tunnel_id):
+                tunnel = item
+                break
+        
+        if (tunnel == None):
+            tunnel = Tunnel(tunnel_id)
+            self.tunnel.append(tunnel)
+        
+        return tunnel
+
+#-------------------------------------------------------------------------------
+# 
+#-------------------------------------------------------------------------------
+class PeerAuthentication(Peer):
+    ''' Helper sub-class of the 'Peer' class'''
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init__(self):
+        self.pre_shared_secret = None
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_pre_shared_secret(self, secret):
+        self.pre_shared_secret = secret
+
+#-------------------------------------------------------------------------------
+# 
+#-------------------------------------------------------------------------------
+class Tunnel():
+    ''' Helper sub-class of the 'Peer' class'''
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init__(self, tunnel_id):
+        self.tagnode = tunnel_id
+        self.local = {'prefix': None}
+        self.remote = {'prefix': None}
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_local(self, local):
+        self.local['prefix'] = local
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_remote(self, remote):
+        self.remote['prefix'] = remote
 
 #-------------------------------------------------------------------------------
 # 
@@ -627,7 +1134,7 @@ class Certificate(IpSecAuthentication):
 # 
 #-------------------------------------------------------------------------------
 class RsaKeys(Vpn):
-    ''' Class representing VPN RSA keys configuration 
+    ''' Class representing RSA keys for VPN configuration 
         Helper sub-class of the 'Vpn' class '''
     
     #---------------------------------------------------------------------------
