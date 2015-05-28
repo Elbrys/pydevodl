@@ -281,6 +281,7 @@ if __name__ == "__main__":
     
     print "\n"
     print ("<<< Delete VPN configuration on the '%s'" % (nodeName))
+    time.sleep(rundelay)
     result = vrouter.delete_vpn_cfg()
     status = result.get_status()
     if(status.eq(STATUS.OK) == True):

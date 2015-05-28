@@ -120,6 +120,16 @@ if __name__ == "__main__":
     print "\n"
     print (">>> Create new VPN configuration on the '%s'" % (nodeName))
     
+    ca_cert_file = '/config/auth/ca.crt'
+    srv_cert_file = '/config/auth/r1.crt'
+    srv_key_file = '/config/auth/r1.key'
+    print (" NOTE: For this demo to succeed the following files must exist on the '%s'\n"
+           "       (empty files can be created for the sake of the demo):\n"
+           "         %s\n"
+           "         %s\n"
+            "         %s"
+           % (nodeName, ca_cert_file, srv_cert_file, srv_key_file))
+    
     
     time.sleep(rundelay)
     
@@ -195,16 +205,29 @@ if __name__ == "__main__":
     # Configure connection to a remote peer
     #-------------------------------------------------------------------------
     peer_node = "192.0.2.33"
-    description = "Site-to-Site VPN Configuration Example - Pre-Shared Key (PSK) Authentication"
+    description = "Site-to-Site VPN Configuration Example - X.509 Certificate Authentication"
     vpn.set_ipsec_site_to_site_peer_description( peer_node, description)
     
-    # Set authentication mode to 'pre-shared-secret'
-    auth_mode = 'pre-shared-secret'
+    # Set authentication mode to 'x509'
+    auth_mode = 'x509'
     vpn.set_ipsec_site_to_site_peer_auth_mode(peer_node, auth_mode)
     
-    # Provide the 'secret' that will be used to generate encryption keys
-    secret = 'test_key_1'
-    vpn.set_ipsec_site_to_site_peer_auth_preshared_secret(peer_node, secret)
+    # Specify the 'distinguished name' of the certificate for the peer
+    remote_id = "C=US, ST=CA, O=ABC Company, CN=east, E=root@abcco.com"
+    vpn.set_ipsec_site_to_site_peer_auth_remote_id(peer_node, remote_id)
+    
+    # Specify the location of the CA certificate on the vRouter
+    vpn.set_ipsec_site_to_site_peer_auth_ca_cert_file(peer_node, ca_cert_file)
+    
+    # Specify the location of the server certificate on the vRouter
+    vpn.set_ipsec_site_to_site_peer_auth_srv_cert_file(peer_node, srv_cert_file)
+    
+    # Specify the location of the server key file on the vRouter
+    vpn.set_ipsec_site_to_site_peer_auth_srv_key_file(peer_node, srv_key_file)
+    
+    # Specify the password for the server key file
+    srv_key_pswd = 'testpassword'
+    vpn.set_ipsec_site_to_site_peer_auth_srv_key_pswd(peer_node, srv_key_pswd)
     
     # Specify the default ESP group for all tunnels
     esp_group_name = 'ESP-1W'
@@ -231,6 +254,7 @@ if __name__ == "__main__":
     print (">>> VPN configuration to be applied to the '%s'" % (nodeName))
     print vpn.get_payload()
     time.sleep(rundelay)
+    
     
     result = vrouter.set_vpn_cfg(vpn)
     status = result.get_status()

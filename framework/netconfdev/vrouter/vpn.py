@@ -375,6 +375,36 @@ class Vpn():
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
+    def set_ipsec_site_to_site_peer_auth_remote_id(self, peer_node, remote_id):
+        self.ipsec.site_to_site.set_peer_auth_remote_id(peer_node, remote_id)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_ipsec_site_to_site_peer_auth_ca_cert_file(self, peer_node, path):
+        self.ipsec.site_to_site.set_peer_auth_ca_cert_file(peer_node, path)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_ipsec_site_to_site_peer_auth_srv_cert_file(self, peer_node, path):
+        self.ipsec.site_to_site.set_peer_auth_srv_cert_file(peer_node, path)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_ipsec_site_to_site_peer_auth_srv_key_file(self, peer_node, path):
+        self.ipsec.site_to_site.set_peer_auth_srv_key_file(peer_node, path)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_ipsec_site_to_site_peer_auth_srv_key_pswd(self, peer_node, pswd):
+        self.ipsec.site_to_site.set_peer_auth_srv_key_pswd(peer_node, pswd)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def set_ipsec_site_to_site_peer_local_address(self, peer_node, local_address):
         self.ipsec.site_to_site.set_peer_local_address(peer_node, local_address)
     
@@ -690,6 +720,46 @@ class SiteToSite(Ipsec):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
+    def set_peer_auth_remote_id(self, peer_node, remote_id):
+        peer = self._find_create_peer(peer_node)
+        assert (isinstance(peer, Peer))
+        peer.set_auth_remote_id(remote_id)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_peer_auth_ca_cert_file(self, peer_node, path):
+        peer = self._find_create_peer(peer_node)
+        assert (isinstance(peer, Peer))
+        peer.set_auth_ca_cert_file(path)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_peer_auth_srv_cert_file(self, peer_node, path):
+        peer = self._find_create_peer(peer_node)
+        assert (isinstance(peer, Peer))
+        peer.set_auth_srv_cert_file(path)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_peer_auth_srv_key_file(self, peer_node, path):
+        peer = self._find_create_peer(peer_node)
+        assert (isinstance(peer, Peer))
+        peer.set_auth_srv_key_file(path)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_peer_auth_srv_key_pswd(self, peer_node, pswd):
+        peer = self._find_create_peer(peer_node)
+        assert (isinstance(peer, Peer))
+        peer.set_auth_srv_key_pswd(pswd)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def set_peer_local_address(self, peer_node, local_address):
         peer = self._find_create_peer(peer_node)
         assert (isinstance(peer, Peer))
@@ -787,6 +857,36 @@ class Peer():
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
+    def set_auth_remote_id(self, remote_id):
+        self.authentication.set_remote_id(remote_id)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_auth_ca_cert_file(self, path):
+        self.authentication.set_ca_cert_file(path)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_auth_srv_cert_file(self, path):
+        self.authentication.set_srv_cert_file(path)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_auth_srv_key_file(self, path):
+        self.authentication.set_srv_key_file(path)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_auth_srv_key_pswd(self, pswd):
+        self.authentication.set_srv_key_pswd(pswd)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def set_local_address(self, local_address):
         self.local_address = local_address
         
@@ -846,12 +946,8 @@ class PeerAuthentication(Peer):
         self.mode = None
         self.pre_shared_secret = None
         self.rsa_key_name = None
-    
-    #---------------------------------------------------------------------------
-    # 
-    #---------------------------------------------------------------------------
-    def set_pre_shared_secret(self, secret):
-        self.pre_shared_secret = secret
+        self.remote_id = None
+        self.x509 = PeerCertificate()
     
     #---------------------------------------------------------------------------
     # 
@@ -862,13 +958,97 @@ class PeerAuthentication(Peer):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
+    def set_pre_shared_secret(self, secret):
+        self.pre_shared_secret = secret
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def set_rsa_key_name(self, rsa_key_name):
         self.rsa_key_name = rsa_key_name
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_remote_id(self, remote_id):
+        self.remote_id = remote_id
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_ca_cert_file(self, path):
+        self.x509.set_ca_cert_file(path)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_srv_cert_file(self, path):
+        self.x509.set_srv_cert_file(path)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_srv_key_file(self, path):
+        self.x509.set_srv_key_file(path)
+     
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_srv_key_pswd(self, pswd):
+        self.x509.set_srv_key_pswd(pswd)
 
 #-------------------------------------------------------------------------------
 # 
 #-------------------------------------------------------------------------------
-class Tunnel():
+class PeerCertificate(PeerAuthentication):
+    ''' Helper sub-class of the 'PeerAuthentication' class '''
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init__(self):
+        ''' File containing the X.509 certificate for the Certificate Authority (CA) '''
+        self.ca_cert_file = None
+        ''' Server key file and password to open it '''
+        self.key = {'file': None, 'password': None}
+        ''' File containing the X.509 certificate for this host '''
+        self.cert_file = None
+        ''' File containing the X.509 Certificate Revocation List (CRL) '''
+        self.crl_file = None
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_ca_cert_file (self, path):
+        self.ca_cert_file = path
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_srv_key_file(self, path):
+        self.key['file'] = path
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_srv_key_pswd(self, pswd):
+        self.key['password'] = pswd
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_srv_cert_file(self, path):
+        self.cert_file = path
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_crl_file(self, path):
+        self.crl_file = path
+
+#-------------------------------------------------------------------------------
+# 
+#-------------------------------------------------------------------------------
+class Tunnel(Peer):
     ''' Helper sub-class of the 'Peer' class'''
     #---------------------------------------------------------------------------
     # 
@@ -1102,7 +1282,7 @@ class IpSecAuthentication(IpSecSettings):
     def __init__(self):
         self.mode = None
         self.pre_shared_secret = None
-        self.x509 = Certificate()
+        self.x509 = IpSecCertificate()
     
     #---------------------------------------------------------------------------
     # 
@@ -1146,7 +1326,10 @@ class IpSecAuthentication(IpSecSettings):
     def set_srv_key_pswd(self, pswd):
         self.x509.set_srv_key_pswd(pswd)
 
-class Certificate(IpSecAuthentication):
+#-------------------------------------------------------------------------------
+# 
+#-------------------------------------------------------------------------------
+class IpSecCertificate(IpSecAuthentication):
     ''' Helper sub-class of the 'IpSecAuthentication' class '''
     #---------------------------------------------------------------------------
     # 
