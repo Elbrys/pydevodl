@@ -107,7 +107,7 @@ if __name__ == "__main__":
         print ("'%s' VPN configuration:" % nodeName)
         cfg = result.get_data()
         data = json.loads(cfg)
-        print json.dumps(data, indent=4, sort_keys=True)
+        print json.dumps(data, indent=4)
     elif (status.eq(STATUS.DATA_NOT_FOUND) == True):
         print ("No VPN configuration found")
     else:
@@ -119,6 +119,8 @@ if __name__ == "__main__":
     
     print "\n"
     print (">>> Create new VPN configuration on the '%s'" % (nodeName))
+    print (" NOTE: For this demo to succeed the local RSA key must exist on the '%s'\n"
+           "       (use the 'generate vpn rsa-key' command to create it)" % nodeName)
     
     
     time.sleep(rundelay)
@@ -195,16 +197,29 @@ if __name__ == "__main__":
     # Configure connection to a remote peer
     #-------------------------------------------------------------------------
     peer_node = "192.0.2.33"
-    description = "Site-to-Site VPN Configuration Example - Pre-Shared Key (PSK) Authentication"
+    description = "Site-to-Site VPN Configuration Example - RSA Digital Signature Authentication"
     vpn.set_ipsec_site_to_site_peer_description( peer_node, description)
     
-    # Set authentication mode to 'pre-shared-secret'
-    auth_mode = 'pre-shared-secret'
+    # Set authentication mode to 'rsa'
+    auth_mode = 'rsa'
     vpn.set_ipsec_site_to_site_peer_auth_mode(peer_node, auth_mode)
     
-    # Provide the 'secret' that will be used to generate encryption keys
-    secret = 'test_key_1'
-    vpn.set_ipsec_site_to_site_peer_auth_preshared_secret(peer_node, secret)
+    # Set the peer's RSA public key and specify that this key should be used
+    # as the identifier for the peer's digital signature
+    rsa_key_name = "EAST-PEER-key"
+    rsa_key_value = "0sAQOVBIJL+rIkpTuwh8FPeceAF0bhgLr++" + \
+                    "W51bOAIjFbRDbR8gX3Vlz6wiUbMgGwQxWlY" + \
+                    "QiqsCeacicsfZx/amlEn9PkSE4e7tqK/JQo" + \
+                    "40L5C7gcNM24mup1d+0WmN3zLb9Qhmq5q3p" + \
+                    "NJxEwnVbPPQeIdZMJxnb1+lA8DPC3SIxJM/" + \
+                    "3at1/KrwqCAhX3QNFY/zNmOtFogELCeyl4+" + \
+                    "d54wQljA+3dwFAQ4bboJ7YIDs+rqORxWd3l" + \
+                    "3I7IajT/pLrwr5eZ8OA9NtAedbMiCwxyuyU" + \
+                    "bznxXZ8Z/MAi3xjL1pjYyWjNNiOij82QJfM" + \
+                    "OrjoXVCfcPn96ZN+Jqk+KknoVeNDwzpoahF" + \
+                    "OseJREeXzkw3/lkMN9N1"
+    vpn.set_rsa_key(rsa_key_name, rsa_key_value)
+    vpn.set_ipsec_site_to_site_peer_auth_rsa_key_name(peer_node, rsa_key_name)
     
     # Specify the default ESP group for all tunnels
     esp_group_name = 'ESP-1W'
@@ -231,7 +246,6 @@ if __name__ == "__main__":
     print (">>> VPN configuration to be applied to the '%s'" % (nodeName))
     print vpn.get_payload()
     time.sleep(rundelay)
-    
     result = vrouter.set_vpn_cfg(vpn)
     status = result.get_status()
     if(status.eq(STATUS.OK) == True):

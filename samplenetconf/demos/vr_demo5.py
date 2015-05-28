@@ -57,7 +57,6 @@ if __name__ == "__main__":
         nodePortNum = d['nodePortNum']
         nodeUname = d['nodeUname']
         nodePswd = d['nodePswd']
-        ifName = d['interfaceName']
     except:
         print ("Failed to get Controller device attributes")
         exit(0)
@@ -102,6 +101,7 @@ if __name__ == "__main__":
     print("\n")
     print ("<<< Show list of dataplane interfaces on the '%s'" % nodeName)
     time.sleep(rundelay)
+    dpIfList = None
     result = vrouter.get_dataplane_interfaces_list()
     status = result.get_status()
     if(status.eq(STATUS.OK) == True):
@@ -113,21 +113,22 @@ if __name__ == "__main__":
         print ("!!!Demo terminated, reason: %s" % status.brief().lower())
         exit(0)
     
-    
-    print("\n")
-    print ("<<< Show '%s' dataplane interface configuration on the '%s'" % (ifName,nodeName))
-    time.sleep(rundelay)
-    result = vrouter.get_dataplane_interface_cfg(ifName)
-    status = result.get_status()
-    if(status.eq(STATUS.OK) == True):
-        print ("Dataplane interface '%s' config:" % ifName)
-        cfg = result.get_data()
-        data = json.loads(cfg)
-        print json.dumps(data, indent=4)
-    else:
-        print ("\n")
-        print ("!!!Demo terminated, reason: %s" % status.brief().lower())
-        exit(0)
+    if (dpIfList != None):
+        ifName = dpIfList[0]
+        print("\n")
+        print ("<<< Show '%s' dataplane interface configuration on the '%s'" % (ifName,nodeName))
+        time.sleep(rundelay)
+        result = vrouter.get_dataplane_interface_cfg(ifName)
+        status = result.get_status()
+        if(status.eq(STATUS.OK) == True):
+            print ("Dataplane interface '%s' config:" % ifName)
+            cfg = result.get_data()
+            data = json.loads(cfg)
+            print json.dumps(data, indent=4)
+        else:
+            print ("\n")
+            print ("!!!Demo terminated, reason: %s" % status.brief().lower())
+            exit(0)
     
     
     print("\n")

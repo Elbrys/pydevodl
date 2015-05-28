@@ -348,14 +348,29 @@ class Vpn():
         
         return ike_grp
     
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def set_ipsec_site_to_site_peer_description(self, peer_node, description):
         self.ipsec.site_to_site.set_peer_description(peer_node, description)
     
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
+    def set_ipsec_site_to_site_peer_auth_mode(self, peer_node, auth_mode):
+        self.ipsec.site_to_site.set_peer_auth_mode(peer_node, auth_mode)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def set_ipsec_site_to_site_peer_auth_preshared_secret(self, peer_node, secret):
         self.ipsec.site_to_site.set_peer_auth_preshared_secret(peer_node, secret)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_ipsec_site_to_site_peer_auth_rsa_key_name(self, peer_node, rsa_key_name):
+        self.ipsec.site_to_site.set_peer_auth_rsa_key_name(peer_node, rsa_key_name)
     
     #---------------------------------------------------------------------------
     # 
@@ -651,10 +666,26 @@ class SiteToSite(Ipsec):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
+    def set_peer_auth_mode(self, peer_node, mode):
+        peer = self._find_create_peer(peer_node)
+        assert (isinstance(peer, Peer))
+        peer.set_auth_mode(mode)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def set_peer_auth_preshared_secret(self, peer_node, secret):
         peer = self._find_create_peer(peer_node)
         assert (isinstance(peer, Peer))
         peer.set_auth_pre_shared_secret(secret)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_peer_auth_rsa_key_name(self, peer_node, rsa_key_name):
+        peer = self._find_create_peer(peer_node)
+        assert (isinstance(peer, Peer))
+        peer.set_auth_rsa_key_name( rsa_key_name)
     
     #---------------------------------------------------------------------------
     # 
@@ -717,6 +748,9 @@ class SiteToSite(Ipsec):
 #-------------------------------------------------------------------------------
 class Peer():
     ''' Helper sub-class of the 'SiteToSite' class'''
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def __init__(self, peer_node):
         self.tagnode = peer_node
         self.description = None
@@ -735,8 +769,20 @@ class Peer():
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
+    def set_auth_mode(self, mode):
+        self.authentication.set_auth_mode(mode)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def set_auth_pre_shared_secret(self, secret):
         self.authentication.set_pre_shared_secret(secret)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_auth_rsa_key_name(self, rsa_key_name):
+        self.authentication.set_rsa_key_name(rsa_key_name)
     
     #---------------------------------------------------------------------------
     # 
@@ -797,13 +843,27 @@ class PeerAuthentication(Peer):
     # 
     #---------------------------------------------------------------------------
     def __init__(self):
+        self.mode = None
         self.pre_shared_secret = None
+        self.rsa_key_name = None
     
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def set_pre_shared_secret(self, secret):
         self.pre_shared_secret = secret
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_auth_mode(self, mode):
+        self.mode  = mode
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_rsa_key_name(self, rsa_key_name):
+        self.rsa_key_name = rsa_key_name
 
 #-------------------------------------------------------------------------------
 # 
@@ -837,6 +897,9 @@ class L2tp(Vpn):
     ''' Class representing VPN Layer 2 Tunneling Protocol (L2TP) configuration
         Helper sub-class of the 'Vpn' class '''
     
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def __init__(self):
         self.remote_access = RemoteAccess()
 
@@ -850,7 +913,7 @@ class RemoteAccess(L2tp):
     # 
     #---------------------------------------------------------------------------
     def __init__(self):
-        self.authentication = Authentication()
+        self.authentication = RemoteAccessAuthentication()
         self.client_ip_pool = None
         self.description = None
         self.dhcp_interface = None
@@ -985,7 +1048,7 @@ class RemoteAccess(L2tp):
 #-------------------------------------------------------------------------------
 # 
 #-------------------------------------------------------------------------------
-class Authentication(RemoteAccess):
+class RemoteAccessAuthentication(RemoteAccess):
     ''' Helper sub-class of the 'RemoteAccess' class '''
     #---------------------------------------------------------------------------
     # 

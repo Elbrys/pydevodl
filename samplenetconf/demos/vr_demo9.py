@@ -107,7 +107,7 @@ if __name__ == "__main__":
         print ("'%s' VPN configuration:" % nodeName)
         cfg = result.get_data()
         data = json.loads(cfg)
-        print json.dumps(data, indent=4)
+        print json.dumps(data, indent=4, sort_keys=True)
     elif (status.eq(STATUS.DATA_NOT_FOUND) == True):
         print ("No VPN configuration found")
     else:
@@ -261,7 +261,7 @@ if __name__ == "__main__":
         print ("'%s' VPN configuration:" % nodeName)
         cfg = result.get_data()
         data = json.loads(cfg)
-        print json.dumps(data, indent=4)
+        print json.dumps(data, indent=4, sort_keys=True)
         print ("<<< VPN configuration was successfully read")
     else:
         print ("\n")
@@ -293,7 +293,7 @@ if __name__ == "__main__":
         print ("'%s' VPN configuration:" % nodeName)
         cfg = result.get_data()
         data = json.loads(cfg)
-        print json.dumps(data, indent=4)
+        print json.dumps(data, indent=4, sort_keys=True)
     elif (status.eq(STATUS.DATA_NOT_FOUND) == True):
         print ("No VPN configuration found")
     else:
