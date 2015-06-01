@@ -38,6 +38,8 @@ from framework.controller.netconfnode import NetconfNode
 from framework.common.result import Result
 from framework.common.status import OperStatus, STATUS
 from framework.netconfdev.vrouter.vpn import Vpn
+from framework.netconfdev.vrouter.interfaces import VpnInterface
+from framework.netconfdev.vrouter.protocols import StaticRoute
 from framework.netconfdev.vrouter.firewall import DataplaneInterfaceFirewall
 
 #-------------------------------------------------------------------------------
@@ -715,10 +717,10 @@ class VRouter5600(NetconfNode):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def set_vpn_cfg(self, vpn_cfg):
-        """ Create/update VPN configuration on the VRouter5600
+    def set_vpn_cfg(self, vpn):
+        """ Create/update VPN configuration
         
-        :param vpn_cfg: instance of the 'Vpn' class
+        :param vpn: instance of the 'Vpn' class
         :return: A tuple: Status, None
         :rtype: instance of the `Result` class
         
@@ -730,13 +732,13 @@ class VRouter5600(NetconfNode):
                              status code.
         
         """
-        assert(isinstance(vpn_cfg, Vpn))
+        assert(isinstance(vpn, Vpn))
         status = OperStatus()
         ctrl = self.ctrl
         headers = {'content-type': 'application/yang.data+json'}
         url = ctrl.get_ext_mount_config_url(self.name)
         
-        obj = vpn_cfg
+        obj = vpn
         payload = obj.get_payload()
         resp = ctrl.http_post_request(url, payload, headers)
         if(resp == None):
@@ -795,7 +797,7 @@ class VRouter5600(NetconfNode):
     # 
     #---------------------------------------------------------------------------
     def delete_vpn_cfg(self):
-        """ Delete VPN configuration of the VRouter5600. """
+        """ Delete VPN configuration """
         status = OperStatus()
         url_ext = "vyatta-security:security/vyatta-security-vpn-ipsec:vpn"
         
@@ -815,4 +817,207 @@ class VRouter5600(NetconfNode):
             status.set_status(STATUS.HTTP_ERROR, resp)
         
         return Result(status, None)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_openvpn_interface_cfg(self, openvpn_interface):
+        assert(isinstance(openvpn_interface, VpnInterface))
+        status = OperStatus()
+        ctrl = self.ctrl
+        headers = {'content-type': 'application/yang.data+json'}
+        url = ctrl.get_ext_mount_config_url(self.name)
+        
+        obj = openvpn_interface
+        payload = obj.get_payload()
+        resp = ctrl.http_post_request(url, payload, headers)
+        if(resp == None):
+            status.set_status(STATUS.CONN_ERROR)
+        elif(resp.content == None):
+            status.set_status(STATUS.CTRL_INTERNAL_ERROR)
+        elif (resp.status_code == 200 or resp.status_code == 204):
+            status.set_status(STATUS.OK)
+        else:
+            status.set_status(STATUS.HTTP_ERROR, resp)
+        
+        return Result(status, None)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_openvpn_interfaces_cfg(self):
+        openVpnIfCfg = None
+        result = self.get_interfaces_cfg()
+        status = result.get_status()
+        if(status.eq(STATUS.OK)):
+            cfg = result.get_data()
+            p1 = 'interfaces'
+            p2 = 'vyatta-interfaces-openvpn:openvpn'
+            if(p1 in cfg and p2 in cfg):
+                openVpnIfCfg = json.loads(cfg).get(p1).get(p2)
+            else:
+                status.set_status(STATUS.DATA_NOT_FOUND)
+        
+        return Result(status, openVpnIfCfg)
+        pass
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_openvpn_interface_cfg(self, ifName):
+        status = OperStatus()
+        templateModelRef = "vyatta-interfaces:interfaces/vyatta-interfaces-openvpn:openvpn/{}"
+        cfg = None
+        modelref = templateModelRef.format(ifName)
+        ctrl = self.ctrl
+        url = ctrl.get_ext_mount_config_url(self.name)
+        url += modelref
+        
+        resp = ctrl.http_get_request(url, data=None, headers=None)
+        if(resp == None):
+            status.set_status(STATUS.CONN_ERROR)
+        elif(resp.content == None):
+            status.set_status(STATUS.CTRL_INTERNAL_ERROR)
+        elif (resp.status_code == 200):
+            cfg = resp.content
+            status.set_status(STATUS.OK)
+        elif (resp.status_code == 404):
+            status.set_status(STATUS.DATA_NOT_FOUND, resp)
+        else:
+            status.set_status(STATUS.HTTP_ERROR, resp)
+        
+        return Result(status, cfg)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def delete_openvpn_interface_cfg(self, ifName):
+        status = OperStatus()
+        templateModelRef = "vyatta-interfaces:interfaces/vyatta-interfaces-openvpn:openvpn/{}"
+        modelref = templateModelRef.format(ifName)
+        ctrl = self.ctrl
+        url = ctrl.get_ext_mount_config_url(self.name)
+        url += modelref
+        
+        resp = ctrl.http_delete_request(url, data=None, headers=None)
+        if(resp == None):
+            status.set_status(STATUS.CONN_ERROR)
+        elif(resp.content == None):
+            status.set_status(STATUS.CTRL_INTERNAL_ERROR)
+        elif (resp.status_code == 200):
+            status.set_status(STATUS.OK)
+        else:
+            status.set_status(STATUS.HTTP_ERROR, resp)
+        
+        return Result(status, resp)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_protocols_static_route_cfg(self, static_route):
+        assert(isinstance(static_route, StaticRoute))
+        status = OperStatus()
+        ctrl = self.ctrl
+        headers = {'content-type': 'application/yang.data+json'}
+        url = ctrl.get_ext_mount_config_url(self.name)
+        
+        obj = static_route
+        payload = obj.get_payload()
+        resp = ctrl.http_post_request(url, payload, headers)
+        if(resp == None):
+            status.set_status(STATUS.CONN_ERROR)
+        elif(resp.content == None):
+            status.set_status(STATUS.CTRL_INTERNAL_ERROR)
+        elif (resp.status_code == 200 or resp.status_code == 204):
+            status.set_status(STATUS.OK)
+        else:
+            status.set_status(STATUS.HTTP_ERROR, resp)
+        
+        return Result(status, None)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_protocols_cfg(self, model_ref=None):
+        status = OperStatus()
+        templateModelRef = "vyatta-protocols:protocols"
+        cfg = None
+        
+        ctrl = self.ctrl
+        url = ctrl.get_ext_mount_config_url(self.name)
+        url += templateModelRef
+        if (model_ref != None):
+            url += "/" + model_ref
+        
+        resp = ctrl.http_get_request(url, data=None, headers=None)
+        if(resp == None):
+            status.set_status(STATUS.CONN_ERROR)
+        elif(resp.content == None):
+            status.set_status(STATUS.CTRL_INTERNAL_ERROR)
+        elif (resp.status_code == 200):
+            cfg = resp.content
+            status.set_status(STATUS.OK)
+        elif (resp.status_code == 404):
+            status.set_status(STATUS.DATA_NOT_FOUND, resp)
+        else:
+            status.set_status(STATUS.HTTP_ERROR, resp)
+        
+        return Result(status, cfg)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def delete_protocols_cfg(self, model_ref=None):
+        status = OperStatus()
+        url_ext = "vyatta-protocols:protocols"
+        
+        ctrl = self.ctrl
+        myname = self.name
+        url = ctrl.get_ext_mount_config_url(myname)
+        url += url_ext
+        if (model_ref != None):
+            url += "/" + model_ref
+        
+        resp = ctrl.http_delete_request(url, data=None, headers=None)
+        if(resp == None):
+            status.set_status(STATUS.CONN_ERROR)
+        elif(resp.content == None):
+            status.set_status(STATUS.CTRL_INTERNAL_ERROR)
+        elif (resp.status_code == 200):
+            status.set_status(STATUS.OK)
+        else:
+            status.set_status(STATUS.HTTP_ERROR, resp)
+        
+        return Result(status, None)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_protocols_static_cfg(self):
+        model_ref = "vyatta-protocols-static:static"
+        return self.get_protocols_cfg(model_ref)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def delete_protocols_static_cfg(self):
+        """ Delete protocols static configuration """
+        model_ref = "vyatta-protocols-static:static"
+        return self.delete_protocols_cfg(model_ref)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_protocols_static_interface_route_cfg(self, ip_prefix):
+        templateModelRef = "vyatta-protocols-static:static/interface-route/{}"
+        model_ref = templateModelRef.format(ip_prefix.replace("/", "%2F"))
+        return self.get_protocols_cfg(model_ref)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def delete_protocols_static_interface_route_cfg(self, ip_prefix):
+        templateModelRef = "vyatta-protocols-static:static/interface-route/{}"
+        model_ref = templateModelRef.format(ip_prefix.replace("/", "%2F"))
+        return self.delete_protocols_cfg(model_ref)
     

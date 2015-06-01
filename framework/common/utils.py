@@ -160,14 +160,16 @@ def replace_str_value_in_dict(d, old, new):
 #-------------------------------------------------------------------------------
 def dict_keys_underscored_to_dashed(d):
     new_dict = {}
-    assert(isinstance(d, dict) or isinstance(d, list))
-    for k, v in d.iteritems():
-        if isinstance(v, dict):
-            v = dict_keys_underscored_to_dashed(v)
-        elif isinstance(v, list):
-            v = [dict_keys_underscored_to_dashed(i) for i in v if i and dict_keys_underscored_to_dashed(i)]
-        
-        new_dict[k.replace('_', '-')] = v
+    
+    if(isinstance(d, dict) or isinstance(d, list)):
+        for k, v in d.iteritems():
+            if isinstance(v, dict):
+                v = dict_keys_underscored_to_dashed(v)
+            elif isinstance(v, list):
+                v = [dict_keys_underscored_to_dashed(i) for i in v if i and dict_keys_underscored_to_dashed(i)]
+            new_dict[k.replace('_', '-')] = v
+    else:
+        return d
     
     return new_dict
 
