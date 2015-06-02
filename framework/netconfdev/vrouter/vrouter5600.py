@@ -38,7 +38,7 @@ from framework.controller.netconfnode import NetconfNode
 from framework.common.result import Result
 from framework.common.status import OperStatus, STATUS
 from framework.netconfdev.vrouter.vpn import Vpn
-from framework.netconfdev.vrouter.interfaces import VpnInterface
+from framework.netconfdev.vrouter.interfaces import OpenVpnInterface
 from framework.netconfdev.vrouter.protocols import StaticRoute
 from framework.netconfdev.vrouter.firewall import DataplaneInterfaceFirewall
 
@@ -822,7 +822,7 @@ class VRouter5600(NetconfNode):
     # 
     #---------------------------------------------------------------------------
     def set_openvpn_interface_cfg(self, openvpn_interface):
-        assert(isinstance(openvpn_interface, VpnInterface))
+        assert(isinstance(openvpn_interface, OpenVpnInterface))
         status = OperStatus()
         ctrl = self.ctrl
         headers = {'content-type': 'application/yang.data+json'}

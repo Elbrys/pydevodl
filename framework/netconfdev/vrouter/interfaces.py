@@ -37,9 +37,9 @@ import json
 from framework.common.utils import strip_none, remove_empty_from_dict, dict_keys_underscored_to_dashed
 
 #-------------------------------------------------------------------------------
-# Class 'VpnInterface'
+# Class 'OpenVpnInterface'
 #-------------------------------------------------------------------------------
-class VpnInterface():
+class OpenVpnInterface():
     ''' Class representing an OpenVPN tunnel interface '''
     _mn1 = "vyatta-interfaces:interfaces"
     _mn2 = "vyatta-interfaces-openvpn:openvpn"
@@ -99,7 +99,7 @@ class VpnInterface():
         self.remote_host = []
         
         ''' Transport Layer Security (TLS) options (container) '''
-        self.tls = None
+        self.tls = TlsOptions()
         
         ''' OpenVPN mode of operation
             enumeration: 'site-to-site', 'client', 'server' '''
@@ -136,6 +136,7 @@ class VpnInterface():
     # 
     #---------------------------------------------------------------------------
     def get_payload(self):
+        """ Return this object as a payload for HTTP request """
         s = self.to_json()
         obj = json.loads(s)
         obj1 = strip_none(obj)
@@ -173,3 +174,105 @@ class VpnInterface():
     #---------------------------------------------------------------------------
     def set_remote_host(self, addr):
         self.remote_host.append(addr)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_tls_role(self, role):
+        self.tls.set_role(role)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_tls_dh_file(self, path):
+        self.tls.set_dh_file(path)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_tls_ca_cert_file(self, path):
+        self.tls.set_ca_cert_file(path)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_tls_cert_file(self, path):
+        self.tls.set_cert_file(path)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_tls_crl_file(self, path):
+        self.tls.set_crl_file(path)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_tls_key_file(self, path):
+        self.tls.set_key_file(path)
+
+#-------------------------------------------------------------------------------
+# Class 'TlsOptions'
+#-------------------------------------------------------------------------------
+class TlsOptions():
+    ''' Transport Layer Security (TLS) options 
+        Helper class of the 'OpenVpnInterface' class '''
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init__(self):
+        ''' Role in TLS negotiation
+            enumeration: 'active', 'passive' '''
+        self.role = None
+        
+        ''' File containing Diffie Hellman parameters (server only) '''
+        self.dh_file = None
+        
+        ''' File containing certificate for Certificate Authority (CA) '''
+        self.ca_cert_file = None
+        
+        ''' File containing certificate for this host '''
+        self.cert_file = None
+        
+        ''' File containing certificate revocation list (CRL) for this host '''
+        self.crl_file = None
+        
+        ''' File containing this host's private key '''
+        self.key_file = None
+        
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_role(self, role):
+        self.role = role
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_dh_file(self, path):
+        self.dh_file = path
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_ca_cert_file(self, path):
+        self.ca_cert_file = path
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_cert_file(self, path):
+        self.cert_file = path
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_crl_file(self, path):
+        self.crl_file = path
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_key_file(self, path):
+        self.key_file = path

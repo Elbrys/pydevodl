@@ -68,7 +68,7 @@ if __name__ == "__main__":
     print ("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
     
     print("\n")
-    print("<<< OpenVPN configuration example: Site-to-Site Mode with Preshared Secret")
+    print("<<< OpenVPN configuration example: Site-to-Site Mode with TLS")
     print("\n")
     
     
@@ -136,15 +136,11 @@ if __name__ == "__main__":
     mode = 'site-to-site'
     vpnif.set_mode(mode)
     
-    # Specify the location of the file containing the preshared secret
-    secret_file = '/config/auth/secret'
-    vpnif.set_shared_secret_key_file(secret_file)
-    
-    # Set the tunnel IP address for the local endpoint
+    # Set the local IP address of the VPN tunnel
     local_address = '192.168.200.1'
     vpnif.set_local_address(local_address)
     
-    # Set the tunnel IP address of the remote endpoint
+    # Set the remote IP address of the VPN tunnel
     remote_address = '192.168.200.2'
     vpnif.set_remote_address(remote_address)
     
@@ -152,6 +148,26 @@ if __name__ == "__main__":
     remote_host = '87.65.43.21'
     vpnif.set_remote_host(remote_host)
     
+    # Set the TLS role of this endpoint
+    tls_role = "passive"
+    vpnif.set_tls_role(tls_role)
+    
+    # Specify the location of the CA certificate file
+    vpnif.set_tls_ca_cert_file(path="/config/auth/ca.crt")
+    
+    # Specify the location of the host certificate file
+    vpnif.set_tls_cert_file(path="/config/auth/V1.crt")
+    
+    # Specify the location of the CRL parameters file
+    vpnif.set_tls_crl_file(path="/config/auth/crl.pem")
+    
+    # Specify the location of the DH file
+    vpnif.set_tls_dh_file(path="/config/auth/dh1024.pem")
+    
+    # Specify the location of the host key file
+    vpnif.set_tls_key_file(path="/config/auth/V1.key")
+    
+    # Apply configuration settings
     result = vrouter.set_openvpn_interface_cfg(vpnif)
     status = result.get_status()
     if(status.eq(STATUS.OK) == True):
