@@ -229,39 +229,45 @@ class Rule():
 # Class 'DataplaneInterfaceFirewall'
 #-------------------------------------------------------------------------------
 class DataplaneInterfaceFirewall():
-    mn1 = "vyatta-interfaces:interfaces"
-    mn2 = "vyatta-interfaces-dataplane:dataplane"
-    mn3 = "vyatta-security-firewall:firewall"
+    _mn1 = "vyatta-interfaces:interfaces"
+    _mn2 = "vyatta-interfaces-dataplane:dataplane"
+    _mn3 = "vyatta-security-firewall:firewall"
     
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def __init__(self, ifName):
+        ''' Interface name '''
         self.tagnode = ifName
-        self.firewall = Object()
-        self.firewall.inlist = []
-        self.firewall.outlist = []
+        
+        ''' Firewall options '''
+        self.firewall = DataplaneInterfaceFirewallOptions()
     
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def add_in_item(self, name):
-        self.firewall.inlist.append(name)
+    def add_in_policy(self, policy_name):
+        self.firewall.add_in_policy(policy_name)
     
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def add_out_item(self, name):
-        self.firewall.outlist.append(name)
+    def add_out_policy(self, policy_name):
+        self.firewall.add_out_policy(policy_name)
     
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def to_json(self):
-        return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+        return json.dumps(self, default=lambda o: o.__dict__,
+                          sort_keys=True, indent=4)
     
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def get_url_extension(self):
-        return (self.mn1 + "/" + self.mn2 + "/" +  self.tagnode)
+        return (self._mn1 + "/" + self._mn2 + "/" +
+                self.tagnode + "/" + self._mn3)
     
     #---------------------------------------------------------------------------
     # 
@@ -272,18 +278,51 @@ class DataplaneInterfaceFirewall():
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def get_payload(self):        
-        s = self.to_json()
-        s = string.replace(s, 'firewall', self.mn3)
+    def get_payload(self):
+        s = self.firewall.to_json()
         s = string.replace(s, 'inlist', "in")
         s = string.replace(s, 'outlist', "out")
-        obj = json.loads(s)
-        payload = {self.mn2:obj}
-        return json.dumps(payload, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+        payload = {self._mn3: json.loads(s)}
+        return json.dumps(payload, default=lambda o: o.__dict__,
+                          sort_keys=True, indent=4)
 
 #-------------------------------------------------------------------------------
 # 
 #-------------------------------------------------------------------------------
+class DataplaneInterfaceFirewallOptions():
+    ''' Class representing Firewall options (inbound/outbound forwarding rules)
+        Helper class of the 'DataplaneInterfaceFirewall' class '''
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init__(self):
+        ''' Inbound forwarding rules '''
+        self.inlist = []
+        
+        ''' Outbound forwarding rules '''
+        self.outlist = []
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def add_in_policy(self, policy_name):
+        self.inlist.append(policy_name)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def add_out_policy(self, policy_name):
+        self.outlist.append(policy_name)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def to_json(self):
+        return json.dumps(self, default=lambda o: o.__dict__,
+                          sort_keys=True, indent=4)
+    
+
 class Object():
     pass
+
 
