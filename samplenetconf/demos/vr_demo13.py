@@ -67,6 +67,10 @@ if __name__ == "__main__":
     print ("<<< Demo Start")
     print ("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
     
+    print("\n")
+    print("<<< OpenVPN configuration example: Site-to-Site Mode with Preshared Secret")
+    print("\n")
+
     rundelay = 5
     
     
