@@ -127,7 +127,7 @@ if __name__ == "__main__":
            "       (empty files can be created for the sake of the demo):\n"
            "         %s\n"
            "         %s\n"
-            "         %s"
+            "        %s"
            % (nodeName, ca_cert_file, srv_cert_file, srv_key_file))
     
     

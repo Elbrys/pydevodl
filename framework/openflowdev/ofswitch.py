@@ -192,7 +192,7 @@ class OFSwitch(OpenflowNode):
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
         
-        return Result(status, plist)
+        return Result(status, sorted(plist))
         
     #---------------------------------------------------------------------------
     # TBD

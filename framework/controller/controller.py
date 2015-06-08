@@ -39,7 +39,8 @@ from requests.auth import HTTPBasicAuth
 from requests.exceptions import ConnectionError, Timeout
 from framework.common.result import Result
 from framework.common.status import OperStatus, STATUS
-from framework.common.utils import find_dict_in_list
+from framework.common.utils import find_dict_in_list, find_key_values_in_dict
+from framework.controller.topology import Topology
 
 
 #-------------------------------------------------------------------------------
@@ -164,7 +165,7 @@ class Controller():
         :param dict headers:  The headers to include in the request.
         :return: The response from the http request.
         :rtype: None or `requests.response <http://docs.python-requests.org/en/latest/api/#requests.Response>`
-
+        
         """
         resp = None
         
@@ -869,7 +870,7 @@ class Controller():
         :param string name: name of the provider from the :py:meth:get_service_providers_info 
         :return: A tuple:  Status, info about the service provider 
         :rtype: :class:`pybvc.common.status.OperStatus`, JSON providing info about the service provider
-
+        
         - STATUS.CONN_ERROR:  if the controller did not respond. provider info is empty.
         - STATUS.CTRL_INTERNAL_ERROR:  if the controller responded but did not provide any status. provider info is empty.
         - STATUS.OK:  Success. provide info is valid.
@@ -1069,7 +1070,7 @@ class Controller():
         templateUrl = "http://{}:{}/restconf/operational/opendaylight-inventory:nodes/node/{}"
         url = templateUrl.format(self.ipAddr, self.portNum, node)
         return url
-
+    
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
@@ -1077,7 +1078,7 @@ class Controller():
         templateUrl = "http://{}:{}/restconf/config/opendaylight-inventory:nodes/node/{}"
         url = templateUrl.format(self.ipAddr, self.portNum, node)
         return url
-
+    
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
@@ -1096,18 +1097,112 @@ class Controller():
             p2 = 'node'
             if(p1 in resp.content and p2 in resp.content):
                 elist = json.loads(resp.content).get(p1).get(p2)
-                if isinstance (elist, list):
+                if (isinstance (elist, list)):
                     p3 = 'id'
                     p4 = 'openflow'
                     for item in elist:
                         if (isinstance (item, dict) and p3 in item and item[p3].startswith(p4)):
                             nlist.append(item[p3])
                 status.set_status(STATUS.OK)
-            
             else:
                 status.set_status(STATUS.DATA_NOT_FOUND)
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
         
-        return Result(status, nlist) 
+        return Result(status, sorted(nlist))
     
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_openflow_operational_flows_total_cnt(self):
+        status = OperStatus()
+        templateUrl = "http://{}:{}/restconf/operational/opendaylight-inventory:nodes"
+        url = templateUrl.format(self.ipAddr, self.portNum)
+        cnt = 0
+        resp = self.http_get_request(url, data=None, headers=None)
+        if(resp == None):
+            status.set_status(STATUS.CONN_ERROR)
+        elif(resp.content == None):
+            status.set_status(STATUS.CTRL_INTERNAL_ERROR)
+        elif (resp.status_code == 200):
+            p1 = 'nodes'
+            obj = json.loads(resp.content)
+            if(p1 in obj and isinstance(obj, dict)):
+                d = obj[p1]
+                p2 = 'opendaylight-flow-statistics:aggregate-flow-statistics'
+                vlist = find_key_values_in_dict(d, p2)
+                assert(isinstance(vlist, list))
+                p4 = 'flow-count'
+                for item in vlist:
+                    if p4 in item:
+                        cnt += item[p4]
+                status.set_status(STATUS.OK)
+            else:
+                status.set_status(STATUS.DATA_NOT_FOUND)
+        else:
+            status.set_status(STATUS.HTTP_ERROR, resp)
+        
+        return Result(status, cnt)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_topology_names(self):
+        status = OperStatus()
+        templateUrl = "http://{}:{}/restconf/operational/network-topology:network-topology"
+        tnames = []
+        
+        url = templateUrl.format(self.ipAddr, self.portNum)
+        resp = self.http_get_request(url, data=None, headers=None)
+        if(resp == None):
+            status.set_status(STATUS.CONN_ERROR)
+        elif(resp.content == None):
+            status.set_status(STATUS.CTRL_INTERNAL_ERROR)
+        elif (resp.status_code == 200):
+            p1 = 'network-topology'
+            p2 = 'topology'
+            if(p1 in resp.content and p2 in resp.content):
+                tlist = json.loads(resp.content).get(p1).get(p2)
+                if (isinstance (tlist, list)):
+                    p3 = 'topology-id'
+                    for item in tlist:
+                        if (isinstance (item, dict) and p3 in item):
+                            tnames.append(item[p3])
+                status.set_status(STATUS.OK)
+            else:
+                status.set_status(STATUS.DATA_NOT_FOUND)
+        else:
+            status.set_status(STATUS.HTTP_ERROR, resp)
+        
+        return Result(status, sorted(tnames))
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def build_topology_object(self, topo_name):
+        status = OperStatus()
+        templateUrl = "http://{}:{}/restconf/operational/network-topology:network-topology/topology/{}"
+        topo_obj = None
+        
+        url = templateUrl.format(self.ipAddr, self.portNum, topo_name)
+        resp = self.http_get_request(url, data=None, headers=None)
+        if(resp == None):
+            status.set_status(STATUS.CONN_ERROR)
+        elif(resp.content == None):
+            status.set_status(STATUS.CTRL_INTERNAL_ERROR)
+        elif (resp.status_code == 200):
+            p1 = 'topology'
+            d = json.loads(resp.content)
+            if(p1 in d):
+                tlist = d.get(p1)
+                if (isinstance (tlist, list)):
+                    p2 = 'topology-id'
+                    for item in tlist:
+                        if (isinstance (item, dict) and p2 in item and item[p2] == topo_name):
+                            topo_obj = Topology(topo_dict=item)
+                            break
+            status.set_status(STATUS.OK)
+        else:
+            status.set_status(STATUS.HTTP_ERROR, resp)
+        
+        return Result(status, topo_obj)
