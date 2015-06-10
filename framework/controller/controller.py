@@ -41,6 +41,7 @@ from framework.common.result import Result
 from framework.common.status import OperStatus, STATUS
 from framework.common.utils import find_dict_in_list, find_key_values_in_dict
 from framework.controller.topology import Topology
+from framework.controller.inventory import Inventory
 
 
 #-------------------------------------------------------------------------------
@@ -1206,3 +1207,31 @@ class Controller():
             status.set_status(STATUS.HTTP_ERROR, resp)
         
         return Result(status, topo_obj)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def build_inventory_object(self, operational=True):
+        status = OperStatus()
+        templateUrl = "http://{}:{}/restconf/{}/opendaylight-inventory:nodes"
+        inv_obj = None
+        
+        inv_type = "operational" if operational else "config"
+        url = templateUrl.format(self.ipAddr, self.portNum, inv_type)
+        resp = self.http_get_request(url, data=None, headers=None)
+        if(resp == None):
+            status.set_status(STATUS.CONN_ERROR)
+        elif(resp.content == None):
+            status.set_status(STATUS.CTRL_INTERNAL_ERROR)
+        elif (resp.status_code == 200):
+            p1 = 'nodes'
+            d = json.loads(resp.content)
+            if(p1 in d and isinstance(d[p1], dict)):
+                inv_obj = Inventory(inv_dict=d[p1])
+                status.set_status(STATUS.OK)
+            else:
+                status.set_status(STATUS.DATA_NOT_FOUND)
+        else:
+            status.set_status(STATUS.HTTP_ERROR, resp)
+        
+        return Result(status, inv_obj)

@@ -136,7 +136,7 @@ if __name__ == "__main__":
     #                   Ethernet Source Address
     #                   Ethernet Destination Address
     #                   Input Port
-    match = Match()    
+    match = Match()
     match.set_eth_type(eth_type)
     match.set_eth_src(eth_src)
     match.set_eth_dst(eth_dst)
