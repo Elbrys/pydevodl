@@ -32,6 +32,7 @@ netconfnode.py: Controller's NETCONF node specific properties
 
 """
 
+import re
 import json
 import string
 
@@ -628,4 +629,197 @@ class NetconfCapableNode():
             assert(False)
         
         return myid
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def is_connected(self):
+        res = None
+        p = "netconf_node_inventory:connected"
+        if hasattr(self, p):
+            res = getattr(self, p)
+        else:
+            assert(False)
+        
+        return res
+        
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_conn_status(self):
+        status = "CONNECTED" if self.is_connected else "DISCONNECTED"
+        return status
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_initial_capabilities(self):
+        clist = []
+        p = 'netconf_node_inventory:initial_capability'
+        if hasattr(self, p):
+            attr = getattr(self, p)
+            assert(isinstance(attr, list))
+            for item in attr:
+                s = self._capability_str_to_schema_str(item)
+                clist.append(s)
+        else:
+            assert(False)
+        
+        return clist
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_current_capabilities(self):
+        pass
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def _capability_str_to_schema_str(self, capability_str):
+        revision = ""
+        schema = ""
+        s = re.split(r'[(?)]', capability_str)
+        for i in range (1, len(s)):
+            if i==2:
+                revision = s[i].replace('revision=', '').replace('_', '-')
+            elif i==3:
+                schema = s[i].replace('_', '-')
+    
+        return "%s@%s.yang" % (schema, revision)
 
+#-------------------------------------------------------------------------------
+# Class 'NetconfConfigModule'
+#-------------------------------------------------------------------------------
+class NetconfConfigModule():
+    ''' Class that represents NETCONF node configuration module
+        on the Controller '''
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init__(self, d):
+        assert(isinstance(d, dict))
+        p = 'odl-sal-netconf-connector-cfg:'
+        js = json.dumps(d)
+        d1 = json.loads(js.replace(p, '').replace('-', '_'))
+        for k, v in d1.items():
+            setattr(self, k, v)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def to_string(self):
+        """ Returns string representation of this object. """
+        return str(vars(self))
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def to_json(self):
+        """ Returns JSON representation of this object. """
+        return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_name(self):
+        name = ""
+        p = 'name'
+        if hasattr(self, p):
+            name = getattr(self, p)
+        else:
+            assert(False)
+        
+        return name
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_ip_address(self):
+        addr = ""
+        p = 'address'
+        if hasattr(self, p):
+            addr = getattr(self, p)
+        else:
+            assert(False)
+       
+        return addr
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_tcp_port(self):
+        port = ""
+        p = 'port'
+        if hasattr(self, p):
+            port = getattr(self, p)
+        else:
+            assert(False)
+       
+        return port
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_conn_timeout(self):
+        timeout = ""
+        p = 'connection_timeout_millis'
+        if hasattr(self, p):
+            timeout = getattr(self, p)
+        else:
+            assert(False)
+       
+        return timeout
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_retry_conn_timeout(self):
+        timeout = ""
+        p = 'between_attempts_timeout_millis'
+        if hasattr(self, p):
+            timeout = getattr(self, p)
+        else:
+            assert(False)
+       
+        return timeout
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_max_conn_attempts(self):
+        cnt = ""
+        p = 'max_connection_attempts'
+        if hasattr(self, p):
+            cnt = getattr(self, p)
+        else:
+            assert(False)
+       
+        return cnt
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_admin_name(self):
+        uname = ""
+        p = 'username'
+        if hasattr(self, p):
+            uname = getattr(self, p)
+        else:
+            assert(False)
+       
+        return uname
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_admin_pswd(self):
+        pswd = ""
+        p = 'password'
+        if hasattr(self, p):
+            pswd = getattr(self, p)
+        else:
+            assert(False)
+       
+        return pswd

@@ -102,7 +102,7 @@ if __name__ == "__main__":
     print "\n"
     print ("<<< OpenFlow switches")
     s1 = 'IP Address'
-    s2 = 'Datapath Id'
+    s2 = 'OpenFlow Id'
     sym = '-'
     print "\n".strip()
     print "         {0:<15}  {1:<30}".format(s1, s2)
@@ -165,7 +165,7 @@ if __name__ == "__main__":
         print "         Hardware        : %s" % node.get_hardware_info()
         print "         Serial number   : %s" % node.get_serial_number()
         print "\n".strip()
-        print "         Datapath Id     : %s" % node.get_datapath_id()
+        print "         OpenFlow Id     : %s" % node.get_datapath_id()
         print "         IP Address      : %s" % node.get_ip_address()
         print "         Description     : %s" % node.get_description()
         print "         Max buffers     : %s" % node.get_max_buffers_info()
@@ -196,8 +196,8 @@ if __name__ == "__main__":
             bytes_tx = port_obj.get_bytes_transmitted()
             print "\n".strip()
             print "         Port '{}'".format(pnum)
+            print "             OpenFlow Id : {}".format(dpid)
             print "             Name        : {}".format(pname)
-            print "             Datapath Id : {}".format(dpid)
             print "             MAC address : {}".format(mac)
             print "             Link state  : {}".format(link_state)
             print "             Oper state  : {}".format(fwd_state)

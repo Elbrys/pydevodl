@@ -30,58 +30,81 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 import time
-import json
+
 
 from framework.controller.controller import Controller
 from framework.common.status import STATUS
-from framework.common.utils import load_dict_from_file
+from framework.controller.inventory import NetconfConfigModule
 
 
 if __name__ == "__main__":
-    
-    f = "cfg1.yml"
-    d = {}
-    if(load_dict_from_file(f, d) == False):
-        print("Config file '%s' read error: " % f)
-        exit()
-    
-    try:
-        ctrlIpAddr = d['ctrlIpAddr']
-        ctrlPortNum = d['ctrlPortNum']
-        ctrlUname = d['ctrlUname']
-        ctrlPswd = d['ctrlPswd']
-    except:
-        print ("Failed to get Controller device attributes")
-        exit(0)
+    ctrlIpAddr = '172.22.18.186'
+    ctrlPortNum = '8181'
+    ctrlUname = 'admin'
+    ctrlPswd = 'admin'
     
     
     print ("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
     print ("<<< Demo Start")
     print ("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
     
-    rundelay = 5
     
-    print ("\n")
-    print ("<<< Creating Controller instance")
-    time.sleep(rundelay)
-    ctrl = Controller(ctrlIpAddr, ctrlPortNum, ctrlUname, ctrlPswd)
-    print ("'Controller':")
-    print ctrl.to_json()
+    rundelay = 2
     
     
     print "\n"
-    print ("<<< Show all configuration modules on the Controller")
+    ctrl = Controller(ctrlIpAddr, ctrlPortNum, ctrlUname, ctrlPswd)
+    print ("<<< Controller '%s:%s" % (ctrlIpAddr, ctrlPortNum))
     time.sleep(rundelay)
-    result = ctrl.get_config_modules()
+    
+    
+    print "\n"
+    print ("<<< Get NETCONF Inventory Information")
+    time.sleep(rundelay)
+    
+    
+    netconf_cfg_modules = []
+    result = ctrl.build_netconf_config_objects()
     status = result.get_status()
-    if(status.eq(STATUS.OK)):
-        print "Modules:"
-        slist = result.get_data()
-        print json.dumps(slist, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+    if(status.eq(STATUS.OK) == True):
+        netconf_cfg_modules  = result.get_data()
     else:
         print ("\n")
-        print ("!!!Demo terminated, reason: %s" % status.brief())
+        print ("!!!Error, failed to obtain NETCONF config information, reason: %s"
+               % status.brief().lower())
         exit(0)
+    
+    
+    print "\n"
+    print ("<<< NETCONF devices")
+    s1 = 'Name'
+    s2 = 'IP Address:Port Num'
+    sym = '-'
+    print "\n".strip()
+    print "         {0:<25}  {1:<21}".format(s1, s2)
+    print "         {0:<25}  {1:<21}".format(sym*25, sym*21)
+   
+    
+    assert(netconf_cfg_modules)
+    for item in netconf_cfg_modules:
+        name = item.get_name()
+        addr = item.get_ip_address()
+        port = item.get_tcp_port()
+        print "         {0:<25}  {1:<21}".format(name, addr + ":" + str(port))
+    
+    
+    assert(netconf_cfg_modules)
+    for item in netconf_cfg_modules:
+        time.sleep(rundelay)
+        print "\n".strip()
+        print "<<< Information for '%s' device\n" % item.get_name()
+        print "         IP Address                    : %s" % item.get_ip_address()
+        print "         TCP Port                      : %s" % item.get_tcp_port()
+        print "         Connection timeout (ms)       : %s" % item.get_conn_timeout()
+        print "         Retry connection timeout (ms) : %s" % item.get_retry_conn_timeout()
+        print "         Max connection attempts       : %s" % item.get_max_conn_attempts()
+        print "         Admin user name               : %s" % item.get_admin_name()
+        print "         Admin password                : %s" % item.get_admin_pswd()
     
     
     print ("\n")
