@@ -70,7 +70,7 @@ if __name__ == "__main__":
     
     
     print "\n"
-    print ("<<< Show operational state of a particular configuration module on the Controller")
+    print ("<<< Show a particular configuration module on the Controller")
     moduleType = "opendaylight-rest-connector:rest-connector-impl"
     moduleName = "rest-connector-default-impl"
     print ("    (module type: %s,\n     module name: %s)"  % (moduleType, moduleName))
