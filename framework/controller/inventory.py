@@ -91,10 +91,10 @@ class Inventory():
                 if isinstance(item, dict):
                     if p1 in item:
                         if p2 in item:
-                            node = OpenFlowCapableNode(item)
+                            node = OpenFlowCapableNode(node_dict=item)
                             self.add_openflow_node(node)
                         elif p3 in item:
-                            node = NetconfCapableNode(item)
+                            node = NetconfCapableNode(node_dict=item)
                             self.add_netconf_node(node)
                         else:
                             assert_msg = "[Inventory] uknown " \
@@ -166,14 +166,33 @@ class Inventory():
 #-------------------------------------------------------------------------------
 class OpenFlowCapableNode():
     ''' Class that represents current state of an OpenFlow capable node
+        in the Controller's inventory store
         Helper class of the 'Inventory' class '''
     
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def __init__(self, d):
+    def __init__(self, node_json=None, node_dict=None):
         self.ports=[]
-        assert(isinstance(d, dict))
+        assert_msg = "[OpenFlowCapableNode] either '%s' or '%s' should " \
+                     "be used, not both" % ('inv_json', 'inv_dict')
+        assert(((node_json != None) and (node_dict != None)) == False), assert_msg
+        
+        if (node_dict != None):
+            self.__init_from_dict__(node_dict)
+            return
+        
+        if (node_json != None):
+            self.__init_from_json__(node_json)
+            return
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init_from_json__(self, s):
+        assert(isinstance(s, basestring))
+        js = string.replace(s, '-', '_')
+        d = json.loads(js)
         p1 = 'node_connector'
         for k, v in d.items():
             if p1 == k and isinstance(v, list):
@@ -182,6 +201,14 @@ class OpenFlowCapableNode():
                     self.ports.append(of_port)
             else:
                 setattr(self, k, v)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init_from_dict__(self, d):
+        assert(isinstance(d, dict))
+        js = json.dumps(d)
+        self.__init_from_json__(js)
     
     #---------------------------------------------------------------------------
     # 
@@ -284,12 +311,6 @@ class OpenFlowCapableNode():
             assert(False)
             
         return addr
-    
-    #---------------------------------------------------------------------------
-    # 
-    #---------------------------------------------------------------------------
-    def get_datapath_id(self):
-        return self.get_id()
     
     #---------------------------------------------------------------------------
     # 
@@ -598,10 +619,36 @@ class NetconfCapableNode():
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def __init__(self, d):
-        assert(isinstance(d, dict))
+    def __init__(self, node_json=None, node_dict=None):
+        assert_msg = "[NetconfCapableNode] either '%s' or '%s' should " \
+                     "be used, not both" % ('inv_json', 'inv_dict')
+        assert(((node_json != None) and (node_dict != None)) == False), assert_msg
+        
+        if (node_dict != None):
+            self.__init_from_dict__(node_dict)
+            return
+        
+        if (node_json != None):
+            self.__init_from_json__(node_json)
+            return
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init_from_json__(self, s):
+        assert(isinstance(s, basestring))
+        js = string.replace(s, '-', '_')
+        d = json.loads(js)
         for k, v in d.items():
             setattr(self, k, v)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init_from_dict__(self, d):
+        assert(isinstance(d, dict))
+        js = json.dumps(d)
+        self.__init_from_json__(js)
     
     #---------------------------------------------------------------------------
     # 

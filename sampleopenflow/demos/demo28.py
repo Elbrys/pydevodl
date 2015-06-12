@@ -109,8 +109,8 @@ if __name__ == "__main__":
     print "         {0:<15}  {1:<30}".format(sym*15, sym*30)
     for node in openflow_nodes:
         addr = node.get_ip_address()
-        dpid = node.get_datapath_id()
-        print "         {0:<15}  {1:<30}".format(addr, dpid)
+        node_id = node.get_id()
+        print "         {0:<15}  {1:<30}".format(addr, node_id)
     
     
     for node in openflow_nodes:
@@ -165,7 +165,7 @@ if __name__ == "__main__":
         print "         Hardware        : %s" % node.get_hardware_info()
         print "         Serial number   : %s" % node.get_serial_number()
         print "\n".strip()
-        print "         OpenFlow Id     : %s" % node.get_datapath_id()
+        print "         OpenFlow Id     : %s" % node.get_id()
         print "         IP Address      : %s" % node.get_ip_address()
         print "         Description     : %s" % node.get_description()
         print "         Max buffers     : %s" % node.get_max_buffers_info()
@@ -186,7 +186,7 @@ if __name__ == "__main__":
             assert(isinstance(port_obj, OpenFlowPort))
             pnum = port_obj.get_port_number()
             pname = port_obj.get_port_name()
-            dpid = port_obj.get_port_id()
+            pid = port_obj.get_port_id()
             mac = port_obj.get_mac_address()
             link_state = port_obj.get_link_state()
             fwd_state = port_obj.get_forwarding_state()
@@ -196,7 +196,7 @@ if __name__ == "__main__":
             bytes_tx = port_obj.get_bytes_transmitted()
             print "\n".strip()
             print "         Port '{}'".format(pnum)
-            print "             OpenFlow Id : {}".format(dpid)
+            print "             OpenFlow Id : {}".format(pid)
             print "             Name        : {}".format(pname)
             print "             MAC address : {}".format(mac)
             print "             Link state  : {}".format(link_state)

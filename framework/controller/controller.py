@@ -41,7 +41,10 @@ from framework.common.result import Result
 from framework.common.status import OperStatus, STATUS
 from framework.common.utils import find_key_values_in_dict
 from framework.controller.topology import Topology
-from framework.controller.inventory import Inventory, NetconfConfigModule
+from framework.controller.inventory import Inventory, \
+                                           OpenFlowCapableNode, \
+                                           NetconfCapableNode, \
+                                           NetconfConfigModule
 
 
 #-------------------------------------------------------------------------------
@@ -1363,6 +1366,70 @@ class Controller():
             status.set_status(STATUS.HTTP_ERROR, resp)
         
         return Result(status, inv_obj)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def build_openflow_node_inventory_object(self, node_id, operational=True):
+        status = OperStatus()
+        templateUrl = "http://{}:{}/restconf/{}/" + \
+                      "opendaylight-inventory:nodes/node/{}"
+        inv_obj = None
+        
+        assert(node_id.startswith("openflow"))
+        inv_type = "operational" if operational else "config"
+        url = templateUrl.format(self.ipAddr, self.portNum, inv_type, node_id)
+        resp = self.http_get_request(url, data=None, headers=None)
+        if(resp == None):
+            status.set_status(STATUS.CONN_ERROR)
+        elif(resp.content == None):
+            status.set_status(STATUS.CTRL_INTERNAL_ERROR)
+        elif (resp.status_code == 200):
+            p1 = 'node'
+            if(p1 in resp.content):
+                node = json.loads(resp.content).get(p1)
+                assert(isinstance(node, list))
+                assert(len(node) == 1)
+                inv_obj = OpenFlowCapableNode(node_dict=node[0])
+                status.set_status(STATUS.OK)
+            else:
+                status.set_status(STATUS.DATA_NOT_FOUND)
+        else:
+            status.set_status(STATUS.HTTP_ERROR, resp)
+        
+        return Result(status, inv_obj)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def build_netconf_node_inventory_object(self, node_id, operational=True):
+        status = OperStatus()
+        templateUrl = "http://{}:{}/restconf/{}/" + \
+                      "opendaylight-inventory:nodes/node/{}"
+        inv_obj = None
+        
+        inv_type = "operational" if operational else "config"
+        url = templateUrl.format(self.ipAddr, self.portNum, inv_type, node_id)
+        resp = self.http_get_request(url, data=None, headers=None)
+        if(resp == None):
+            status.set_status(STATUS.CONN_ERROR)
+        elif(resp.content == None):
+            status.set_status(STATUS.CTRL_INTERNAL_ERROR)
+        elif (resp.status_code == 200):
+            p1 = 'node'
+            if(p1 in resp.content):
+                node = json.loads(resp.content).get(p1)
+                assert(isinstance(node, list))
+                assert(len(node) == 1)
+                inv_obj = NetconfCapableNode(node_dict=node[0])
+                status.set_status(STATUS.OK)
+            else:
+                status.set_status(STATUS.DATA_NOT_FOUND)
+        else:
+            status.set_status(STATUS.HTTP_ERROR, resp)
+        
+        return Result(status, inv_obj)
+        pass
     
     #---------------------------------------------------------------------------
     # 

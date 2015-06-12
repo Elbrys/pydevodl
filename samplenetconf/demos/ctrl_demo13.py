@@ -34,7 +34,7 @@ import time
 
 from framework.controller.controller import Controller
 from framework.common.status import STATUS
-from framework.controller.inventory import NetconfConfigModule
+from framework.controller.inventory import NetconfCapableNode
 
 
 if __name__ == "__main__":
@@ -43,6 +43,8 @@ if __name__ == "__main__":
     ctrlUname = 'admin'
     ctrlPswd = 'admin'
     
+    netconf_ids = []
+    netconf_nodes = []
     
     print ("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
     print ("<<< Demo Start")
@@ -59,54 +61,56 @@ if __name__ == "__main__":
     
     
     print "\n"
-    print ("<<< Get NETCONF Configuration Information")
+    print ("<<< Get NETCONF Inventory Information")
     time.sleep(rundelay)
     
     
-    netconf_cfg_modules = []
-    result = ctrl.build_netconf_config_objects()
+    result = ctrl.get_netconf_nodes_in_config()
     status = result.get_status()
-    if(status.eq(STATUS.OK) == True):
-        netconf_cfg_modules  = result.get_data()
+    if(status.eq(STATUS.OK)):
+        netconf_ids = result.get_data()
     else:
         print ("\n")
-        print ("!!!Error, failed to obtain NETCONF configuration information, reason: %s"
-               % status.brief().lower())
+        print ("!!!Demo terminated, "
+               "failed to get list of NETCONF devices, "
+               "reason: %s" % status.brief())
         exit(0)
-    
-    
+        
     print "\n"
     print ("<<< NETCONF devices")
-    s1 = 'Name'
-    s2 = 'IP Address:Port Num'
-    sym = '-'
     print "\n".strip()
-    print "         {0:<25}  {1:<21}".format(s1, s2)
-    print "         {0:<25}  {1:<21}".format(sym*25, sym*21)
-   
-    
-    assert(netconf_cfg_modules)
-    for item in netconf_cfg_modules:
-        assert(isinstance(item, NetconfConfigModule))
-        name = item.get_name()
-        addr = item.get_ip_address()
-        port = item.get_tcp_port()
-        print "         {0:<25}  {1:<21}".format(name, addr + ":" + str(port))
+    for node_id in netconf_ids:
+        print "         %s" % node_id
     
     
-    assert(netconf_cfg_modules)
-    for item in netconf_cfg_modules:
-        assert(isinstance(item, NetconfConfigModule))
+    for node_id in netconf_ids:
+        result = ctrl.build_netconf_node_inventory_object(node_id)
+        status = result.get_status()
+        if(status.eq(STATUS.OK)):
+            node = result.get_data()
+            assert(isinstance(node, NetconfCapableNode))
+            netconf_nodes.append(node)
+        else:
+            print ("\n")
+            print ("!!!Demo terminated, "
+                   "failed to build object for NETCONF device '%s', "
+                   "reason: %s" % (node_id, status.brief()))
+            exit(0)
+    
+    
+    for node in netconf_nodes:
         time.sleep(rundelay)
         print "\n".strip()
-        print "<<< Information for '%s' device\n" % item.get_name()
-        print "         IP Address                    : %s" % item.get_ip_address()
-        print "         TCP Port                      : %s" % item.get_tcp_port()
-        print "         Connection timeout (ms)       : %s" % item.get_conn_timeout()
-        print "         Retry connection timeout (ms) : %s" % item.get_retry_conn_timeout()
-        print "         Max connection attempts       : %s" % item.get_max_conn_attempts()
-        print "         Admin user name               : %s" % item.get_admin_name()
-        print "         Admin password                : %s" % item.get_admin_pswd()
+        print "<<< Information for '{}' device".format(node_id)
+        print "\n".strip()
+        print "         Device Name       : {}".format(node.get_id())
+        print "         Connection status : {}".format(node.get_conn_status())
+        print "\n".strip()
+        print "         Initial Capabilities"
+        print "         {}".format('-'*60)
+        clist = node.get_initial_capabilities()
+        for item in clist:
+            print "         {}".format(item)
     
     
     print ("\n")
