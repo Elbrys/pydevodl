@@ -69,7 +69,7 @@ if __name__ == "__main__":
     
     print "\n"
     ctrl = Controller(ctrlIpAddr, ctrlPortNum, ctrlUname, ctrlPswd)
-    print ("<<< Controller '%s:%s" % (ctrlIpAddr, ctrlPortNum))
+    print ("<<< Controller '%s:%s'" % (ctrlIpAddr, ctrlPortNum))
     time.sleep(rundelay)
     
     
@@ -105,12 +105,12 @@ if __name__ == "__main__":
     s2 = 'OpenFlow Id'
     sym = '-'
     print "\n".strip()
-    print "         {0:<15}  {1:<30}".format(s1, s2)
-    print "         {0:<15}  {1:<30}".format(sym*15, sym*30)
+    print "        {0:<15}  {1:<30}".format(s1, s2)
+    print "        {0:<15}  {1:<30}".format(sym*15, sym*30)
     for node in openflow_nodes:
         addr = node.get_ip_address()
         node_id = node.get_id()
-        print "         {0:<15}  {1:<30}".format(addr, node_id)
+        print "        {0:<15}  {1:<30}".format(addr, node_id)
     
     
     for node in openflow_nodes:
@@ -118,41 +118,41 @@ if __name__ == "__main__":
         time.sleep(rundelay)
         print "\n".strip()
         print "<<< Information for '%s' switch\n" % node.get_id()
-        print "         IP Address      : %s" % node.get_ip_address()
-        print "         Max tables      : %s" % node.get_max_tables_info()
-        print "         Number of flows : %s" % node.get_flows_cnt()
+        print "        IP Address      : %s" % node.get_ip_address()
+        print "        Max tables      : %s" % node.get_max_tables_info()
+        print "        Number of flows : %s" % node.get_flows_cnt()
         clist = node.get_capabilities()
         g = 2
         chunks=[clist[x:x+g] for x in xrange(0, len(clist), g)]
         s = 'Capabilities'
-        print "         %s    :" % s,
+        print "        %s    :" % s,
         for i in range(0, len(chunks)):
-            n = 0 if i == 0 else len(s) + 15
+            n = 0 if i == 0 else len(s) + 14
             print "%s%s" % (" "*n, ", ".join(chunks[i]))
         
         s1 = 'Table Id'
         s2 = 'Flows Cnt'
         print "\n".strip()
-        print "         {0:<8}  {1:<10}".format(s1, s2)
+        print "        {0:<8}  {1:<10}".format(s1, s2)
         sym = '-'
-        print "         {0:<8}  {1:<10}".format(sym*len(s1), sym*len(s2))
+        print "        {0:<8}  {1:<10}".format(sym*len(s1), sym*len(s2))
         flow_tables_cnt = node.get_flow_tables_cnt()
         for table_id in range(0, flow_tables_cnt+1):
             cnt = node.get_flows_in_table_cnt(table_id)
             if (cnt != 0):
-                print "         {0:<8}  {1:<10}".format(table_id, cnt)
+                print "        {0:<8}  {1:<10}".format(table_id, cnt)
         
         s1 = 'Port Num'
         s2 = 'OpenFlow Id'
         print "\n".strip()
-        print "         {0:<8}  {1:<16}".format(s1, s2)
-        print "         {0:<8}  {1:<30}".format(sym*8, sym*30)
+        print "        {0:<8}  {1:<16}".format(s1, s2)
+        print "        {0:<8}  {1:<30}".format(sym*8, sym*30)
         port_ids = node.get_port_ids()
         for port_id in port_ids:
             port_obj = node.get_port_obj(port_id)
             assert(isinstance(port_obj, OpenFlowPort))
             pnum = port_obj.get_port_number()
-            print "         {0:<8}  {1:<30}".format(pnum, port_id)
+            print "        {0:<8}  {1:<30}".format(pnum, port_id)
     
     
     for node in openflow_nodes:
@@ -160,24 +160,24 @@ if __name__ == "__main__":
         time.sleep(rundelay)
         print "\n".strip()
         print "<<< Detailed information for '%s' switch\n" % node.get_id()
-        print "         Manufacturer    : %s" % node.get_manufacturer_info()
-        print "         Software        : %s" % node.get_software_info()
-        print "         Hardware        : %s" % node.get_hardware_info()
-        print "         Serial number   : %s" % node.get_serial_number()
+        print "        Manufacturer    : %s" % node.get_manufacturer_info()
+        print "        Software        : %s" % node.get_software_info()
+        print "        Hardware        : %s" % node.get_hardware_info()
+        print "        Serial number   : %s" % node.get_serial_number()
         print "\n".strip()
-        print "         OpenFlow Id     : %s" % node.get_id()
-        print "         IP Address      : %s" % node.get_ip_address()
-        print "         Description     : %s" % node.get_description()
-        print "         Max buffers     : %s" % node.get_max_buffers_info()
-        print "         Max tables      : %s" % node.get_max_tables_info()
-        print "         Number of flows : %s" % node.get_flows_cnt()
+        print "        OpenFlow Id     : %s" % node.get_id()
+        print "        IP Address      : %s" % node.get_ip_address()
+        print "        Description     : %s" % node.get_description()
+        print "        Max buffers     : %s" % node.get_max_buffers_info()
+        print "        Max tables      : %s" % node.get_max_tables_info()
+        print "        Number of flows : %s" % node.get_flows_cnt()
         clist = node.get_capabilities()
         g = 2
         chunks=[clist[x:x+g] for x in xrange(0, len(clist), g)]
         s = 'Capabilities'
-        print "         %s    :" % s,
+        print "        %s    :" % s,
         for i in range(0, len(chunks)):
-            n = 0 if i == 0 else len(s) + 15
+            n = 0 if i == 0 else len(s) + 14
             print "%s%s" % (" "*n, ", ".join(chunks[i]))
         
         port_ids = node.get_port_ids()
@@ -195,16 +195,16 @@ if __name__ == "__main__":
             bytes_rx = port_obj.get_bytes_received()
             bytes_tx = port_obj.get_bytes_transmitted()
             print "\n".strip()
-            print "         Port '{}'".format(pnum)
-            print "             OpenFlow Id : {}".format(pid)
-            print "             Name        : {}".format(pname)
-            print "             MAC address : {}".format(mac)
-            print "             Link state  : {}".format(link_state)
-            print "             Oper state  : {}".format(fwd_state)
-            print "             Pkts RX     : {}".format(pkts_rx)
-            print "             Pkts TX     : {}".format(pkts_tx)
-            print "             Bytes RX    : {}".format(bytes_rx)
-            print "             Bytes TX    : {}".format(bytes_tx)
+            print "        Port '{}'".format(pnum)
+            print "            OpenFlow Id : {}".format(pid)
+            print "            Name        : {}".format(pname)
+            print "            MAC address : {}".format(mac)
+            print "            Link state  : {}".format(link_state)
+            print "            Oper state  : {}".format(fwd_state)
+            print "            Pkts RX     : {}".format(pkts_rx)
+            print "            Pkts TX     : {}".format(pkts_tx)
+            print "            Bytes RX    : {}".format(bytes_rx)
+            print "            Bytes TX    : {}".format(bytes_tx)
         
         
     print ("\n")

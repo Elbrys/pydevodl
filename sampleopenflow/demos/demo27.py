@@ -30,20 +30,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 import time
-import json
 
 
 from framework.controller.controller import Controller
-from framework.controller.topology import Topology
-from framework.openflowdev.ofswitch import OFSwitch
-from framework.openflowdev.ofswitch import FlowEntry
-from framework.openflowdev.ofswitch import Instruction
-from framework.openflowdev.ofswitch import OutputAction
-from framework.openflowdev.ofswitch import Match
+from framework.controller.inventory import Inventory
+from framework.controller.topology import Topology, Node
 
 from framework.common.status import STATUS
 from framework.common.utils import load_dict_from_file
-from framework.common.constants import *
 
 if __name__ == "__main__":
     
@@ -66,90 +60,128 @@ if __name__ == "__main__":
     print ("<<< Demo Start")
     print ("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
     
-    rundelay = 5
+    rundelay = 2
     
     ctrl = Controller(ctrlIpAddr, ctrlPortNum, ctrlUname, ctrlPswd)
     
     print "\n"
-    print ("<<< Controller '%s:%s" % (ctrlIpAddr, ctrlPortNum))
+    print ("<<< Controller '%s:%s'" % (ctrlIpAddr, ctrlPortNum))
     time.sleep(rundelay)
     
     
     print ("\n")
-    print ("<<< OpenFlow summary information")
+    print ("<<< Get OpenFlow Network Topology information")
+    time.sleep(rundelay)
    
+    topology_ids = []
     topologies = []
-    flows_cnt = 0
-    num_of_switches = 0
-    num_of_inter_switch_links = 0
-    num_of_hosts = 0
+    inventory = None
     
-    result = ctrl.get_openflow_operational_flows_total_cnt()
+    
+    result = ctrl.build_inventory_object()
     status = result.get_status()
     if(status.eq(STATUS.OK) == True):
-        flows_cnt  = result.get_data()
-        assert(isinstance(flows_cnt, int))
+        inventory = result.get_data()
+        assert(isinstance(inventory, Inventory))
     else:
         print ("\n")
-        print ("!!!Error, failed to get OpenFlow flows count, reason: %s" 
+        print ("!!!Error, failed to obtain inventory info, reason: %s"
                % status.brief().lower())
         exit(0)
     
-    result = ctrl.get_topology_names()
+    
+    result = ctrl.get_topology_ids()
     status = result.get_status()
     if(status.eq(STATUS.OK) == True):
-        tnames = result.get_data()
-        assert(isinstance(tnames, list))
+        topology_ids = result.get_data()
+        assert(isinstance(topology_ids, list))
     else:
         print ("\n")
-        print ("!!!Error, failed to get topology info, reason: %s" % status.brief().lower())
+        print ("!!!Error, failed to obtain topology info, reason: %s" 
+               % status.brief().lower())
         exit(0)
     
     
-    for item in tnames:
-        result = ctrl.build_topology_object(item)
+    print "\n"
+    print ("<<< OpenFlow network topologies")
+    for topo_id in topology_ids:
+        print "       '%s'" % topo_id
+    
+    
+    for topo_id in topology_ids:
+        result = ctrl.build_topology_object(topo_id)
         status = result.get_status()
         if(status.eq(STATUS.OK) == True):
             topo  = result.get_data()
             topologies.append(topo)
             assert(isinstance(topo, Topology))
-            num_of_switches += topo.get_switches_cnt()
-            num_of_inter_switch_links += topo.get_inter_switch_links_cnt()
-            num_of_hosts += topo.get_hosts_cnt()
         else:
             print ("\n")
             print ("!!!Error, failed to parse '%s' topology info, reason: %s" 
-                   % (item, status.brief().lower()))
+                   % (topo_id, status.brief().lower()))
             exit(0)
     
     
-    print "    Number of network topologies: %s" % len(tnames)
-    print "    Number of switches:           %s" % num_of_switches
-    print "    Number of inter switch links: %s" % num_of_inter_switch_links
-    print "    Number of operational flows:  %s" % flows_cnt
-    print "    Number of hosts:              %s" % num_of_hosts
-    
-    
-    time.sleep(rundelay)
-    
-    
-    print "\n"
-    print ("<<< Network topology identifiers:")
     for topo in topologies:
-        print ("    '%s'") % topo.topology_id
-    
-    
-    time.sleep(rundelay)
-    
-    
-    for topo in topologies:
+        time.sleep(rundelay)
         print "\n"
-        print ("<<< Topology '%s' summary information:") % topo.topology_id
-        print ("    Number of switches: %s" % topo.get_switches_cnt())
-        print ("    Number of inter switch links: %s" % topo.get_inter_switch_links_cnt())
-        print ("    Number of hosts: %s" % topo.get_hosts_cnt())
+        print ("<<< Information for '%s' network topology:") % topo.get_id()
+        print "\n".strip()
+        
+        flows_cnt = 0
+        sids =  topo.get_switch_ids()
+        for sid in sids:
+            fcnt = inventory.get_openflow_node_flows_cnt(sid)
+            flows_cnt += inventory.get_openflow_node_flows_cnt(sid)
+        
+        print ("        Number of flows              : %s" % flows_cnt)
+        print ("        Number of switches           : %s" % topo.get_switches_cnt())
+        print ("        Number of inter-switch links : %s" % topo.get_inter_switch_links_cnt())
+        print ("        Number of hosts              : %s" % topo.get_hosts_cnt())
+        
+        
+        time.sleep(rundelay)
         print "\n"
-    
+        print ("<<< OpenFlow switches in '%s' topology")  % topo.get_id()
+        s1 = 'IP Address'
+        s2 = 'OpenFlow Id'
+        sym = '-'
+        print "\n".strip()
+        print "        {0:<15}  {1:<30}".format(s1, s2)
+        print "        {0:<15}  {1:<30}".format(sym*15, sym*30)
+        switch_ids =  topo.get_switch_ids()
+        for switch_id in switch_ids:
+            inv_node = inventory.get_openflow_node(switch_id)
+            addr = inv_node.get_ip_address()
+            node_id = inv_node.get_id()
+            print "        {0:<15}  {1:<30}".format(addr, node_id)
+        
+        
+        switches = topo.get_switches()
+        for switch in switches:
+            assert(isinstance(switch, Node))
+            print "\n".strip()
+            time.sleep(rundelay)
+            print "<<< Neighborhood information for '%s' switch ports" % switch.get_id()
+            pnums = switch.get_port_numbers()
+            for pnum in pnums:
+                if pnum == 'LOCAL':
+                    continue
+                print "\n".strip()
+                print "        Port '%s'" % pnum
+                plist = topo.get_peer_list_for_node_port_(switch, pnum)
+                for item in plist:
+                    assert(isinstance(item, Node))
+                    if(item.is_switch()):
+                        print "            Device Type : %s" % "switch"
+                        print "            OpenFlow Id : %s"  % item.get_openflow_id()
+                    elif (item.is_host()):
+                        print "            Device Type : %s" % "host"
+                        mac_addr = item.get_mac_address()
+                        print "            MAC Address : %s"  % mac_addr
+                        ip_addr = item.get_ip_address_for_mac(mac_addr)
+                        print "            IP Address  : %s"  % ip_addr
+            
     
     time.sleep(rundelay)
     

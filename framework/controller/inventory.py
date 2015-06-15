@@ -142,6 +142,18 @@ class Inventory():
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
+    def get_openflow_node_flows_cnt(self, node_id):
+        cnt = 0
+        node = self.get_openflow_node(node_id)
+        if node:
+            assert(isinstance(node, OpenFlowCapableNode))
+            cnt = node.get_flows_cnt()
+        
+        return cnt
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def get_netconf_node_ids(self):
         ids = []
         for item in self.netconf_nodes:

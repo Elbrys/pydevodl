@@ -1277,7 +1277,7 @@ class Controller():
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def get_topology_names(self):
+    def get_topology_ids(self):
         status = OperStatus()
         templateUrl = "http://{}:{}/restconf/operational/" + \
                       "network-topology:network-topology"
