@@ -30,7 +30,7 @@ if __name__ == "__main__":
         exit(0)
     
     model_identifier = None
-    model_version = None    
+    model_version = None
 
     if(len(sys.argv) == 1):
         print("   Error: missing arguments")

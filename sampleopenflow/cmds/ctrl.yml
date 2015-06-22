@@ -1,0 +1,15 @@
+#--------------------------------------
+# Controller specific attributes
+#--------------------------------------
+
+# IP address
+ipaddr: 172.22.18.186
+
+# TCP port number
+port: 8181
+
+# Admin user name
+name: admin
+
+# Admin user password
+pswd: admin

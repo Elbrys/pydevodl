@@ -131,7 +131,6 @@ if __name__ == "__main__":
         flows_cnt = 0
         sids =  topo.get_switch_ids()
         for sid in sids:
-            fcnt = inventory.get_openflow_node_flows_cnt(sid)
             flows_cnt += inventory.get_openflow_node_flows_cnt(sid)
         
         print ("        Number of flows              : %s" % flows_cnt)

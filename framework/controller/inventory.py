@@ -85,21 +85,16 @@ class Inventory():
             l = json.loads(js)
             assert(isinstance(l, list))
             p1 = 'id'
-            p2 = 'flow_node_inventory:table'
-            p3 = 'netconf_node_inventory:initial_capability'
+            p2 = 'openflow'
             for item in l:
                 if isinstance(item, dict):
-                    if p1 in item:
-                        if p2 in item:
+                    if p1 in item and isinstance(item[p1], basestring):
+                        if (item[p1].startswith(p2)):
                             node = OpenFlowCapableNode(node_dict=item)
                             self.add_openflow_node(node)
-                        elif p3 in item:
+                        else:
                             node = NetconfCapableNode(node_dict=item)
                             self.add_netconf_node(node)
-                        else:
-                            assert_msg = "[Inventory] uknown " \
-                                         "node type %s" % item
-                            assert(False), assert_msg
         else:
             raise TypeError("[Inventory] wrong argument type '%s'"
                             " (JSON 'string' is expected)" % type(s))
