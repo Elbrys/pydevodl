@@ -442,12 +442,12 @@ class OpenFlowCapableNode():
     # 
     #---------------------------------------------------------------------------
     def get_port_obj(self, port_id):
-        pobj = None
+        port_obj = None
         for item in self.ports:
             if(item.get_port_id() == port_id):
-                pobj = item
+                port_obj = item
         
-        return pobj
+        return port_obj
 
 #-------------------------------------------------------------------------------
 # Class 'OpenFlowPort'
@@ -615,6 +615,19 @@ class OpenFlowPort():
                 bytes_cnt = d[p1][p2][p3]
         
         return bytes_cnt
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_current_features(self):
+        features = []
+        p = 'flow_node_inventory:current_feature'
+        d = self.__dict__
+        if (p in d and isinstance(d[p], basestring)):
+            s = d[p].upper().replace('_', '-')
+            features = s.split()
+        
+        return features
 
 #-------------------------------------------------------------------------------
 # Class 'NetconfCapableNode'
