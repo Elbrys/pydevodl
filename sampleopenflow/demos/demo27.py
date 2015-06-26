@@ -5,7 +5,7 @@ Copyright (c) 2015
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
- - Redistributions of source code must retain the above copyright notice,
+-  Redistributions of source code must retain the above copyright notice,
    this list of conditions and the following disclaimer.
 -  Redistributions in binary form must reproduce the above copyright notice,
    this list of conditions and the following disclaimer in the documentation
@@ -168,18 +168,21 @@ if __name__ == "__main__":
                     continue
                 print "\n".strip()
                 print "        Port '%s'" % pnum
-                plist = topo.get_peer_list_for_node_port_(switch, pnum)
-                for item in plist:
-                    assert(isinstance(item, Node))
-                    if(item.is_switch()):
-                        print "            Device Type : %s" % "switch"
-                        print "            OpenFlow Id : %s"  % item.get_openflow_id()
-                    elif (item.is_host()):
-                        print "            Device Type : %s" % "host"
-                        mac_addr = item.get_mac_address()
-                        print "            MAC Address : %s"  % mac_addr
-                        ip_addr = item.get_ip_address_for_mac(mac_addr)
-                        print "            IP Address  : %s"  % ip_addr
+                peer_list = topo.get_peer_list_for_node_port_(switch, pnum)
+                if len(peer_list):
+                    for item in peer_list:
+                        assert(isinstance(item, Node))
+                        if(item.is_switch()):
+                            print "            Device Type : %s" % "switch"
+                            print "            OpenFlow Id : %s"  % item.get_openflow_id()
+                        elif (item.is_host()):
+                            print "            Device Type : %s" % "host"
+                            mac_addr = item.get_mac_address()
+                            print "            MAC Address : %s"  % mac_addr
+                            ip_addr = item.get_ip_address_for_mac(mac_addr)
+                            print "            IP Address  : %s"  % ip_addr
+                else:
+                    print "            None"
             
     
     time.sleep(rundelay)

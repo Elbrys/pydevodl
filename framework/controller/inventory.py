@@ -3,7 +3,7 @@ Copyright (c) 2015
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
- - Redistributions of source code must retain the above copyright notice,
+-  Redistributions of source code must retain the above copyright notice,
    this list of conditions and the following disclaimer.
 -  Redistributions in binary form must reproduce the above copyright notice,
    this list of conditions and the following disclaimer in the documentation
@@ -47,16 +47,9 @@ class Inventory():
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def __init__(self, inv_json=None, inv_dict=None):
+    def __init__(self, inv_json=None):
         self.openflow_nodes = []
         self.netconf_nodes = []
-        assert_msg = "[Inventory] either '%s' or '%s' should be used, " \
-                     "not both" % ('inv_json', 'inv_dict')
-        assert(((inv_json != None) and (inv_dict != None)) == False), assert_msg
-        if (inv_dict != None):
-            self.__init_from_dict__(inv_dict)
-            return
-        
         if (inv_json != None):
             self.__init_from_json__(inv_json)
             return
@@ -90,27 +83,14 @@ class Inventory():
                 if isinstance(item, dict):
                     if p1 in item and isinstance(item[p1], basestring):
                         if (item[p1].startswith(p2)):
-                            node = OpenFlowCapableNode(node_dict=item)
+                            node = OpenFlowCapableNode(inv_dict=item)
                             self.add_openflow_node(node)
                         else:
-                            node = NetconfCapableNode(node_dict=item)
+                            node = NetconfCapableNode(inv_dict=item)
                             self.add_netconf_node(node)
         else:
             raise TypeError("[Inventory] wrong argument type '%s'"
                             " (JSON 'string' is expected)" % type(s))
-    
-    #---------------------------------------------------------------------------
-    # 
-    #---------------------------------------------------------------------------
-    def __init_from_dict__(self, d):
-        if (isinstance(d, dict)):
-            p1 = 'node'
-            assert(p1 in d and isinstance(d[p1], list))
-            js = json.dumps(d[p1])
-            self.__init_from_json__(js)
-        else:
-            raise TypeError("[Inventory] wrong argument type '%s'"
-                            " ('dict' is expected)" % type(d))
     
     #---------------------------------------------------------------------------
     # 
@@ -179,18 +159,15 @@ class OpenFlowCapableNode():
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def __init__(self, node_json=None, node_dict=None):
+    def __init__(self, inv_json=None, inv_dict=None):
         self.ports=[]
-        assert_msg = "[OpenFlowCapableNode] either '%s' or '%s' should " \
-                     "be used, not both" % ('inv_json', 'inv_dict')
-        assert(((node_json != None) and (node_dict != None)) == False), assert_msg
         
-        if (node_dict != None):
-            self.__init_from_dict__(node_dict)
+        if (inv_json):
+            self.__init_from_json__(inv_json)
             return
         
-        if (node_json != None):
-            self.__init_from_json__(node_json)
+        if(inv_dict):
+            self.__init_from_dict__(inv_dict)
             return
     
     #---------------------------------------------------------------------------
@@ -639,17 +616,13 @@ class NetconfCapableNode():
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def __init__(self, node_json=None, node_dict=None):
-        assert_msg = "[NetconfCapableNode] either '%s' or '%s' should " \
-                     "be used, not both" % ('inv_json', 'inv_dict')
-        assert(((node_json != None) and (node_dict != None)) == False), assert_msg
-        
-        if (node_dict != None):
-            self.__init_from_dict__(node_dict)
+    def __init__(self, inv_json=None, inv_dict=None):
+        if (inv_dict != None):
+            self.__init_from_dict__(inv_dict)
             return
         
-        if (node_json != None):
-            self.__init_from_json__(node_json)
+        if (inv_json != None):
+            self.__init_from_json__(inv_json)
             return
     
     #---------------------------------------------------------------------------

@@ -3,7 +3,7 @@ Copyright (c) 2015
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
- - Redistributions of source code must retain the above copyright notice,
+-  Redistributions of source code must retain the above copyright notice,
    this list of conditions and the following disclaimer.
 -  Redistributions in binary form must reproduce the above copyright notice,
    this list of conditions and the following disclaimer in the documentation
@@ -35,6 +35,7 @@ controller.py: Controller's properties and communication methods
 import json
 import xmltodict
 import requests
+
 from requests.auth import HTTPBasicAuth
 from requests.exceptions import ConnectionError, Timeout
 from framework.common.result import Result
@@ -1356,11 +1357,13 @@ class Controller():
             status.set_status(STATUS.CTRL_INTERNAL_ERROR)
         elif (resp.status_code == 200):
             p1 = 'nodes'
-            d = json.loads(resp.content)
-            if(p1 in d and isinstance(d[p1], dict)):
-                inv_obj = Inventory(inv_dict=d[p1])
+            p2 = 'node'
+            try:
+                d = json.loads(resp.content)
+                v = d.get(p1).get(p2)
+                inv_obj = Inventory(inv_json=json.dumps(v))
                 status.set_status(STATUS.OK)
-            else:
+            except:
                 status.set_status(STATUS.DATA_NOT_FOUND)
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
@@ -1376,24 +1379,25 @@ class Controller():
                       "opendaylight-inventory:nodes/node/{}"
         inv_obj = None
         
-        assert(node_id.startswith("openflow"))
         inv_type = "operational" if operational else "config"
         url = templateUrl.format(self.ipAddr, self.portNum, inv_type, node_id)
         resp = self.http_get_request(url, data=None, headers=None)
+        
         if(resp == None):
             status.set_status(STATUS.CONN_ERROR)
         elif(resp.content == None):
             status.set_status(STATUS.CTRL_INTERNAL_ERROR)
-        elif (resp.status_code == 200):
+        elif(resp.status_code == 200):
             p1 = 'node'
-            if(p1 in resp.content):
-                node = json.loads(resp.content).get(p1)
-                assert(isinstance(node, list))
-                assert(len(node) == 1)
-                inv_obj = OpenFlowCapableNode(node_dict=node[0])
+            try:
+                d = json.loads(resp.content)
+                v = d.get(p1)[0]
+                inv_obj = OpenFlowCapableNode(inv_json=json.dumps(v))
                 status.set_status(STATUS.OK)
-            else:
+            except:
                 status.set_status(STATUS.DATA_NOT_FOUND)
+        elif(resp.status_code == 404):
+            status.set_status(STATUS.DATA_NOT_FOUND)
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
         

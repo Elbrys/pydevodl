@@ -5,7 +5,7 @@ Copyright (c) 2015
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
- - Redistributions of source code must retain the above copyright notice,
+-  Redistributions of source code must retain the above copyright notice,
    this list of conditions and the following disclaimer.
 -  Redistributions in binary form must reproduce the above copyright notice,
    this list of conditions and the following disclaimer in the documentation
@@ -30,10 +30,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 import yaml
-import sys, argparse, logging
+import argparse
 
 from framework.controller.controller import Controller
 from framework.common.status import STATUS
+from framework.openflowdev.ofswitch import OFSwitch, FlowEntry
 from framework.controller.topology import Topology, Node
 from framework.controller.inventory import Inventory, \
                                            OpenFlowCapableNode, \
@@ -43,6 +44,8 @@ from framework.controller.inventory import Inventory, \
 # Class 'CtrlCfg'
 #-------------------------------------------------------------------------------
 class CtrlCfg():
+    """ Attributes necessary for communication with Controller """
+    
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
@@ -62,6 +65,7 @@ class CtrlCfg():
 # Class 'TopologyInfo'
 #-------------------------------------------------------------------------------
 class TopologyInfo():
+    """ Methods to retrieve and display network topology information """
     
     #---------------------------------------------------------------------------
     # 
@@ -80,6 +84,11 @@ class TopologyInfo():
         if(status.eq(STATUS.OK) == True):
             inventory = result.get_data()
             assert(isinstance(inventory, Inventory))
+        elif(status.eq(STATUS.DATA_NOT_FOUND)):
+            print "\n".strip()
+            print " Requested data not found"
+            print "\n".strip()
+            exit(0)
         else:
             print ("\n")
             print ("!!!Error, failed to obtain inventory info, reason: %s"
@@ -91,6 +100,11 @@ class TopologyInfo():
         if(status.eq(STATUS.OK) == True):
             topology_ids = result.get_data()
             assert(isinstance(topology_ids, list))
+        elif(status.eq(STATUS.DATA_NOT_FOUND)):
+            print "\n".strip()
+            print " Requested data not found"
+            print "\n".strip()
+            exit(0)
         else:
             print ("\n")
             print ("!!!Error, failed to obtain topology info, reason: %s"
@@ -102,7 +116,7 @@ class TopologyInfo():
             result = ctrl.build_topology_object(topo_id)
             status = result.get_status()
             if(status.eq(STATUS.OK) == True):
-                topo  = result.get_data()
+                topo = result.get_data()
                 topologies.append(topo)
                 assert(isinstance(topo, Topology))
             else:
@@ -172,6 +186,11 @@ class TopologyInfo():
         if(status.eq(STATUS.OK) == True):
             switch_inv = result.get_data()
             assert(isinstance(switch_inv, OpenFlowCapableNode))
+        elif(status.eq(STATUS.DATA_NOT_FOUND)):
+            print "\n".strip()
+            print " Requested data not found"
+            print "\n".strip()
+            exit(0)
         else:
             print ("\n")
             print ("!!!Error, failed to get inventory info for '%s' switch, reason: %s"
@@ -187,6 +206,11 @@ class TopologyInfo():
             switch_topo = topo.get_switch(switch_id)
             assert(isinstance(switch_topo, Node))
             assert(switch_topo.is_switch())
+        elif(status.eq(STATUS.DATA_NOT_FOUND)):
+            print "\n".strip()
+            print " Requested data not found"
+            print "\n".strip()
+            exit(0)
         else:
             print ("\n")
             print ("!!!Error, failed to parse '%s' topology info, reason: %s" 
@@ -229,25 +253,29 @@ class TopologyInfo():
                     continue
                 print "   Port '%s' connected devices" % pnum
                 print "\n".strip()
-                plist = topo.get_peer_list_for_node_port_(switch_topo, pnum)
-                for item in plist:
-                    assert(isinstance(item, Node))
-                    if(item.is_switch()):
-                        print "     Device Type : %s" % "switch"
-                        print "     OpenFlow Id : %s"  % item.get_openflow_id()
-                    elif (item.is_host()):
-                        print "     Device Type : %s" % "host"
-                        mac_addr = item.get_mac_address()
-                        print "     MAC Address : %s"  % mac_addr
-                        ip_addr = item.get_ip_address_for_mac(mac_addr)
-                        print "     IP Address  : %s"  % ip_addr
-                    
-                    print "\n".strip()
+                peer_list = topo.get_peer_list_for_node_port_(switch_topo, pnum)
+                if len(peer_list):
+                    for item in peer_list:
+                        assert(isinstance(item, Node))
+                        if(item.is_switch()):
+                            print "     Device Type : %s" % "switch"
+                            print "     OpenFlow Id : %s"  % item.get_openflow_id()
+                        elif (item.is_host()):
+                            print "     Device Type : %s" % "host"
+                            mac_addr = item.get_mac_address()
+                            print "     MAC Address : %s"  % mac_addr
+                            ip_addr = item.get_ip_address_for_mac(mac_addr)
+                            print "     IP Address  : %s"  % ip_addr
+                else:
+                    print "     None"
+                        
+                print "\n".strip()
 
 #-------------------------------------------------------------------------------
 # Class 'InventoryInfo'
 #-------------------------------------------------------------------------------
 class InventoryInfo():
+    """ Methods to retrieve and display nodes inventory information """
     
     #---------------------------------------------------------------------------
     # 
@@ -267,13 +295,17 @@ class InventoryInfo():
         if(status.eq(STATUS.OK) == True):
             inv_obj  = result.get_data()
             assert(isinstance(inv_obj, Inventory))
+        elif(status.eq(STATUS.DATA_NOT_FOUND)):
+            print "\n".strip()
+            print " Requested data not found"
+            print "\n".strip()
+            exit(0)
         else:
             print ("\n")
             print ("!!!Error, failed to obtain inventory info, reason: %s"
                     % status.brief().lower())
             exit(0)
         
-        assert(inv_obj)
         openflow_node_ids = inv_obj.get_openflow_node_ids()
         openflow_nodes = []
         flows_cnt = 0
@@ -365,6 +397,11 @@ class InventoryInfo():
         if(status.eq(STATUS.OK) == True):
             switch_inv = result.get_data()
             assert(isinstance(switch_inv, OpenFlowCapableNode))
+        elif(status.eq(STATUS.DATA_NOT_FOUND)):
+            print "\n".strip()
+            print " Requested data not found"
+            print "\n".strip()
+            exit(0)
         else:
             print ("\n")
             print ("!!!Error, failed to get inventory info for '%s' switch, reason: %s"
@@ -475,9 +512,109 @@ class InventoryInfo():
         print "\n"
 
 #-------------------------------------------------------------------------------
+# Class 'FlowInfo'
+#-------------------------------------------------------------------------------
+class FlowInfo():
+    """ Methods to retrieve and display OpenFlow flows information """
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init__(self, ctrl, switch_id):
+        self.ctrl = ctrl
+        self.switchid = switch_id
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def show_table(self, table_id, oper, ofp):
+        flow_entries = []
+        ofswitch = OFSwitch(self.ctrl, self.switchid)
+        if oper:
+            result = ofswitch.get_operational_FlowEntries(table_id)
+        else:
+            result = ofswitch.get_configured_FlowEntries(table_id)
+        status = result.get_status()
+        if(status.eq(STATUS.OK) == True):
+            data = result.get_data()
+            flow_entries = sorted(data, key=lambda fe: fe.get_flow_priority())
+        elif(status.eq(STATUS.DATA_NOT_FOUND)):
+            print "\n".strip()
+            print " Requested data not found"
+            print "\n".strip()
+            exit(0)
+        else:
+            print ("\n")
+            print ("!!!Error, reason: %s" % status.brief().lower())
+            exit(0)
+        
+        print "\n".strip()
+        s = "Device Operational" if oper else "Controller Cached"
+        print " Switch '%s' - %s Flows" % (self.switchid, s)
+        print "\n".strip()
+        
+        if len(flow_entries) > 0:
+            for flow_entry in flow_entries:
+                assert(isinstance(flow_entry, FlowEntry))
+                if(ofp):
+                    print " -- Flow id '%s'" % flow_entry.get_flow_id()
+                    print " %s" % flow_entry.to_ofp_oxm_syntax()
+                else:
+                    lines = flow_entry.to_yang_json().split('\n')
+                    for line in lines:
+                        print " %s" % line
+        else:
+            print "   No flows found"
+        
+        print "\n".strip()
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def show_flow(self, table_id, flow_id, oper, ofp):
+        ofswitch = OFSwitch(self.ctrl, self.switchid)
+        flow_entry = None
+        if oper:
+            result = ofswitch.get_operational_FlowEntry(table_id, flow_id)
+        else:
+            result = ofswitch.get_configured_FlowEntry(table_id, flow_id)
+        status = result.get_status()
+        if(status.eq(STATUS.OK) == True):
+            flow_entry = result.get_data()
+            assert(isinstance(flow_entry, FlowEntry))
+        elif(status.eq(STATUS.DATA_NOT_FOUND)):
+            print "\n".strip()
+            print " Requested data not found"
+            print "\n".strip()
+            exit(0)
+        else:
+            print ("\n")
+            print ("!!!Error, reason: %s" % status.brief().lower())
+            exit(0)
+        
+        print "\n".strip()
+        s = "Device Operational" if oper else "Controller Cached"
+        print " Switch '%s' - %s Flows" % (self.switchid, s)
+        print "\n".strip()
+        
+        if(flow_entry != None):
+            if(ofp):
+                print " -- Flow id '%s'" % flow_entry.get_flow_id()
+                print " %s" % flow_entry.to_ofp_oxm_syntax()
+            else:
+                lines = flow_entry.to_yang_json().split('\n')
+                for line in lines:
+                    print " %s" % line
+        else:
+            print "   Not found"
+        
+        print "\n".strip()
+
+#-------------------------------------------------------------------------------
 # Class 'OFToolParser'
 #-------------------------------------------------------------------------------
 class OFToolParser(object):
+    """ CLI parser and commands executer """
     
     #---------------------------------------------------------------------------
     # 
@@ -488,13 +625,14 @@ class OFToolParser(object):
             prog=self.prog,
             description='Command line tool for interaction with OpenFlow Controller',
             usage="%(prog)s [-h] [-C <path>] <command> [<args>]\n"
+                  "(type '%(prog)s -h' for details)\n"
                      "\nAvailable commands are:\n"
-                     "\n   show-topo       Show topology info"
-                     "\n   show-inv        Show inventory info"
-                     "\n   show-flow       Show flow(s)"
-                     "\n   clear-flow      Delete flow(s)"
+                     "\n   show-topo       Show network topology information"
+                     "\n   show-inv        Show inventory nodes information"
+                     "\n   show-flow       Show OpenFlow flows information"
+                     "\n   clear-flow      Delete OpenFlow flows"
                      "\n"
-                     "\n  'git help <command>' provides details for a specific command")
+                     "\n  '%(prog)s help <command>' provides details for a specific command")
         parser.add_argument('-C', metavar="<path>",
                             dest='ctrl_cfg_file',
                             help="path to the controller's configuration file "
@@ -507,8 +645,7 @@ class OFToolParser(object):
         self.ctrl_cfg  = self.get_ctrl_cfg(args.ctrl_cfg_file)
         if(self.ctrl_cfg == None):
             print "\n".strip()
-            print ("Error, failed to get Controller's configuration file %s"
-                   % args.ctrl_cfg_file)
+            print ("Cannot find controller configuration file")
             print "\n".strip()
             exit(1)
         
@@ -529,16 +666,20 @@ class OFToolParser(object):
     def show_topo(self, options):
         parser = argparse.ArgumentParser(
             prog=self.prog,
-            description='Show topology information',
-            usage="%(prog)s show-topo [-s=OPENFLOWID] [-v|--verbose]"
+#            description='Show network topology information',
+            usage="%(prog)s show-topo [-s=SWITCHID|--switch=SWITCHID]"
+                  " [-v|--verbose]"
                   "\n\n"
-                  "Show topology information currently known to the controller\n\n"
-                  "  -s   provide information for a given switch\n"
-                  "  -v   show detailed information\n")
+                  "Show OpenFlow network topology information in the"
+                  " operational inventory store\n\n"
+                  "Options:\n"
+                  "  -s, --switch    switch identifier\n"
+                  "  -v, --verbose   detailed output\n")
         parser.add_argument("-v", '--verbose', action="store_true",
                             help="output details level")
         parser.add_argument('-s', '--switch', metavar = "SWITCHID")
-        parser.add_argument('-U', action="store_true", dest="usage", help=argparse.SUPPRESS)
+        parser.add_argument('-U', action="store_true", dest="usage",
+                            help=argparse.SUPPRESS)
         args = parser.parse_args(options)
         if(args.usage):
             parser.print_usage()
@@ -561,16 +702,20 @@ class OFToolParser(object):
     def show_inv(self, options):
         parser = argparse.ArgumentParser(
             prog=self.prog,
-            description='Show inventory information',
-            usage="%(prog)s show-inv [-s=OPENFLOWID] [-v]"
+#            description="Show OpenFlow nodes information in the controller's inventory store",
+            usage="%(prog)s show-inv [-s=SWITCHID|--switch=SWITCHID]"
+                  " [-v|--verbose]"
                    "\n\n"
-                  "Show current state of the controller's inventory store\n\n"
-                  "  -s   provide information about a given switch\n"
-                  "  -v   show detailed information\n")
+                  "Show OpenFlow nodes information in the"
+                  " operational inventory store\n\n"
+                  "Options:\n"
+                  "  -s, --switch    switch identifier\n"
+                  "  -v, --verbose   detailed output\n")
         parser.add_argument("-v", '--verbose', action="store_true",
                             help="output details level")
         parser.add_argument('-s', '--switch', metavar = "SWITCHID")
-        parser.add_argument('-U', action="store_true", dest="usage", help=argparse.SUPPRESS)
+        parser.add_argument('-U', action="store_true", dest="usage",
+                            help=argparse.SUPPRESS)
         args = parser.parse_args(options)
         if(args.usage):
             parser.print_usage()
@@ -593,32 +738,59 @@ class OFToolParser(object):
     def show_flow(self, options):
         parser = argparse.ArgumentParser(
             prog=self.prog,
-            description='Show OpenFlow flows information',
-            usage="%(prog)s show-flow [-s=OPENFLOWID|--switch=OPENFLOWID]\n"
-                  "                        [-t=TABLEID|--table=TABLEID]\n"
-                  "                        [-f=FLOWID|--flow=FLOWID]\n"
-                  "                        [--cache] [--json]"
+#            description='Show OpenFlow flows information',
+            usage="%(prog)s show-flow -s=SWITCHID|--switch=SWITCHID\n"
+                  "                        -t=TABLEID|--table=TABLEID\n"
+                  "                         [-f=FLOWID|--flow=FLOWID]\n"
+                  "                         [--config|--operational]\n"
+                  "                         [--json|--ofp]"
                   "\n\n"
-                  " Show OpenFlow flows information\n\n"
-                  "  -s, --switch  provide information for a given switch\n"
-                  "  -t, --table   flow table id\n"
-                  "  -f, --flow    flow entry id\n"
-                  "  --cache       controller cached flows\n"
-                  "  --json        JSON output format\n"
+                  "Show OpenFlow flows information\n\n"
+                  "\n\n"
+                  "Options:\n"
+                  "  -s, --switch    switch identifier\n"
+                  "  -t, --table     flow table id\n"
+                  "  -f, --flow      flow entry id\n"
+                  "  --config        controller cached flows (default)\n"
+                  "  --operational   device operational flows\n"
+                  "  --json          display data in JSON format (default)\n"
+                  "  --ofp           display data in OpenFlow protocol format\n"
                   )
-        parser.add_argument("-v", '--verbose', action="store_true",
-                            help="output details level")
         parser.add_argument('-s', '--switch', metavar = "SWITCHID")
-        parser.add_argument('-t', '--table', metavar = "TABLEID")
+        parser.add_argument('-t', '--table', metavar = "TABLEID", 
+                            type=self.positive_int)
         parser.add_argument('-f', '--flow', metavar = "FLOWID")
-        parser.add_argument('-U', action="store_true", dest="usage", help=argparse.SUPPRESS)
+        group1 = parser.add_mutually_exclusive_group()
+        group1.add_argument('--config', action='store_true', default=True)
+        group1.add_argument('--oper', action='store_true')
+        group2 = parser.add_mutually_exclusive_group()
+        group2.add_argument('--json', action='store_true', default=True)
+        group2.add_argument('--ofp', action='store_true')
+        parser.add_argument('-U', action="store_true", dest="usage", 
+                            help=argparse.SUPPRESS)
         args = parser.parse_args(options)
         if(args.usage):
             parser.print_usage()
             print "\n".strip()
             return
         
-        print "TBD (yet to be implemented)"
+        if (args.switch == None):
+            msg = "option -s (or --switch) is required"
+            parser.error(msg)
+        
+        if (args.table == None):
+            msg = "option -t (or --table) is required"
+            parser.error(msg)
+        
+        print "\n".strip()
+        print " [Controller '%s']" % self.ctrl_cfg.to_string()
+        ctrl = Controller(self.ctrl_cfg.ip_addr, self.ctrl_cfg.tcp_port,
+                          self.ctrl_cfg.admin_name, self.ctrl_cfg.admin_pswd)
+        flow = FlowInfo(ctrl, args.switch)
+        if (args.flow != None):
+            flow.show_flow(args.table, args.flow, args.oper, args.ofp)
+        else:
+            flow.show_table(args.table, args.oper, args.ofp)
     
     #---------------------------------------------------------------------------
     # 
@@ -627,22 +799,58 @@ class OFToolParser(object):
         parser = argparse.ArgumentParser(
             prog=self.prog,
             description='Clear OpenFlow flows',
-            usage="%(prog)s clear-flow [-s=OPENFLOWID] [-t=TABLEID] [-f=FLOWID]")
+            usage="%(prog)s clear-flow -s=SWITCHID|--switch=SWICTHID\n"
+                  "                         -t=TABLEID|--table=TABLEID\n"
+                  "                          [-f=FLOWID|--flow=FLOWID]\n"
+                  "\n\n"
+                  "Clear cached flows on the Controller\n\n"
+                  "\n\n"
+                  "Options:\n"
+                  "  -s, --switch   switch identifier\n"
+                  "  -t, --table    flow table id\n"
+                  "  -f, --flow     flow id\n"
+            
+            )
         parser.add_argument('-s', '--switch', metavar = "SWITCHID")
-        parser.add_argument('-U', action="store_true", dest="usage", help=argparse.SUPPRESS)
+        parser.add_argument('-t', '--table', metavar = "TABLEID", 
+                            type=self.positive_int)
+        parser.add_argument('-f', '--flow', metavar = "FLOWID")
+        parser.add_argument('-U', action="store_true", dest="usage",
+                            help=argparse.SUPPRESS)
         args = parser.parse_args(options)
         if(args.usage):
             parser.print_usage()
             print "\n".strip()
             return
         
-        print "TBD (yet to be implemented)"
+        if (args.switch == None):
+            msg = "option -s (or --switch) is required"
+            parser.error(msg)
+        
+        if (args.table == None):
+            msg = "option -t (or --table) is required"
+            parser.error(msg)
+        
+        print "\n".strip()
+        print " [Controller '%s']" % self.ctrl_cfg.to_string()
+        ctrl = Controller(self.ctrl_cfg.ip_addr, self.ctrl_cfg.tcp_port,
+                          self.ctrl_cfg.admin_name, self.ctrl_cfg.admin_pswd)
+        ofswitch = OFSwitch(ctrl, args.switch)
+        if(args.flow != None):
+            result = ofswitch.delete_flow(args.table, args.flow)
+        else:
+            result = ofswitch.delete_flows(args.table)
+        
+        status = result.get_status()
+        print "\n".strip()
+        print "%s" % status.detailed()
+        print "\n".strip()
     
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def help(self, options):
-        parser = argparse.ArgumentParser(add_help=False, 
+        parser = argparse.ArgumentParser(add_help=False,
                                          usage="oftool help <command>")
         parser.add_argument('command')
         args = parser.parse_args(options)
@@ -678,6 +886,19 @@ class OFToolParser(object):
                 print ("Error: unknown attribute %s in file '%s'" % (e, path))
             
             return None
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def positive_int(self, value):
+        msg = "is not a valid positive integer"
+        try:
+            if (int(value) < 0):
+                raise argparse.ArgumentTypeError("'%s' %s" % (value, msg))
+        except:
+            raise argparse.ArgumentTypeError("'%s' %s" % (value, msg))
+        
+        return value
 
 if __name__ == '__main__':
     
