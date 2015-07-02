@@ -649,7 +649,7 @@ class Controller():
                       "opendaylight-inventory:nodes/node/{}/" + \
                       "yang-ext:mount/ietf-netconf-monitoring:get-schema"
         url = templateUrl.format(self.ipAddr, self.portNum, nodeName) 
-        headers = {'content-type': 'application/yang.data+json', 
+        headers = {'content-type': 'application/yang.data+json',
                    'accept': 'text/json, text/html, application/xml, */*'}
         payload = {'input': {'identifier' : schemaId, 
                              'version' : schemaVersion, 'format' : 'yang'}}
@@ -1501,3 +1501,66 @@ class Controller():
         
         return Result(status, cfg_obj)
     
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def create_data_change_event_subscription(self, datastore, scope, path):
+        status = OperStatus()
+        stream_name = None
+        templateUrl = "http://{}:{}/restconf/operations/" + \
+                      "sal-remote:create-data-change-event-subscription"
+        url = templateUrl.format(self.ipAddr, self.portNum)
+        headers = {'content-type': 'application/yang.data+json',
+                   'accept': 'text/json, text/html, application/xml, */*'}
+        payload = {'input': {'path' : path,
+                             'datastore' : datastore,
+                             'scope' : scope}}
+        resp = self.http_post_request(url, json.dumps(payload), headers)
+        if(resp == None):
+            status.set_status(STATUS.CONN_ERROR)
+        elif(resp.content == None):
+            status.set_status(STATUS.CTRL_INTERNAL_ERROR)
+        elif (resp.status_code == 200):
+            try:
+                p1 = 'output'
+                p2 = 'stream-name'
+                doc = xmltodict.parse(resp.content)
+                stream_name = doc[p1][p2]
+                status.set_status(STATUS.OK)
+            except (KeyError, TypeError, ValueError) as e:
+                    print repr(e)
+                    status.set_status(STATUS.DATA_NOT_FOUND)
+        else:
+            status.set_status(STATUS.HTTP_ERROR, resp)
+        
+        return Result(status, stream_name)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def subscribe_to_stream(self, stream_name):
+        status = OperStatus()
+        stream_location = None
+        templateUrl = "http://{}:{}/restconf/streams/stream/{}"
+        url = templateUrl.format(self.ipAddr, self.portNum, stream_name)
+        
+        resp = self.http_get_request(url, data=None, headers=None)
+        if(resp == None):
+            status.set_status(STATUS.CONN_ERROR)
+        elif(resp.content == None):
+            status.set_status(STATUS.CTRL_INTERNAL_ERROR)
+        elif (resp.status_code == 200):
+            try:
+                p1 = 'location'
+                stream_location = resp.headers[p1]
+                status.set_status(STATUS.OK)
+            except:
+                status.set_status(STATUS.DATA_NOT_FOUND, resp)
+        else:
+            status.set_status(STATUS.HTTP_ERROR, resp)
+        
+        return Result(status, stream_location)
+        
+        
+        
+        

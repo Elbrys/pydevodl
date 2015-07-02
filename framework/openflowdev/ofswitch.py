@@ -379,6 +379,8 @@ class OFSwitch(OpenflowNode):
             status.set_status(STATUS.OK
                               if flow != None
                               else STATUS.DATA_NOT_FOUND)
+        elif (resp.status_code == 404):
+            status.set_status(STATUS.DATA_NOT_FOUND)
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
         
