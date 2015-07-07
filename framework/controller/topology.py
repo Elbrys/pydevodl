@@ -1,6 +1,7 @@
 import string
 import json
 
+from framework.common.utils import dict_keys_dashed_to_underscored
 
 #-------------------------------------------------------------------------------
 # Class 'Topology'
@@ -31,8 +32,8 @@ class Topology():
     #---------------------------------------------------------------------------
     def __init_from_json__(self, s):
         if (isinstance(s, basestring)):
-            js = string.replace(s, '-', '_')
-            d = json.loads(js)
+            obj = json.loads(s)
+            d = dict_keys_dashed_to_underscored(obj)
             for k, v in d.items():
                 if ('topology_id' == k):
                     self.topology_id = v

@@ -36,6 +36,7 @@ import re
 import json
 import string
 
+from framework.common.utils import dict_keys_dashed_to_underscored
 
 #-------------------------------------------------------------------------------
 # Class 'Inventory'
@@ -73,20 +74,19 @@ class Inventory():
     #---------------------------------------------------------------------------
     def __init_from_json__(self, s):
         if (isinstance(s, basestring)):
-            
-            js = string.replace(s, '-', '_')
-            l = json.loads(js)
+            l = json.loads(s)
             assert(isinstance(l, list))
             p1 = 'id'
             p2 = 'openflow'
             for item in l:
                 if isinstance(item, dict):
-                    if p1 in item and isinstance(item[p1], basestring):
-                        if (item[p1].startswith(p2)):
-                            node = OpenFlowCapableNode(inv_dict=item)
+                    d = dict_keys_dashed_to_underscored(item)
+                    if p1 in d and isinstance(d[p1], basestring):
+                        if (d[p1].startswith(p2)):
+                            node = OpenFlowCapableNode(inv_dict=d)
                             self.add_openflow_node(node)
                         else:
-                            node = NetconfCapableNode(inv_dict=item)
+                            node = NetconfCapableNode(inv_dict=d)
                             self.add_netconf_node(node)
         else:
             raise TypeError("[Inventory] wrong argument type '%s'"
@@ -175,8 +175,8 @@ class OpenFlowCapableNode():
     #---------------------------------------------------------------------------
     def __init_from_json__(self, s):
         assert(isinstance(s, basestring))
-        js = string.replace(s, '-', '_')
-        d = json.loads(js)
+        obj = json.loads(s)
+        d = dict_keys_dashed_to_underscored(obj)
         p1 = 'node_connector'
         for k, v in d.items():
             if p1 == k and isinstance(v, list):
@@ -276,7 +276,7 @@ class OpenFlowCapableNode():
         if (p1 in d):
             p2 = 'capabilities'
             if p2 in d[p1] and isinstance(d[p1][p2], list):
-                p3 = 'flow_node_inventory:flow_feature_capability_'
+                p3 = 'flow-node-inventory:flow-feature-capability-'
                 for item in d[p1][p2]:
                     s = item.replace(p3, "").replace('_', ' ').upper()
                     capabilities.append(s)
@@ -630,8 +630,8 @@ class NetconfCapableNode():
     #---------------------------------------------------------------------------
     def __init_from_json__(self, s):
         assert(isinstance(s, basestring))
-        js = string.replace(s, '-', '_')
-        d = json.loads(js)
+        obj = json.loads(s)
+        d = dict_keys_dashed_to_underscored(obj)
         for k, v in d.items():
             setattr(self, k, v)
     
@@ -742,7 +742,8 @@ class NetconfConfigModule():
         assert(isinstance(d, dict))
         p = 'odl-sal-netconf-connector-cfg:'
         js = json.dumps(d)
-        d1 = json.loads(js.replace(p, '').replace('-', '_'))
+        obj = json.loads(js.replace(p, ''))
+        d1 = dict_keys_dashed_to_underscored(obj)
         for k, v in d1.items():
             setattr(self, k, v)
     

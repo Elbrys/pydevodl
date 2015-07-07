@@ -46,6 +46,7 @@ from framework.common.utils import replace_str_value_in_dict
 from framework.common.utils import find_key_value_in_dict
 from framework.common.utils import find_dict_in_list
 from framework.common.utils import strip_none
+from framework.common.utils import dict_keys_dashed_to_underscored
 
 #-------------------------------------------------------------------------------
 # 
@@ -282,6 +283,7 @@ class OFSwitch(OpenflowNode):
         urlext = templateUrlExt.format(table_id, urllib2.quote(str(flow_id)))
         url += urlext
         
+        print " +++ %s" % url
         resp = ctrl.http_delete_request(url, data=None, headers=None)
         if(resp == None):
             status.set_status(STATUS.CONN_ERROR)
@@ -644,9 +646,9 @@ class FlowEntry(object):
     def __init_from_json__(self, s):
         if (s != None and isinstance(s, basestring)):
             self.instructions = {'instruction': []}
-            js = string.replace(s, '-', '_')
-            js = string.replace(js, 'opendaylight_flow_statistics:flow_statistics', 'flow_statistics')
-            d = json.loads(js)
+            js = string.replace(s, 'opendaylight_flow_statistics:flow_statistics', 'flow_statistics')
+            obj = json.loads(js)
+            d = dict_keys_dashed_to_underscored(obj)
             for k, v in d.items():
                 if ('match' == k):
                     match = Match(v)

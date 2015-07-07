@@ -41,6 +41,7 @@ from requests.exceptions import ConnectionError, Timeout
 from framework.common.result import Result
 from framework.common.status import OperStatus, STATUS
 from framework.common.utils import find_key_values_in_dict
+from framework.common.utils import dbg_print
 from framework.controller.topology import Topology
 from framework.controller.inventory import Inventory, \
                                            OpenFlowCapableNode, \
@@ -210,22 +211,25 @@ class Controller():
             status.set_status(STATUS.CONN_ERROR)
         elif(resp.content == None):
             status.set_status(STATUS.CTRL_INTERNAL_ERROR)
-        elif (resp.status_code == 200):
-            p1 = 'nodes'
-            p2 = 'node'
-            if(p1 in resp.content and p2 in resp.content):
-                elemlist = json.loads(resp.content).get(p1).get(p2)
-                for elem in elemlist:
+        elif(resp.status_code == 200):
+            # If format of the response differs from our expectation then
+            # code in 'except' clause suppose to handle such condition
+            try:
+                p1 = 'nodes'
+                p2 = 'node'
+                itemslist = json.loads(resp.content)[p1][p2]
+                for item in itemslist:
                     p3 = 'id'
-                    if(p3 in elem):
-                        nlist.append(str(elem[p3]))
+                    node_id = item[p3]
+                    nlist.append(str(node_id))
                 status.set_status(STATUS.OK)
-            else:
-                status.set_status(STATUS.DATA_NOT_FOUND)
+            except(Exception):
+                dbg_print("DEBUG: data not found in the received reply")
+                status.set_status(STATUS.DATA_NOT_FOUND, resp)
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
         
-        return Result(status, nlist)     
+        return Result(status, nlist)
     
     #---------------------------------------------------------------------------
     # 
@@ -235,20 +239,24 @@ class Controller():
         templateUrl = "http://{}:{}/restconf/operational/" + \
                       "opendaylight-inventory:nodes/node/{}"
         url = templateUrl.format(self.ipAddr, self.portNum, nodeId)
-        info = [] 
+        info = None
         
         resp = self.http_get_request(url, data=None, headers=None)
         if(resp == None):
             status.set_status(STATUS.CONN_ERROR)
         elif(resp.content == None):
             status.set_status(STATUS.CTRL_INTERNAL_ERROR)
-        elif (resp.status_code == 200):
-            p1 = 'node'
-            if(p1 in resp.content):
-                info = json.loads(resp.content).get(p1)
-                status.set_status(STATUS.OK)
-            else:
-                status.set_status(STATUS.DATA_NOT_FOUND, resp)
+        elif(resp.status_code == 200):
+            # If format of the response differs from our expectation then
+            # code in 'except' clause suppose to handle such condition
+            try:
+                p1 = 'node'
+                info = json.loads(resp.content)[p1][0]
+            except(Exception):
+                dbg_print("DEBUG: data not found in the received reply")
+            finally:
+                status.set_status(STATUS.OK if info else STATUS.DATA_NOT_FOUND,
+                                  resp)
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
         
@@ -283,7 +291,7 @@ class Controller():
             status.set_status(STATUS.CONN_ERROR)
         elif(resp.content == None):
             status.set_status(STATUS.CTRL_INTERNAL_ERROR)
-        elif (resp.status_code == 200):
+        elif(resp.status_code == 200):
             status.set_status(STATUS.NODE_CONFIGURED)
         else:
             status.set_status(STATUS.DATA_NOT_FOUND, resp)
@@ -321,27 +329,46 @@ class Controller():
             status.set_status(STATUS.CONN_ERROR)
         elif(resp.content == None):
             status.set_status(STATUS.CTRL_INTERNAL_ERROR)
-        elif (resp.status_code == 200):
-            found = False
-            connected = False
-            p1 = 'nodes'
-            p2 = 'node'
-            if(p1 in resp.content and p2 in resp.content):
-                itemlist = json.loads(resp.content).get(p1).get(p2)
-                for item in itemlist:
+        elif(resp.status_code == 200):
+            # If format of the response differs from our expectation then
+            # code in 'except' clause suppose to handle such condition
+            try:
+                found = False
+                connected = False
+                p1 = 'nodes'
+                p2 = 'node'
+                itemslist = json.loads(resp.content)[p1][p2]
+                for item in itemslist:
                     p3 = 'id'
-                    if(p3 in item and item[p3] == nodeId):
+                    p4 = 'netconf-node-inventory:connected'
+                    p5 = 'openflow'
+                    if(item[p3] == nodeId):
                         found = True
-                        p4 = 'netconf-node-inventory:connected'
-                        if (p4 in item and item[p4] == True):
+                        # OpenFlow devices that are connected to the
+                        # Controller appear in the inventory with 'openflow'
+                        # prefix as part of the node 'id'. If device with
+                        # given nodeId is found in the Controller's inventory
+                        # its status is 'connected'.
+                        if(nodeId.startswith(p5)):
                             connected = True
-                        break
-            if(connected):
-                status.set_status(STATUS.NODE_CONNECTED)
-            elif(found):
-                status.set_status(STATUS.NODE_DISONNECTED)
-            else:
-                status.set_status(STATUS.NODE_NOT_FOUND)
+                            break
+                        else:
+                            # Controller does not report connection status for
+                            # a NETCONF device until successfully connected to
+                            # to that device
+                            if(p4 in item and item[p4] == True):
+                                connected = True
+                            break
+                
+                if(connected):
+                    status.set_status(STATUS.NODE_CONNECTED)
+                elif(found):
+                    status.set_status(STATUS.NODE_DISONNECTED)
+                else:
+                    status.set_status(STATUS.NODE_NOT_FOUND)
+            except(Exception):
+                dbg_print("DEBUG: data not found in the received reply")
+                status.set_status(STATUS.DATA_NOT_FOUND, resp)
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
         
@@ -377,18 +404,21 @@ class Controller():
             status.set_status(STATUS.CONN_ERROR)
         elif(resp.content == None):
             status.set_status(STATUS.CTRL_INTERNAL_ERROR)
-        elif (resp.status_code == 200):
+        elif(resp.status_code == 200):
+            # If format of the response differs from our expectation then
+            # code in 'except' clause suppose to handle such condition
             p1 = 'nodes'
             p2 = 'node'
-            if(p1 in resp.content and p2 in resp.content):
-                elemlist = json.loads(resp.content).get(p1).get(p2)
-                for elem in elemlist:
+            try:
+                itemslist = json.loads(resp.content)[p1][p2]
+                for item in itemslist:
                     p3 = 'id'
-                    if(p3 in elem):
-                        nlist.append(str(elem[p3]))
+                    node_id = item[p3]
+                    nlist.append(str(node_id))
                 status.set_status(STATUS.OK)
-            else:
-                status.set_status(STATUS.DATA_NOT_FOUND)
+            except(Exception):
+                dbg_print("DEBUG: data not found in the received reply")
+                status.set_status(STATUS.DATA_NOT_FOUND, resp)
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
         
@@ -427,36 +457,40 @@ class Controller():
             status.set_status(STATUS.CONN_ERROR)
         elif(resp.content == None):
             status.set_status(STATUS.CTRL_INTERNAL_ERROR)
-        elif (resp.status_code == 200):
-            p1 = 'nodes'
-            p2 = 'node'
-            if(p1 in resp.content and p2 in resp.content):
+        elif(resp.status_code == 200):
+            # If format of the response differs from our expectation then
+            # the code in 'except' clause suppose to handle such condition
+            try:
+                p1 = 'nodes'
+                p2 = 'node'
+                p3 = 'id'
+                p4 = 'netconf-node-inventory:connected'
+                p5 = 'connected'
+                p6 = 'openflow'
+                itemslist = json.loads(resp.content).get(p1).get(p2)
+                for item in itemslist:
+                    node_id = item[p3]
+                    nd = dict()
+                    nd.update({p2 : str(node_id)})
+                    # OpenFlow devices that are connected to the
+                    # Controller appear in the inventory with 'openflow'
+                    # prefix as part of the node 'id'. If device with
+                    # given nodeId is found in the Controller's inventory
+                    # its status is 'connected'
+                    if (node_id.startswith(p6)):
+                        nd.update({p5 : True})
+                    # Controller does not report connection status for
+                    # a NETCONF device until successfully connected to
+                    # to that device
+                    elif ((p4 in item) and (item[p4] == True)):
+                        nd.update({p5 : True})
+                    else:
+                        nd.update({p5 : False})
+                    nlist.append(nd)
                 status.set_status(STATUS.OK)
-                itemlist = json.loads(resp.content).get(p1).get(p2)
-                for item in itemlist:
-                    p3 = 'id'
-                    if (p3 in item):
-                        nd = dict()
-                        nd.update({p2 : item[p3]})
-                        p4 = 'netconf-node-inventory:connected'
-                        p5 = 'connected'
-                        # OpenFlow devices on the Controller are always
-                        # prefixed with the 'openflow' keyword.
-                        # An OpenFlow device is connecting to the Controller
-                        # (not vice versa as in case with NETCONF). So if we
-                        # see an OpenFlow device in the Controller's
-                        # operational inventory store then 'connected' status
-                        # for the device is True.
-                        p6 = 'openflow'
-                        if (p6 in item[p3]):
-                            nd.update({p5 : True})
-                        elif ((p4 in item) and (item[p4] == True)):
-                            nd.update({p5 : True})
-                        else:
-                            nd.update({p5 : False})
-                        nlist.append(nd)
-            else:
-                status.set_status(STATUS.DATA_NOT_FOUND)
+            except(Exception):
+                dbg_print("DEBUG: data not found in the received reply")
+                status.set_status(STATUS.DATA_NOT_FOUND, resp)
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
         
@@ -494,22 +528,27 @@ class Controller():
             status.set_status(STATUS.CONN_ERROR)
         elif(resp.content == None):
             status.set_status(STATUS.CTRL_INTERNAL_ERROR)
-        elif (resp.status_code == 200):
-            p1 = 'nodes'
-            p2 = 'node'
-            if(p1 in resp.content and p2 in resp.content):
-                elemlist = json.loads(resp.content).get(p1).get(p2)
-                for elem in elemlist:
+        elif(resp.status_code == 200):
+            # If format of the response differs from our expectation then
+            # code in 'except' clause suppose to handle such condition
+            try:
+                p1 = 'nodes'
+                p2 = 'node'
+                itemslist = json.loads(resp.content)[p1][p2]
+                for item in itemslist:
                     p3 = 'id'
-                    # OpenFlow devices on the Controller are always prefixed
-                    # with the 'openflow' keyword So we use an extra check for
-                    # the 'openflow' prefixed entries in order to ignore them
                     p4 = 'openflow'
-                    if(p3 in elem and p4 not in elem[p3]):
-                        nlist.append(str(elem[p3]))
+                    # OpenFlow devices that are connected to the
+                    # Controller appear in the inventory with 'openflow'
+                    # prefix as part of the node 'id'. So we use an extra
+                    # check in order to ignore OpenFlow devices.
+                    node_id = item[p3]
+                    if(node_id.startswith(p4) == False):
+                        nlist.append(str(node_id))
                 status.set_status(STATUS.OK)
-            else:
-                status.set_status(STATUS.DATA_NOT_FOUND)
+            except(Exception):
+                dbg_print("DEBUG: data not found in the received reply")
+                status.set_status(STATUS.DATA_NOT_FOUND, resp)
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
         
@@ -548,30 +587,38 @@ class Controller():
             status.set_status(STATUS.CONN_ERROR)
         elif(resp.content == None):
             status.set_status(STATUS.CTRL_INTERNAL_ERROR)
-        elif (resp.status_code == 200):
-            p1 = 'nodes'
-            p2 = 'node'
-            if(p1 in resp.content and p2 in resp.content):
-                status.set_status(STATUS.OK)
-                itemlist = json.loads(resp.content).get(p1).get(p2)
-                for item in itemlist:
-                    p3 = 'id'
-                    # OpenFlow devices on the Controller are always prefixed
-                    # with the 'openflow' keyword. So we use an extra check
+        elif(resp.status_code == 200):
+            # If format of the response differs from our expectation then
+            # code in 'except' clause suppose to handle such condition
+            try:
+                p1 = 'nodes'
+                p2 = 'node'
+                p3 = 'id'
+                p4 = 'netconf-node-inventory:connected'
+                p5 = 'connected'
+                p6 = 'openflow'
+                itemslist = json.loads(resp.content)[p1][p2]
+                for item in itemslist:
+                    node_id = item[p3]
+                    # OpenFlow devices that are connected to the
+                    # Controller appear in the inventory with 'openflow'
+                    # prefix as part of the node 'id'. So we use an extra check
                     # for the 'openflow' prefixes in order to ignore them
-                    p4 = 'openflow'
-                    if (p3 in item and p4 not in item[p3]):
+                    if (node_id.startswith(p6) == False):
                         nd = dict()
-                        nd.update({p2 : item[p3]})
-                        p5 = 'netconf-node-inventory:connected'
-                        p6 = 'connected'
-                        if ((p5 in item) and (item[p5] == True)):
-                            nd.update({p6 : True})
+                        nd.update({p2 : str(node_id)})
+                        # Controller does not report connection status for
+                        # a NETCONF device until successfully connected to
+                        # to that device
+                        if ((p4 in item) and (item[p4] == True)):
+                            nd.update({p5 : True})
                         else:
-                            nd.update({p6 : False})
+                            nd.update({p5 : False})
                         nlist.append(nd)
-            else:
-                status.set_status(STATUS.DATA_NOT_FOUND)
+                status.set_status(STATUS.OK)
+            except(Exception):
+                dbg_print("DEBUG: data not found in the received reply")
+                status.set_status(STATUS.DATA_NOT_FOUND, resp)
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
         
@@ -610,13 +657,17 @@ class Controller():
             status.set_status(STATUS.CONN_ERROR)
         elif(resp.content == None):
             status.set_status(STATUS.CTRL_INTERNAL_ERROR)
-        elif (resp.status_code == 200):
+        elif(resp.status_code == 200):
+            # If format of the response differs from our expectation then
+            # the code in 'except' clause suppose to handle such condition
             p1 = 'schemas'
             p2 = 'schema'
-            if(p1 in resp.content and p2 in resp.content):
-                status = OperStatus(STATUS.OK)
-                data = json.loads(resp.content).get(p1).get(p2)
-                slist = data
+            try:
+                slist = json.loads(resp.content)[p1][p2]
+                status.set_status(STATUS.OK)
+            except(Exception):
+                dbg_print("DEBUG: data not found in the received reply")
+                status.set_status(STATUS.DATA_NOT_FOUND, resp)
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
         
@@ -648,7 +699,7 @@ class Controller():
         templateUrl = "http://{}:{}/restconf/operations/" + \
                       "opendaylight-inventory:nodes/node/{}/" + \
                       "yang-ext:mount/ietf-netconf-monitoring:get-schema"
-        url = templateUrl.format(self.ipAddr, self.portNum, nodeName) 
+        url = templateUrl.format(self.ipAddr, self.portNum, nodeName)
         headers = {'content-type': 'application/yang.data+json',
                    'accept': 'text/json, text/html, application/xml, */*'}
         payload = {'input': {'identifier' : schemaId, 
@@ -660,21 +711,23 @@ class Controller():
             status.set_status(STATUS.CONN_ERROR)
         elif(resp.content == None):
             status.set_status(STATUS.CTRL_INTERNAL_ERROR)
-        elif (resp.status_code == 200):
+        elif(resp.status_code == 200):
             if(resp.headers.get('content-type') == "application/xml"):
-                doc = xmltodict.parse(resp.content)
+                # If format of the response differs from our expectation then
+                # code in 'except' clause suppose to handle such condition
                 try:
+                    doc = xmltodict.parse(resp.content)
                     p1 = 'get-schema'
                     p2 = 'output'
                     p3 = 'data'
                     schema = doc[p1][p2][p3]
                     status.set_status(STATUS.OK)
-                except (KeyError, TypeError, ValueError) as e:
-                    print repr(e)
+                except(Exception):
+                    dbg_print("DEBUG: data not found in the received reply")
                     status.set_status(STATUS.DATA_NOT_FOUND)
             else:
                 status.set_status(STATUS.DATA_NOT_FOUND)
-                print "TBD: not implemented content type parser"
+                print "DEBUG: TBD (not implemented content type parser)"
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
         
@@ -714,12 +767,15 @@ class Controller():
             status.set_status(STATUS.CONN_ERROR)
         elif(resp.content == None):
             status.set_status(STATUS.CTRL_INTERNAL_ERROR)
-        elif (resp.status_code == 200):
-            p1 = 'operations'
-            if(p1 in resp.content):
-                olist = json.loads(resp.content).get(p1)
+        elif(resp.status_code == 200):
+            # If format of the response differs from our expectation then
+            # the code in 'except' clause suppose to handle such condition
+            try:
+                p1 = 'operations'
+                olist = json.loads(resp.content)[p1]
                 status.set_status(STATUS.OK)
-            else:
+            except(Exception):
+                dbg_print("DEBUG: data not found in the received reply")
                 status.set_status(STATUS.DATA_NOT_FOUND, resp)
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
@@ -758,14 +814,16 @@ class Controller():
             status.set_status(STATUS.CONN_ERROR)
         elif(resp.content == None):
             status.set_status(STATUS.CTRL_INTERNAL_ERROR)
-        elif (resp.status_code == 200):
+        elif(resp.status_code == 200):
+            # If format of the response differs from our expectation then
+            # the code in 'except' clause suppose to handle such condition
             try:
                 p1 = 'modules'
                 p2 = 'module'
-                mlist = json.loads(resp.content.replace('\\\n','')).get(p1).get(p2)
+                mlist = json.loads(resp.content.replace('\\\n',''))[p1][p2]
                 status.set_status(STATUS.OK)
-            except (KeyError, TypeError, ValueError)as  e:
-                print repr(e)
+            except(Exception):
+                dbg_print("DEBUG: data not found in the received reply")
                 status.set_status(STATUS.DATA_NOT_FOUND)
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
@@ -807,13 +865,16 @@ class Controller():
             status.set_status(STATUS.CONN_ERROR)
         elif(resp.content == None):
             status.set_status(STATUS.CTRL_INTERNAL_ERROR)
-        elif (resp.status_code == 200):
-            p1 = 'module'
-            if(p1 in resp.content):
-                module = json.loads(resp.content).get(p1)
+        elif(resp.status_code == 200):
+            # If format of the response differs from our expectation then
+            # the code in 'except' clause suppose to handle such condition
+            try:
+                p1 = 'module'
+                module = json.loads(resp.content)[p1]
                 status.set_status(STATUS.OK)
-            else:
-                status.set_status(STATUS.DATA_NOT_FOUND)
+            except(Exception):
+                dbg_print("DEBUG: data not found in the received reply")
+                status.set_status(STATUS.DATA_NOT_FOUND, resp)
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
         
@@ -854,13 +915,16 @@ class Controller():
             status.set_status(STATUS.CONN_ERROR)
         elif(resp.content == None):
             status.set_status(STATUS.CTRL_INTERNAL_ERROR)
-        elif (resp.status_code == 200):
-            p1 = 'sessions'
-            if(p1 in resp.content):
-                slist = json.loads(resp.content).get(p1)
+        elif(resp.status_code == 200):
+            # If format of the response differs from our expectation then
+            # the code in 'except' clause suppose to handle such condition
+            try:
+                p1 = 'sessions'
+                slist = json.loads(resp.content)[p1]
                 status.set_status(STATUS.OK)
-            else:
-                status.set_status(STATUS.DATA_NOT_FOUND)
+            except(Exception):
+                dbg_print("DEBUG: data not found in the received reply")
+                status.set_status(STATUS.DATA_NOT_FOUND, resp)
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
         
@@ -897,13 +961,16 @@ class Controller():
             status.set_status(STATUS.CONN_ERROR)
         elif(resp.content == None):
             status.set_status(STATUS.CTRL_INTERNAL_ERROR)
-        elif (resp.status_code == 200):
-            p1 = 'streams'
-            if(p1 in resp.content):
-                slist = json.loads(resp.content).get(p1)
+        elif(resp.status_code == 200):
+            # If format of the response differs from our expectation then
+            # the code in 'except' clause suppose to handle such condition
+            try:
+                p1 = 'streams'
+                slist = json.loads(resp.content)[p1]
                 status.set_status(STATUS.OK)
-            else:
-                status.set_status(STATUS.DATA_NOT_FOUND)
+            except(Exception):
+                dbg_print("DEBUG: data not found in the received reply")
+                status.set_status(STATUS.DATA_NOT_FOUND, resp)
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
         
@@ -943,14 +1010,17 @@ class Controller():
             status.set_status(STATUS.CONN_ERROR)
         elif(resp.content == None):
             status.set_status(STATUS.CTRL_INTERNAL_ERROR)
-        elif (resp.status_code == 200):
-            p1 = 'services'
-            p2 = 'service'
-            if(p1 in resp.content and p2 in resp.content):
-                slist = json.loads(resp.content).get(p1).get(p2)
+        elif(resp.status_code == 200):
+            # If format of the response differs from our expectation then
+            # the code in 'except' clause suppose to handle such condition
+            try:
+                p1 = 'services'
+                p2 = 'service'
+                slist = json.loads(resp.content)[p1][p2]
                 status.set_status(STATUS.OK)
-            else:
-                status.set_status(STATUS.DATA_NOT_FOUND)
+            except(Exception):
+                dbg_print("DEBUG: data not found in the received reply")
+                status.set_status(STATUS.DATA_NOT_FOUND, resp)
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
         
@@ -991,13 +1061,16 @@ class Controller():
             status.set_status(STATUS.CONN_ERROR)
         elif(resp.content == None):
             status.set_status(STATUS.CTRL_INTERNAL_ERROR)
-        elif (resp.status_code == 200):
-            p1 = 'service'
-            if(p1 in resp.content):
-                service = json.loads(resp.content).get(p1)
+        elif(resp.status_code == 200):
+            # If format of the response differs from our expectation then
+            # the code in 'except' clause suppose to handle such condition
+            try:
+                p1 = 'service'
+                service = json.loads(resp.content)[p1]
                 status.set_status(STATUS.OK)
-            else:
-                status.set_status(STATUS.DATA_NOT_FOUND)
+            except(Exception):
+                dbg_print("DEBUG: data not found in the received reply")
+                status.set_status(STATUS.DATA_NOT_FOUND, resp)
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
         
@@ -1072,7 +1145,7 @@ class Controller():
             status.set_status(STATUS.CONN_ERROR)
         elif(resp.content == None):
             status.set_status(STATUS.CTRL_INTERNAL_ERROR)
-        elif (resp.status_code == 200 or resp.status_code == 204):
+        elif(resp.status_code == 200 or resp.status_code == 204):
             status.set_status(STATUS.OK)
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
@@ -1112,7 +1185,7 @@ class Controller():
             status.set_status(STATUS.CONN_ERROR)
         elif(resp.content == None):
             status.set_status(STATUS.CTRL_INTERNAL_ERROR)
-        elif (resp.status_code == 200):
+        elif(resp.status_code == 200):
             status.set_status(STATUS.OK)
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
@@ -1164,7 +1237,7 @@ class Controller():
             status.set_status(STATUS.CONN_ERROR)
         elif(resp.content == None):
             status.set_status(STATUS.CTRL_INTERNAL_ERROR)
-        elif (resp.status_code == 200):
+        elif(resp.status_code == 200):
             status.set_status(STATUS.OK)
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
@@ -1221,20 +1294,21 @@ class Controller():
             status.set_status(STATUS.CONN_ERROR)
         elif(resp.content == None):
             status.set_status(STATUS.CTRL_INTERNAL_ERROR)
-        elif (resp.status_code == 200):
-            p1 = 'nodes'
-            p2 = 'node'
-            if(p1 in resp.content and p2 in resp.content):
-                elist = json.loads(resp.content).get(p1).get(p2)
-                if (isinstance (elist, list)):
-                    p3 = 'id'
-                    p4 = 'openflow'
-                    for item in elist:
-                        if (isinstance (item, dict) and 
-                            p3 in item and item[p3].startswith(p4)):
-                            nlist.append(item[p3])
+        elif(resp.status_code == 200):
+            # If format of the response differs from our expectation then
+            # code in 'except' clause suppose to handle such condition
+            try:
+                p1 = 'nodes'
+                p2 = 'node'
+                p3 = 'id'
+                p4 = 'openflow'
+                itemslist = json.loads(resp.content)[p1][p2]
+                for item in itemslist:
+                    if(item[p3].startswith(p4)):
+                        nlist.append(item[p3])
                 status.set_status(STATUS.OK)
-            else:
+            except(Exception):
+                dbg_print("DEBUG: data not found in the received reply")
                 status.set_status(STATUS.DATA_NOT_FOUND)
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
@@ -1255,21 +1329,22 @@ class Controller():
             status.set_status(STATUS.CONN_ERROR)
         elif(resp.content == None):
             status.set_status(STATUS.CTRL_INTERNAL_ERROR)
-        elif (resp.status_code == 200):
-            p1 = 'nodes'
-            obj = json.loads(resp.content)
-            if(p1 in obj and isinstance(obj, dict)):
-                d = obj[p1]
+        elif(resp.status_code == 200):
+            # If format of the response differs from our expectation then
+            # the code in 'except' clause suppose to handle such condition
+            try:
+                p1 = 'nodes'
                 p2 = 'opendaylight-flow-statistics:aggregate-flow-statistics'
+                p3 = 'flow-count'
+                d = json.loads(resp.content)[p1]
                 vlist = find_key_values_in_dict(d, p2)
-                assert(isinstance(vlist, list))
-                p4 = 'flow-count'
-                for item in vlist:
-                    if p4 in item:
-                        cnt += item[p4]
+                if vlist:
+                    for item in vlist:
+                        cnt += item[p3]
                 status.set_status(STATUS.OK)
-            else:
-                status.set_status(STATUS.DATA_NOT_FOUND)
+            except(Exception):
+                dbg_print("DEBUG: data not found in the received reply")
+                status.set_status(STATUS.DATA_NOT_FOUND, resp)
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
         
@@ -1290,19 +1365,20 @@ class Controller():
             status.set_status(STATUS.CONN_ERROR)
         elif(resp.content == None):
             status.set_status(STATUS.CTRL_INTERNAL_ERROR)
-        elif (resp.status_code == 200):
-            p1 = 'network-topology'
-            p2 = 'topology'
-            if(p1 in resp.content and p2 in resp.content):
-                tlist = json.loads(resp.content).get(p1).get(p2)
-                if (isinstance (tlist, list)):
-                    p3 = 'topology-id'
-                    for item in tlist:
-                        if (isinstance (item, dict) and p3 in item):
-                            tnames.append(item[p3])
+        elif(resp.status_code == 200):
+            # If format of the response differs from our expectation then
+            # code in 'except' clause suppose to handle such condition
+            try:
+                p1 = 'network-topology'
+                p2 = 'topology'
+                p3 = 'topology-id'
+                tlist = json.loads(resp.content)[p1][p2]
+                for item in tlist:
+                    tnames.append(item[p3])
                 status.set_status(STATUS.OK)
-            else:
-                status.set_status(STATUS.DATA_NOT_FOUND)
+            except(Exception):
+                dbg_print("DEBUG: data not found in the received reply")
+                status.set_status(STATUS.DATA_NOT_FOUND, resp)
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
         
@@ -1323,18 +1399,22 @@ class Controller():
             status.set_status(STATUS.CONN_ERROR)
         elif(resp.content == None):
             status.set_status(STATUS.CTRL_INTERNAL_ERROR)
-        elif (resp.status_code == 200):
-            p1 = 'topology'
-            d = json.loads(resp.content)
-            if(p1 in d):
-                tlist = d.get(p1)
-                if (isinstance (tlist, list)):
-                    p2 = 'topology-id'
-                    for item in tlist:
-                        if (isinstance (item, dict) and p2 in item and item[p2] == topo_name):
-                            topo_obj = Topology(topo_dict=item)
-                            break
-            status.set_status(STATUS.OK)
+        elif(resp.status_code == 200):
+            # If format of the response differs from our expectation then
+            # code in 'except' clause suppose to handle such condition
+            try:
+                p1 = 'topology'
+                p2 = 'topology-id'
+                d = json.loads(resp.content)
+                tlist = d[p1]
+                for item in tlist:
+                    if item[p2] == topo_name:
+                        topo_obj = Topology(topo_dict=item)
+                        break
+                status.set_status(STATUS.OK)
+            except(Exception):
+                dbg_print("DEBUG: data not found in the received reply")
+                status.set_status(STATUS.DATA_NOT_FOUND, resp)
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
         
@@ -1355,15 +1435,18 @@ class Controller():
             status.set_status(STATUS.CONN_ERROR)
         elif(resp.content == None):
             status.set_status(STATUS.CTRL_INTERNAL_ERROR)
-        elif (resp.status_code == 200):
+        elif(resp.status_code == 200):
+            # If format of the response differs from our expectation then
+            # code in 'except' clause suppose to handle such condition
             p1 = 'nodes'
             p2 = 'node'
             try:
                 d = json.loads(resp.content)
-                v = d.get(p1).get(p2)
+                v = d[p1][p2]
                 inv_obj = Inventory(inv_json=json.dumps(v))
                 status.set_status(STATUS.OK)
-            except:
+            except(Exception):
+                dbg_print("DEBUG: data not found in the received reply")
                 status.set_status(STATUS.DATA_NOT_FOUND)
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
@@ -1388,13 +1471,16 @@ class Controller():
         elif(resp.content == None):
             status.set_status(STATUS.CTRL_INTERNAL_ERROR)
         elif(resp.status_code == 200):
-            p1 = 'node'
+            # If format of the response differs from our expectation then
+            # code in 'except' clause suppose to handle such condition
             try:
+                p1 = 'node'
                 d = json.loads(resp.content)
-                v = d.get(p1)[0]
+                v = d[p1][0]
                 inv_obj = OpenFlowCapableNode(inv_json=json.dumps(v))
                 status.set_status(STATUS.OK)
-            except:
+            except(Exception):
+                dbg_print("DEBUG: data not found in the received reply")
                 status.set_status(STATUS.DATA_NOT_FOUND)
         elif(resp.status_code == 404):
             status.set_status(STATUS.DATA_NOT_FOUND)
@@ -1419,21 +1505,21 @@ class Controller():
             status.set_status(STATUS.CONN_ERROR)
         elif(resp.content == None):
             status.set_status(STATUS.CTRL_INTERNAL_ERROR)
-        elif (resp.status_code == 200):
-            p1 = 'node'
-            if(p1 in resp.content):
-                node = json.loads(resp.content).get(p1)
-                assert(isinstance(node, list))
-                assert(len(node) == 1)
-                inv_obj = NetconfCapableNode(node_dict=node[0])
+        elif(resp.status_code == 200):
+            # If format of the response differs from our expectation then
+            # code in 'except' clause suppose to handle such condition
+            try:
+                p1 = 'node'
+                d = json.loads(resp.content)[p1]
+                inv_obj = NetconfCapableNode(inv_dict=d[0])
                 status.set_status(STATUS.OK)
-            else:
+            except(Exception):
+                dbg_print("DEBUG: data not found in the received reply")
                 status.set_status(STATUS.DATA_NOT_FOUND)
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
         
         return Result(status, inv_obj)
-        pass
     
     #---------------------------------------------------------------------------
     # 
@@ -1450,19 +1536,21 @@ class Controller():
             status.set_status(STATUS.CONN_ERROR)
         elif(resp.content == None):
             status.set_status(STATUS.CTRL_INTERNAL_ERROR)
-        elif (resp.status_code == 200):
+        elif(resp.status_code == 200):
+            # If format of the response differs from our expectation then
+            # code in 'except' clause suppose to handle such condition
             try:
                 p1 = 'modules'
                 p2 = 'module'
                 p3 = 'type'
                 p4 = 'odl-sal-netconf-connector-cfg:sal-netconf-connector'
-                mlist = json.loads(resp.content.replace('\\\n','')).get(p1).get(p2)
+                mlist = json.loads(resp.content.replace('\\\n',''))[p1][p2]
                 for item in mlist:
-                    if (p3 in item and item[p3] == p4):
+                    if(item[p3] == p4):
                         objs.append(NetconfConfigModule(item))
                 status.set_status(STATUS.OK)
-            except (KeyError, TypeError, ValueError)as  e:
-                print repr(e)
+            except(Exception):
+                dbg_print("DEBUG: data not found in the received reply")
                 status.set_status(STATUS.DATA_NOT_FOUND)
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
@@ -1486,15 +1574,16 @@ class Controller():
             status.set_status(STATUS.CONN_ERROR)
         elif(resp.content == None):
             status.set_status(STATUS.CTRL_INTERNAL_ERROR)
-        elif (resp.status_code == 200):
-            p1 = 'module'
-            if(p1 in resp.content):
-                module = json.loads(resp.content).get(p1)
-                assert(isinstance(module, list))
-                assert(len(module) == 1)
+        elif(resp.status_code == 200):
+            # If format of the response differs from our expectation then
+            # code in 'except' clause suppose to handle such condition
+            try:
+                p1 = 'module'
+                module = json.loads(resp.content)[p1]
                 cfg_obj = NetconfConfigModule(module[0])
                 status.set_status(STATUS.OK)
-            else:
+            except(Exception):
+                dbg_print("DEBUG: data not found in the received reply")
                 status.set_status(STATUS.DATA_NOT_FOUND)
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
@@ -1520,16 +1609,18 @@ class Controller():
             status.set_status(STATUS.CONN_ERROR)
         elif(resp.content == None):
             status.set_status(STATUS.CTRL_INTERNAL_ERROR)
-        elif (resp.status_code == 200):
+        elif(resp.status_code == 200):
+            # If format of the response differs from our expectation then
+            # code in 'except' clause suppose to handle such condition
             try:
                 p1 = 'output'
                 p2 = 'stream-name'
                 doc = xmltodict.parse(resp.content)
                 stream_name = doc[p1][p2]
                 status.set_status(STATUS.OK)
-            except (KeyError, TypeError, ValueError) as e:
-                    print repr(e)
-                    status.set_status(STATUS.DATA_NOT_FOUND)
+            except(Exception):
+                dbg_print("DEBUG: data not found in the received reply")
+                status.set_status(STATUS.DATA_NOT_FOUND)
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
         
@@ -1549,18 +1640,17 @@ class Controller():
             status.set_status(STATUS.CONN_ERROR)
         elif(resp.content == None):
             status.set_status(STATUS.CTRL_INTERNAL_ERROR)
-        elif (resp.status_code == 200):
+        elif(resp.status_code == 200):
+            # If format of the response differs from our expectation then
+            # code in 'except' clause suppose to handle such condition
             try:
                 p1 = 'location'
                 stream_location = resp.headers[p1]
                 status.set_status(STATUS.OK)
             except:
+                dbg_print("DEBUG: data not found in the received reply")
                 status.set_status(STATUS.DATA_NOT_FOUND, resp)
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
         
         return Result(status, stream_location)
-        
-        
-        
-        

@@ -361,7 +361,7 @@ if __name__ == "__main__":
         result = ofswitch.get_configured_FlowEntry(flow_table_id, i)
         status = result.get_status()
         if(status.eq(STATUS.OK) == True):
-            print (" [Flow ID '%s']" % i)
+            print (" -- Flow id '%s'" % i)
             fe = result.get_data()
             print " %s" % fe.to_ofp_oxm_syntax()
         else:

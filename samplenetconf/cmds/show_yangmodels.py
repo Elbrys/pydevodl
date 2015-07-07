@@ -45,7 +45,6 @@ if __name__ == "__main__":
     else:
         print ("\n")
         print ("!!!Failed, reason: %s" % status.brief().lower())
-        print ("%s" % status.detailed())
         sys.exit(0)
 
     print "\n"
