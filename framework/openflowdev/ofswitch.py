@@ -283,7 +283,6 @@ class OFSwitch(OpenflowNode):
         urlext = templateUrlExt.format(table_id, urllib2.quote(str(flow_id)))
         url += urlext
         
-        print " +++ %s" % url
         resp = ctrl.http_delete_request(url, data=None, headers=None)
         if(resp == None):
             status.set_status(STATUS.CONN_ERROR)

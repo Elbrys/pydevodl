@@ -1654,3 +1654,16 @@ class Controller():
             status.set_status(STATUS.HTTP_ERROR, resp)
         
         return Result(status, stream_location)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_network_topology_yang_schema_path(self, topo_id=None):
+        base_path = "/network-topology:network-topology"
+        ext = "/network-topology:topology[network-topology:topology-id=\"{}\"]"
+        path = base_path
+        if topo_id:
+            path += ext.format(topo_id)
+        
+        return path
+    
