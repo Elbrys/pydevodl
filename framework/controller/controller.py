@@ -1667,3 +1667,10 @@ class Controller():
         
         return path
     
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_inventory_nodes_yang_schema_path(self):
+        base_path = "opendaylight-inventory:nodes"
+        return base_path
+    

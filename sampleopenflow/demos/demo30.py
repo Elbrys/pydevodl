@@ -35,7 +35,7 @@ from websocket import create_connection
 from framework.common.status import STATUS
 from framework.common.utils import load_dict_from_file
 from framework.controller.controller import Controller
-from framework.controller.notification import NetworkTopologyChangeNotification
+from framework.controller.notification import InventoryChangeNotification
 
 if __name__ == "__main__":
     
@@ -59,18 +59,18 @@ if __name__ == "__main__":
     description =  "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n"\
                    " This demo illustrates how to use Controller's notification \n"\
                    " subscription service for tracing dynamic changes in the\n"\
-                   " network topology data tree maintained by the Controller.\n"\
+                   " the Controller's inventory data store.\n"\
                    "\n"\
-                   " It is implied that core network services (Forwarding Rules\n"\
-                   " Manager, Topology Manager, Switch Manager, Host Tracker)\n"\
-                   " are functioning on the Controller\n"\
-                   "\n" \
-                   " This script creates an event listener on the Controller and\n" \
-                   " establishes permanent connection to the events notification\n" \
-                   " stream. Once a data change event in the topology tree (such\n" \
-                   " as add/remove switch, host or link) is detected it will be\n" \
-                   " reported to the screen.\n" \
+                   " It is implied that core network services (OpenFlow, NETCONF)\n"\
+                   " are functioning on the Controller.\n"\
+                   "\n"\
+                   " This script creates an event listener on the Controller and\n"\
+                   " establishes permanent connection to the events notification\n"\
+                   " stream. Once a data change event in the inventory data store\n"\
+                   " (such as add/remove node or flow entry) is detected\n"\
+                   " it will be reported to the screen.\n"\
                    "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n"
+    
     
     print "\n".strip()
     print description
@@ -84,11 +84,8 @@ if __name__ == "__main__":
     
     
     ctrl = Controller(ctrlIpAddr, ctrlPortNum, ctrlUname, ctrlPswd)
-    # Identifier of the network topology to be traced
-    # (name used by Controller for default topology instance)
-    topo_id = 'flow:1'
     print "\n".strip()
-    print ("<<< 'Controller': %s, Topology Identifier: '%s'" % (ctrlIpAddr, topo_id))
+    print ("<<< 'Controller': %s" % (ctrlIpAddr))
     time.sleep(rundelay)
     
     
@@ -112,8 +109,8 @@ if __name__ == "__main__":
     #            This scope is superset of ONE and BASE.
     scope = "SUBTREE"
     
-    # Path to the network topology node in the YANG data tree
-    path = ctrl.get_network_topology_yang_schema_path(topo_id)
+    # Path to the inventory data store in the YANG data tree
+    path = ctrl.get_inventory_nodes_yang_schema_path()
     
     # Create listener on the Controller (if it does already exist Controller
     # just returns the stream name to subscribe to)
@@ -149,41 +146,32 @@ if __name__ == "__main__":
     websock = create_connection(stream_location)
     try:
         while True:
-            event = websock.recv()
-            tcn = NetworkTopologyChangeNotification(event)
+            notification = websock.recv()
+            icn = InventoryChangeNotification(notification)
             
-            timestamp = tcn.get_time()
+            timestamp = icn.get_time()
             
-            l = tcn.switches_added()
+            l = icn.nodes_added()
             if l and len(l):
                 for i in l:
-                    print " [%s] added switch: %s" % (timestamp, i)
+                    print " [%s] added node: %s" % (timestamp, i)
             
-            l = tcn.switches_removed()
+            l = icn.nodes_removed()
             if l and len(l):
                 for i in l:
-                    print " [%s] removed switch: %s" % (timestamp, i)
-            
-            l = tcn.hosts_added()
-            if l and len(l):
-                for i in l:
-                    print " [%s] added host: %s" % (timestamp, i)
-            
-            l = tcn.hosts_removed()
-            if l and len(l):
-                for i in l:
-                    print " [%s] removed host: %s" % (timestamp, i)
-            
-            l = tcn.links_added()
-            if l and len(l):
-                for i in l:
-                    print " [%s] added link: %s" % (timestamp, i)
+                    print " [%s] removed node: %s" % (timestamp, i)
                     
-            l = tcn.links_removed()
+            l = icn.flows_added()
             if l and len(l):
                 for i in l:
-                    print " [%s] removed link: %s" % (timestamp, i)
-            
+                    print " [%s] added flow entry: %s" % (timestamp, 
+                                                          i.to_string())
+                    
+            l = icn.flows_removed()
+            if l and len(l):
+                for i in l:
+                    print " [%s] removed flow entry node: %s" % (timestamp, 
+                                                                 i.to_string())
     except(KeyboardInterrupt) as e:
         print "Interrupted from keyboard, exit\n"
     
