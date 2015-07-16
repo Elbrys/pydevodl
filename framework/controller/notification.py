@@ -34,7 +34,6 @@ notification.py: Parser for notification events received from Controller
 
 import os
 import re
-import string
 import xmltodict
 from framework.common.utils import dbg_print
 
@@ -682,7 +681,7 @@ class PathInfo():
                         d = {'ns': v, 'pfx': pfx}
                         namespaces.append(d)
                         nickname = k.split(':')[-1]
-                        path = string.replace(path, nickname, pfx)
+                        path = path.replace(nickname, pfx)
                 
                 self.namespaces = namespaces
                 self.path = path
@@ -690,7 +689,6 @@ class PathInfo():
                 msg = "DEBUG: failed to process info '%s'" % info
                 dbg_print(msg)
         elif isinstance(info, basestring):
-            print " +++ %s" % info
             self.path = info
         else:
             msg = "DEBUG: info=%s, " \

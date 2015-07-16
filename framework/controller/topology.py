@@ -1,4 +1,3 @@
-import string
 import json
 
 from framework.common.utils import dict_keys_dashed_to_underscored

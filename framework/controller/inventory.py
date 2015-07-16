@@ -34,7 +34,6 @@ netconfnode.py: Controller's NETCONF node specific properties
 
 import re
 import json
-import string
 
 from framework.common.utils import dict_keys_dashed_to_underscored
 

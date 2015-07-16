@@ -1,3 +1,4 @@
+
 """
 Copyright (c) 2015
 
@@ -32,7 +33,6 @@ ofswitch.py: OpenFlow switch properties and methods
 
 """
 
-import string
 import json
 import urllib2
 
@@ -645,7 +645,7 @@ class FlowEntry(object):
     def __init_from_json__(self, s):
         if (s != None and isinstance(s, basestring)):
             self.instructions = {'instruction': []}
-            js = string.replace(s, 'opendaylight_flow_statistics:flow_statistics', 'flow_statistics')
+            js = s.replace('opendaylight_flow_statistics:flow_statistics', 'flow_statistics')
             obj = json.loads(js)
             d = dict_keys_dashed_to_underscored(obj)
             for k, v in d.items():
@@ -686,11 +686,11 @@ class FlowEntry(object):
         s = self.to_json()
         # Convert all 'underscored' keywords to 'dash-separated' form used
         # by ODL YANG models naming conventions
-        s = string.replace(s, '_', '-')
+        s = s.replace('_', '-')
         # Following are exceptions from the common ODL rules for having all
         # multi-part keywords in YANG models being hash separated
-        s = string.replace(s, 'table-id', 'table_id')
-        s = string.replace(s, 'cookie-mask', 'cookie_mask')
+        s = s.replace('table-id', 'table_id')
+        s = s.replace('cookie-mask', 'cookie_mask')
         
         return s
     
@@ -702,11 +702,11 @@ class FlowEntry(object):
         s = self.to_json()
         # Convert all 'underscored' keywords to 'dash-separated' form used
         # by ODL YANG models naming conventions
-        s = string.replace(s, '_', '-')
+        s = s.replace('_', '-')
         # Following are exceptions from the common ODL rules for having all
         # multi-part keywords in YANG models being hash separated
-        s = string.replace(s, 'table-id', 'table_id')
-        s = string.replace(s, 'cookie-mask', 'cookie_mask')
+        s = s.replace('table-id', 'table_id')
+        s = s.replace('cookie-mask', 'cookie_mask')
         d1 = json.loads(s)
         d2 = strip_none(d1)
         payload = {self._mn : d2}
@@ -760,6 +760,7 @@ class FlowEntry(object):
         sc = sc.translate(None, '"{} ').replace(':','=')
         
         # Flow Match
+        sm = ""
         m = self.get_match_fields()
         if (m != None):
             odm = OrderedDict()

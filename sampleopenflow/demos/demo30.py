@@ -164,14 +164,14 @@ if __name__ == "__main__":
             l = icn.flows_added()
             if l and len(l):
                 for i in l:
-                    print " [%s] added flow entry: %s" % (timestamp, 
+                    print " [%s] added flow entry: %s" % (timestamp,
                                                           i.to_string())
                     
             l = icn.flows_removed()
             if l and len(l):
                 for i in l:
-                    print " [%s] removed flow entry node: %s" % (timestamp, 
-                                                                 i.to_string())
+                    print " [%s] removed flow entry: %s" % (timestamp,
+                                                            i.to_string())
     except(KeyboardInterrupt) as e:
         print "Interrupted from keyboard, exit\n"
     

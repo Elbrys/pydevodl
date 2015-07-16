@@ -35,7 +35,6 @@ utils.py: Helper utilities
 import os
 import sys
 import time
-import string
 import yaml
 import inspect
 
@@ -149,10 +148,10 @@ def replace_str_value_in_dict(d, old, new):
     elif type(d) is list:
         return [replace_str_value_in_dict(v, old, new) for v in d if v and replace_str_value_in_dict(v, old, new)]
     elif type(d) is unicode:
-        d = string.replace(d, unicode(old), unicode(new))
+        d = d.replace(unicode(old), unicode(new))
         return d        
     elif type(d) is str:
-        d = string.replace(d, old, new)
+        d = d.replace(old, new)
         return d
     else:
         return d
