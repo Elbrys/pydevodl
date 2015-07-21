@@ -1,0 +1,79 @@
+/****************************************************************************
+    Example of OpenFlow flow entry
+    
+    Layer 2 matching fields:
+    - Ingress port:    3
+    - MAC destination: 20:14:29:01:19:61
+    - MAC source:      00:11:22:33:44:56
+    - Ethernet type:   2048 (0x800) (IP)
+    - VLAN ID:         78
+    - VLAN PCP:        6 (Internetwork Control)
+    
+    Action: Drop
+    
+    NOTES: For each JSON encoded flow entry the 'id' and 'table_id'
+           are the must fields
+*****************************************************************************/
+
+{
+    // generic attributes of the flow entry
+    "id": "100",                                 // unique identifier of this
+                                                 // flow entry on the Controller
+                                                 // (mandatory)
+    "table_id": "0",                             // identifier of the table to
+                                                 // put the flow entry in
+                                                 // (mandatory)
+    "flow-name": "layer 2 flow match sample",    // this flow entry name
+                                                 // (optional)
+    "cookie": "100",                             // an opaque identifier to be
+                                                 // associated with this flow entry
+                                                 // (optional)
+    "hard-timeout": "0",                         // max time for this flow entry
+                                                 // to exist in the table (seconds)
+                                                 // zero value means infinity
+                                                 // (optional)
+    "idle-timeout": "0",                         // idle time before discarding
+                                                 // this flow entry due to lack
+                                                 // of match (seconds)
+                                                 // zero value means infinity
+                                                 // (optional)
+    "priority": "1000",                          // priority level for this flow
+                                                 // entry in the table
+                                                 // (optional)
+     
+    // packet matching criteria
+    "match": {
+        "in-port": "3",                          // Ingress port
+        "ethernet-match": {
+            "ethernet-destination": {            // MAC destination
+                "address": "20:14:29:01:19:61"
+            },
+            "ethernet-source": {                 // MAC source
+                "address": "00:11:22:33:44:56"
+            },
+            "ethernet-type": {                   // Ethernet type
+                "type": "2048"
+            }
+        },
+        "vlan-match": {
+            "vlan-id": {                         // VLAN ID
+                "vlan-id": "78", 
+                "vlan-id-present": "true"
+            },
+            "vlan-pcp": "6"                      // VLAN PCP
+        }
+    },
+    
+    // instructions to be executed for the matching packet
+    "instructions": {
+        "instruction": {
+            "order": "0",
+            "apply-actions": {
+                "action": {                      // Apply action
+                    "order": "0",
+                    "drop-action": {}            // Drop
+                }
+            }
+        }
+    }
+}

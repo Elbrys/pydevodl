@@ -1,0 +1,117 @@
+/****************************************************************************
+    Example of OpenFlow flow entry
+    
+    Layers 2 and 3 matching fields:
+    - Ingress port:         1
+    - MAC destination:      ff:ff:29:01:19:61
+    - MAC source:           00:1c:42:60:7c:9f
+    - Ethernet type:        2048 (0x800) (IP)
+    - VLAN ID:              101
+    - VLAN PCP:             7 (Network Control)
+    - IPv4 DSCP:            40 (Critical)
+    - IPv4 protocol:        17 (UDP)
+    - IPv4 source:          192.168.1.11/32
+    - IPv4 destination:     172.168.5.6/18
+    - UDP source port:      25364
+    - UDP destination port: 514
+    
+    Actions:
+    - Push VLAN header 34984 (0x88A8)
+    - Set VLAN ID 998
+    - Output to port 7
+    
+    NOTES: For each flow entry the 'id' and 'table_id'
+           are the must fields
+*****************************************************************************/
+
+{
+    // generic attributes of the flow entry
+    "id": "300",                                 // unique identifier of this
+                                                 // flow entry on the Controller
+                                                 // (mandatory)
+    "table_id": "0",                             // identifier of the table to
+                                                 // put the flow entry in
+                                                 // (mandatory)
+    "flow-name": "layer 2-3 flow match sample",  // this flow entry name
+                                                 // (optional)
+    "cookie": "300",                             // an opaque identifier to be
+                                                 // associated with this flow entry
+                                                 // (optional)
+    "hard-timeout": "0",                         // max time for this flow entry
+                                                 // to exist in the table (seconds)
+                                                 // zero value means infinity
+                                                 // (optional)
+    "idle-timeout": "0",                         // idle time before discarding
+                                                 // this flow entry due to lack
+                                                 // of match (seconds)
+                                                 // zero value means infinity
+                                                 // (optional)
+    "priority": "3000",                          // priority level for this flow
+                                                 // entry in the table
+                                                 // (optional)
+     
+     // instructions to be executed for the matching packet
+    "instructions": {
+        "instruction": {
+            "order": "0",
+            "apply-actions": {                   // Apply Actions
+                "action": [
+                    {
+                        "order": 0, 
+                        "push-vlan-action": {    // Push VLAN header
+                            "ethernet-type": 34984
+                        }
+                    },
+                    {
+                        "order": 1,
+                        "set-field": {           // Set Field (VLAN ID)
+                            "vlan-match": {
+                                "vlan-id": {
+                                    "vlan-id": 998,
+                                    "vlan-id-present": true
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "order": 2, 
+                        "output-action": {        // Output
+                            "output-node-connector": 7
+                        }
+                    }
+                ]
+            }
+        }
+    },
+    
+    // packet matching criteria
+    "match": {
+        "in-port": "1",                          // Ingress port
+        "ethernet-match": {
+            "ethernet-destination": {            // MAC destination
+                "address": "ff:ff:29:01:19:61"
+            }, 
+            "ethernet-source": {                 // MAC source
+                "address": "00:1c:42:60:7c:9f"
+            },
+            "ethernet-type": {                   // Ethernet type
+                "type": "2048"
+            }
+        },
+        "vlan-match": {
+            "vlan-id": {                         // VLAN ID
+                "vlan-id": "101",
+                "vlan-id-present": "true"
+            },
+            "vlan-pcp": "7"                      // VLAN PCP
+        },
+        "ip-match": {
+            "ip-dscp": "40",                     // IPv4 DSCP
+            "ip-protocol": "17"                  // IPv4 protocol
+        }, 
+        "ipv4-source": "192.168.1.11/32",        // IPv4 source
+        "ipv4-destination": "172.168.5.6/18",    // IPv4 destination
+        "udp-source-port": "25364",              // UDP source port
+        "udp-destination-port": "514"            // UDP destination port
+    }
+}

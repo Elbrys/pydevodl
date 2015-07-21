@@ -29,6 +29,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """
 
+import json
 import yaml
 import argparse
 
@@ -61,6 +62,80 @@ class CtrlCfg():
     def to_string(self):
         return "%s:%s" % (self.ip_addr, self.tcp_port)
 
+#-------------------------------------------------------------------------------
+# Class 'ConcatJSONObjects'
+#-------------------------------------------------------------------------------
+class ConcatJSONObjects(json.JSONDecoder):
+    """ Custom JSON decoder subclass used for retrieving multiple JSON objects
+        from a text file. Capable to parse JSON files and strings annotated with
+        single and multi-line comments
+    """
+    
+    MULTILINE_COMMENT_START = "/*"
+    MULTILINE_COMMENT_END = "*/"
+    SINGLELINE_COMMENT = "//"
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def _strip_comments(self, s):
+        json_string = ""
+        is_multiline_comment = False
+        lines = s.split('\n')
+        for l in lines:
+            l = l.strip()
+            
+            if l.startswith(self.MULTILINE_COMMENT_START):
+                is_multiline_comment= True
+                
+            if is_multiline_comment:
+                if l.endswith(self.MULTILINE_COMMENT_END):
+                    is_multiline_comment = False
+                continue
+            
+            if l.startswith(self.SINGLELINE_COMMENT):
+                continue
+            
+            # check for the internal single-line comment
+            # (current algorithm assumes that if single-line comment
+            # substring is found at the highest index in the JSON string
+            # and number of double-quotation marks before its position is
+            # even than it is really a comment, not a substring located
+            # within JSON string value)
+            idx = l.rfind(self.SINGLELINE_COMMENT)
+            if idx >= 0:
+                cnt = l.count('"', 0, idx)
+                if cnt%2 == 0:   # single-line comment substring is outside
+                    l = l[:idx]  # of the JSON body, ignore comment part
+            
+            '''
+            idx = l.find(self.MULTILINE_COMMENT_START)
+            if idx >= 0:
+                l = l[:idx]
+            
+            idx = l.find(self.MULTILINE_COMMENT_END)
+            if idx >= 0:
+                continue
+            '''
+            
+            json_string += l
+        
+        return json_string
+    
+    #---------------------------------------------------------------------------
+    # Overriding 'decode' method defined in JSONDecoder parent class
+    #---------------------------------------------------------------------------
+    def decode(self, s):
+        objs = []
+        json_string = self._strip_comments(s)
+        idx = 0
+        js_len = len(json_string)
+        while idx < js_len:
+            obj, idx = self.raw_decode(json_string, idx)
+            objs.append(obj)
+        
+        return objs
+    
 #-------------------------------------------------------------------------------
 # Class 'TopologyInfo'
 #-------------------------------------------------------------------------------
@@ -631,6 +706,7 @@ class OFToolParser(object):
                      "\n   show-inv        Show inventory nodes information"
                      "\n   show-flow       Show OpenFlow flows information"
                      "\n   clear-flow      Delete OpenFlow flows"
+                     "\n   add-flow        Add OpenFlow flows"
                      "\n"
                      "\n  '%(prog)s help <command>' provides details for a specific command")
         parser.add_argument('-C', metavar="<path>",
@@ -849,6 +925,69 @@ class OFToolParser(object):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
+    def add_flow(self, options):
+        parser = argparse.ArgumentParser(
+            prog=self.prog,
+            description="Add flow entries to the Controller's cache",
+            usage="%(prog)s add-flow -s=SWITCHID|--switch=SWICTHID\n"
+                  "                       -f <path>|--file <path>\n"
+                  "\n\n"
+                  "Add flow entries to the Controller's cache\n\n"
+                  "\n\n"
+                  "Options:\n"
+                  "  -s, --switch   switch identifier\n"
+                  "  -f, --file     path to the file containing flow entries\n"
+                  "                 (default is './flow.json')\n"
+            
+            )
+        parser.add_argument('-s', '--switch', metavar = "SWITCHID")
+        parser.add_argument('-f', '--file', metavar="<path>",
+                            dest='flow_file',
+                            help="path to the file containing flow entries "
+                                 "(default is './flow.json')",
+                            default="./flow.json")
+        parser.add_argument('-U', action="store_true", dest="usage",
+                            help=argparse.SUPPRESS)
+        args = parser.parse_args(options)
+        if(args.usage):
+            parser.print_usage()
+            print "\n".strip()
+            return
+    
+        if (args.switch == None):
+            msg = "option -s (or --switch) is required"
+            parser.error(msg)
+        
+        flows = self.read_flows(args.flow_file)
+        if not flows:
+            print "Failed to execute command, exit"
+            exit(1)
+        
+        print "\n".strip()
+        print " [Controller '%s']" % self.ctrl_cfg.to_string()
+        print "\n".strip()
+        ctrl = Controller(self.ctrl_cfg.ip_addr, self.ctrl_cfg.tcp_port,
+                          self.ctrl_cfg.admin_name, self.ctrl_cfg.admin_pswd)
+        ofswitch = OFSwitch(ctrl, args.switch)
+        
+        try:
+            for flow in flows:
+                fid = flow['id']
+                tid = flow['table_id']
+                js = json.dumps(flow, default=lambda o: o.__dict__)
+                result = ofswitch.add_modify_flow_json(table_id=tid, flow_id=fid,flow_json=js)
+                status = result.get_status()
+                if(status.eq(STATUS.OK) == True):
+                    print "Flow id '%s', success" % fid
+                else:
+                    print "Flow id '%s', failure, reason: %s" % (fid, status.detailed())
+            print "\n".strip()
+        except(Exception) as e:
+            print "Error: %s" % e
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
     def help(self, options):
         parser = argparse.ArgumentParser(add_help=False,
                                          usage="oftool help <command>")
@@ -885,6 +1024,25 @@ class OFToolParser(object):
             elif isinstance(e, KeyError):
                 print ("Error: unknown attribute %s in file '%s'" % (e, path))
             
+            return None
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def read_flows(self, path):
+        try:
+            with open(path, 'r') as f:
+                objs = json.load(f, cls=ConcatJSONObjects)
+                if not objs:
+                    raise ValueError('no data')
+                return objs
+        except (Exception) as e:
+            if isinstance(e, IOError):
+                print("Error: failed to read file '%s'" % path)
+            elif isinstance(e, ValueError):
+                print "Error: failed to parse data in file '%s' [%s]" % (path, e)
+            else:
+                print "!!!Error: %s" % e
             return None
     
     #---------------------------------------------------------------------------

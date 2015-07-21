@@ -47,6 +47,7 @@ from framework.common.utils import find_key_value_in_dict
 from framework.common.utils import find_dict_in_list
 from framework.common.utils import strip_none
 from framework.common.utils import dict_keys_dashed_to_underscored
+from framework.common.utils import dbg_print
 
 #-------------------------------------------------------------------------------
 # 
@@ -250,6 +251,7 @@ class OFSwitch(OpenflowNode):
         status = OperStatus()
         templateUrlExt = "/table/{}/flow/{}"
         headers = {'content-type': 'application/yang.data+json'}
+        resp = None
         if isinstance(flow_entry, FlowEntry):
             ctrl = self.ctrl
             url = ctrl.get_node_config_url(self.name)
@@ -264,10 +266,40 @@ class OFSwitch(OpenflowNode):
                 status.set_status(STATUS.CTRL_INTERNAL_ERROR)
             elif (resp.status_code == 200):
                 status.set_status(STATUS.OK)
-            else:               
-                status.set_status(STATUS.HTTP_ERROR, resp)                
+            else:
+                status.set_status(STATUS.HTTP_ERROR, resp)
         else:
-            print "Error !!!"
+            dbg_print("DEBUG: unsupported data format ")
+            status.set_status(STATUS.MALFORM_DATA)
+        
+        return Result(status, resp)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def add_modify_flow_json(self, table_id, flow_id, flow_json):
+        status = OperStatus()
+        model_ref = "flow-node-inventory:flow"
+        templateUrlExt = "/table/{}/flow/{}"
+        headers = {'content-type': 'application/yang.data+json'}
+        resp = None
+        if isinstance(flow_json, basestring):
+            ctrl = self.ctrl
+            url = ctrl.get_node_config_url(self.name)
+            urlext = templateUrlExt.format(table_id, flow_id)
+            url += urlext
+            payload = {model_ref: json.loads(flow_json)}
+            resp = ctrl.http_put_request(url, json.dumps(payload), headers)
+            if(resp == None):
+                status.set_status(STATUS.CONN_ERROR)
+            elif(resp.content == None):
+                status.set_status(STATUS.CTRL_INTERNAL_ERROR)
+            elif (resp.status_code == 200):
+                status.set_status(STATUS.OK)
+            else:
+                status.set_status(STATUS.HTTP_ERROR, resp)
+        else:
+            dbg_print("DEBUG: unsupported data format ")
             status.set_status(STATUS.MALFORM_DATA)
         
         return Result(status, resp)

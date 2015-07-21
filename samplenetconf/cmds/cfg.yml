@@ -8,6 +8,8 @@ ctrlPswd:  'admin'
 # NetconfNode specification
 nodeName: "vRouter"
 nodeIpAddr: "172.22.17.107"
+#nodeName: "mbp108"
+#nodeIpAddr: "172.22.17.108"
 nodePortNum: 830
 nodeUname: "vyatta"
 nodePswd: "vyatta"
