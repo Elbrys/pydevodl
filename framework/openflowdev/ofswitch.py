@@ -714,7 +714,7 @@ class FlowEntry(object):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def to_yang_json(self):
+    def to_yang_json(self, strip=False):
         s = self.to_json()
         # Convert all 'underscored' keywords to 'dash-separated' form used
         # by ODL YANG models naming conventions
@@ -723,6 +723,11 @@ class FlowEntry(object):
         # multi-part keywords in YANG models being hash separated
         s = s.replace('table-id', 'table_id')
         s = s.replace('cookie-mask', 'cookie_mask')
+        if strip:
+            # ignore unassigned ("empty") attributes
+            d1 = json.loads(s)
+            d2 = strip_none(d1)
+            s = json.dumps(d2, sort_keys=True, indent=4)
         
         return s
     
@@ -753,7 +758,7 @@ class FlowEntry(object):
         # Flow Cookie
         v = self.get_flow_cookie()
         if (v != None):
-            odc['cookie'] = hex(v)
+            odc['cookie'] = hex(int(v))
         
         # Flow Duration
         v = self.get_duration()
@@ -803,7 +808,7 @@ class FlowEntry(object):
             
             v = m.get_eth_type()
             if (v != None):
-                odm['eth_type'] = hex(v)
+                odm['eth_type'] = hex(int(v))
             
             v = m.get_eth_src()
             if (v != None):
@@ -966,7 +971,7 @@ class FlowEntry(object):
                     elif (isinstance(action, PushVlanHeaderAction)):
                         s = "push_vlan="
                         eth_type = action.get_eth_type()
-                        s += str(hex(eth_type))
+                        s += str(hex(int(eth_type)))
                         push_vlan_list.append(s)
                     elif (isinstance(action, PopVlanHeaderAction)):
                         s = "pop_vlan"
@@ -974,7 +979,7 @@ class FlowEntry(object):
                     elif (isinstance(action, PushMplsHeaderAction)):
                         s = "push_mpls="
                         eth_type = action.get_eth_type()
-                        s += str(hex(eth_type))
+                        s += str(hex(int(eth_type)))
                         push_mpls_list.append(s)
                     elif (isinstance(action, PopMplsHeaderAction)):
                         s = "pop_mpls"
@@ -1288,11 +1293,19 @@ class Instructions():
         if (d != None and isinstance(d, dict)):
             self.instructions = []
             for k,v in d.items():
-                if (('instruction' == k) and isinstance(v, list)):
-                    for item in v:
-                        if (isinstance(item, dict)):
-                            inst = Instruction(d=item)
+                if ('instruction' == k):
+                    if isinstance(v, list):
+                        for item in v:
+                            if (isinstance(item, dict)):
+                                inst = Instruction(d=item)
+                                self.add_instruction(inst)
+                    elif isinstance(v, dict):
+                            inst = Instruction(d=v)
                             self.add_instruction(inst)
+                    else:
+                        msg = "DEBUG: key=%s, value=%s" \
+                              " - unexpected data format" % (k, v)
+                        dbg_print(msg)
         else:
             raise TypeError("!!!Error, argument '%s' is of a wrong type "
                             "('dict' is expected)" % d)
@@ -1340,44 +1353,24 @@ class Instruction():
     #---------------------------------------------------------------------------
     def __init_from_dict__(self, d):
         if(d != None and isinstance(d, dict)):
+            p1 = 'apply_actions'
+            p2 = 'action'
+            p3 = 'order'
             for k,v in d.items():
-                if ('apply_actions' == k):
-                    self.apply_actions = {'action': []}
-                    p1 = 'action'
-                    if p1 in v and isinstance(v[p1], list):
-                        for a in v[p1]:
-                            if isinstance(a, dict):
-                                p2 = 'output_action'
-                                p3 = 'push_vlan_action'
-                                p4 = 'pop_vlan_action'
-                                p5 = 'push_mpls_action'
-                                p6 = 'pop_mpls_action'
-                                p7 = 'set_field'
-                                p8 = 'drop_action'
-                                if (p2 in a):
-                                    action = OutputAction(d=a[p2]) 
-                                    self.add_apply_action(action)
-                                elif (p3 in a):
-                                    action = PushVlanHeaderAction(d=a[p3])
-                                    self.add_apply_action(action)
-                                elif (p4 in a):
-                                    action = PopVlanHeaderAction()
-                                    self.add_apply_action(action)
-                                elif (p5 in a):
-                                    action = PushMplsHeaderAction(d=a[p5])
-                                    self.add_apply_action(action)
-                                elif (p6 in a):
-                                    action = PopMplsHeaderAction()
-                                    self.add_apply_action(action)
-                                elif (p7 in a):
-                                    action = SetFieldAction(d=a[p7])
-                                    self.add_apply_action(action)
-                                elif (p8 in a):
-                                    action = DropAction()
-                                    self.add_apply_action(action)
-                                else:
-                                    print "[Instruction] TBD"
-                elif 'order':
+                if (p1 == k):
+                    self.apply_actions = {p2: []}
+                    if p2 in v:
+                        if isinstance(v[p2], list):
+                            for a in v[p2]:
+                                if isinstance(a, dict):
+                                    action = self.create_action_from_dict(a)
+                                    if (action):
+                                        self.add_apply_action(action)
+                        elif isinstance(v[p2], dict):
+                            action = self.create_action_from_dict(v[p2])
+                            if (action):
+                                self.add_apply_action(action)
+                elif p3:
                     self.order = v
                 else:
                     setattr(self, k, v)
@@ -1412,6 +1405,45 @@ class Instruction():
             res = True
         
         return res
+    
+#-------------------------------------------------------------------------------
+# 
+#-------------------------------------------------------------------------------
+    def create_action_from_dict(self, d):
+        if isinstance(d, dict):
+            action = None
+            
+            p1 = 'order'
+            p2 = 'output_action'
+            p3 = 'push_vlan_action'
+            p4 = 'pop_vlan_action'
+            p5 = 'push_mpls_action'
+            p6 = 'pop_mpls_action'
+            p7 = 'set_field'
+            p8 = 'drop_action'
+            action_order = d.get(p1, None)
+            if (p2 in d):
+                action = OutputAction(order=action_order, d=d[p2])
+            elif (p3 in d):
+                action = PushVlanHeaderAction(order=action_order, d=d[p3])
+            elif (p4 in d):
+                action = PopVlanHeaderAction(order=action_order)
+            elif (p5 in d):
+                action = PushMplsHeaderAction(order=action_order, d=d[p5])
+            elif (p6 in d):
+                action = PopMplsHeaderAction(order=action_order)
+            elif (p7 in d):
+                action = SetFieldAction(order=action_order, d=d[p7])
+            elif (p8 in d):
+                action = DropAction(order=action_order)
+            else:
+                msg = "can not find action in d='%s'" % d
+                dbg_print(msg)
+            
+            return action
+        else:
+            raise TypeError("[Instruction] wrong argument type '%s'"
+                            " ('dict' is expected)" % type(d))
 
 #-------------------------------------------------------------------------------
 # 
@@ -1434,25 +1466,28 @@ class Action(object):
 #-------------------------------------------------------------------------------
 class OutputAction(Action):
     ''' The Output action forwards a packet to a specified OpenFlow port
-        OpenFlow switches must support forwarding to physical ports, 
+        OpenFlow switches must support forwarding to physical ports,
         switch-defined logical ports and the required reserved ports  '''
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def __init__(self, action_order=0, port=None, max_len=None, d=None):
+    def __init__(self, order=None, port=None, max_len=None, d=None):
+        super(OutputAction, self).__init__(order)
+        
         if(d != None):
             self.__init_from_dict__(d)
             return
         
-        super(OutputAction, self).__init__(action_order)
-        self.output_action = {'output_node_connector' : port, 'max_length' : max_len }
+        self.output_action = {'output_node_connector' : port,
+                              'max_length' : max_len }
     
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def __init_from_dict__(self,d):
+    def __init_from_dict__(self, d):
         if(d != None and isinstance(d, dict)):
-            self.output_action = {'output_node_connector' : None, 'max_length' : None }
+            self.output_action = {'output_node_connector' : None,
+                                  'max_length' : None }
             for k,v in d.items():
                 if ('output_node_connector' == k):
                     self.set_outport(v)
@@ -1511,7 +1546,7 @@ class OutputAction(Action):
 #-------------------------------------------------------------------------------
 class SetQueueAction(Action):
     ''' The set-queue action sets the queue id for a packet. When the packet is
-        forwarded to a port using the output action, the queue id determines 
+        forwarded to a port using the output action, the queue id determines
         which queue attached to this port is used for scheduling and forwarding
         the packet. Forwarding behavior is dictated by the configuration of the
         queue and is used to provide basic Quality-of-Service (QoS) support '''
@@ -1551,8 +1586,8 @@ class DropAction(Action):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def __init__(self, action_order=None):
-        super(DropAction, self).__init__(action_order)
+    def __init__(self, order=None):
+        super(DropAction, self).__init__(order)
         self.drop_action = {}
     
     #---------------------------------------------------------------------------
@@ -1779,20 +1814,24 @@ class PushVlanHeaderAction(Action):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def __init__(self, action_order=None, eth_type=None, tag=None, pcp=None, cfi=None, vid=None, d=None):
+    def __init__(self, order=None, eth_type=None, tag=None, pcp=None,
+                 cfi=None, vid=None, d=None):
+        super(PushVlanHeaderAction, self).__init__(order)
+        
         if (d != None):
             self.__init_from_dict__(d)
             return
         
-        super(PushVlanHeaderAction, self).__init__(action_order)
-        self.push_vlan_action = {'ethernet_type': eth_type, 'tag': tag, 'pcp': pcp, 'cfi': cfi, 'vlan_id': vid }
+        self.push_vlan_action = {'ethernet_type': eth_type, 'tag': tag,
+                                 'pcp': pcp, 'cfi': cfi, 'vlan_id': vid }
     
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def __init_from_dict__(self, d):
         if (d != None and isinstance(d, dict)):
-            self.push_vlan_action = {'ethernet_type': None, 'tag': None, 'pcp': None, 'cfi': None, 'vlan_id': None }
+            self.push_vlan_action = {'ethernet_type': None, 'tag': None,
+                                     'pcp': None, 'cfi': None, 'vlan_id': None }
             for k,v in d.items():
                 if ('ethernet_type' == k):
                     self.set_eth_type(v)
@@ -1857,8 +1896,8 @@ class PopVlanHeaderAction(Action):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def __init__(self, action_order=None):
-        super(PopVlanHeaderAction, self).__init__(action_order)
+    def __init__(self, order=None):
+        super(PopVlanHeaderAction, self).__init__(order)
         self.pop_vlan_action = {}
 
 #-------------------------------------------------------------------------------
@@ -1871,12 +1910,13 @@ class PushMplsHeaderAction(Action):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def __init__(self, action_order=None, ethernet_type=None, d=None):
+    def __init__(self, order=None, ethernet_type=None, d=None):
+        super(PushMplsHeaderAction, self).__init__(order)
+        
         if (d != None):
             self.__init_from_dict__(d)
             return
         
-        super(PushMplsHeaderAction, self).__init__(action_order)
         self.push_mpls_action = {'ethernet_type': ethernet_type}
     
     #---------------------------------------------------------------------------
@@ -1921,8 +1961,8 @@ class PopMplsHeaderAction(Action):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def __init__(self, action_order=0, ethernet_type=None):
-        super(PopMplsHeaderAction, self).__init__(action_order)
+    def __init__(self, order=0, ethernet_type=None):
+        super(PopMplsHeaderAction, self).__init__(order)
         self.pop_mpls_action = {'ethernet_type': ethernet_type}
     
     #---------------------------------------------------------------------------
@@ -2082,12 +2122,13 @@ class SetFieldAction(Action):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def __init__(self, action_order=None, d=None):
+    def __init__(self, order=None, d=None):
+        super(SetFieldAction, self).__init__(order)
+        
         if (d != None):
             self.__init_from_dict__(d)
             return
         
-        super(SetFieldAction, self).__init__(action_order)
         self.set_field = {'vlan_match': None, 'protocol_match_fields' : None}
     
     #---------------------------------------------------------------------------

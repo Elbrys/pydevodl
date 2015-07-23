@@ -33,8 +33,10 @@ import json
 import yaml
 import argparse
 
+from collections import OrderedDict
 from framework.controller.controller import Controller
 from framework.common.status import STATUS
+from framework.common.utils import dbg_print
 from framework.openflowdev.ofswitch import OFSwitch, FlowEntry
 from framework.controller.topology import Topology, Node
 from framework.controller.inventory import Inventory, \
@@ -107,16 +109,6 @@ class ConcatJSONObjects(json.JSONDecoder):
                 cnt = l.count('"', 0, idx)
                 if cnt%2 == 0:   # single-line comment substring is outside
                     l = l[:idx]  # of the JSON body, ignore comment part
-            
-            '''
-            idx = l.find(self.MULTILINE_COMMENT_START)
-            if idx >= 0:
-                l = l[:idx]
-            
-            idx = l.find(self.MULTILINE_COMMENT_END)
-            if idx >= 0:
-                continue
-            '''
             
             json_string += l
         
@@ -635,7 +627,7 @@ class FlowInfo():
                     print " -- Flow id '%s'" % flow_entry.get_flow_id()
                     print " %s" % flow_entry.to_ofp_oxm_syntax()
                 else:
-                    lines = flow_entry.to_yang_json().split('\n')
+                    lines = flow_entry.to_yang_json(strip=True).split('\n')
                     for line in lines:
                         print " %s" % line
         else:
@@ -677,7 +669,7 @@ class FlowInfo():
                 print " -- Flow id '%s'" % flow_entry.get_flow_id()
                 print " %s" % flow_entry.to_ofp_oxm_syntax()
             else:
-                lines = flow_entry.to_yang_json().split('\n')
+                lines = flow_entry.to_yang_json(strip=True).split('\n')
                 for line in lines:
                     print " %s" % line
         else:
@@ -931,6 +923,7 @@ class OFToolParser(object):
             description="Add flow entries to the Controller's cache",
             usage="%(prog)s add-flow -s=SWITCHID|--switch=SWICTHID\n"
                   "                       -f <path>|--file <path>\n"
+                  "                        [--dry-run]\n"
                   "\n\n"
                   "Add flow entries to the Controller's cache\n\n"
                   "\n\n"
@@ -938,7 +931,7 @@ class OFToolParser(object):
                   "  -s, --switch   switch identifier\n"
                   "  -f, --file     path to the file containing flow entries\n"
                   "                 (default is './flow.json')\n"
-            
+                  "  -dry-run       show content of flow(s) to be created"
             )
         parser.add_argument('-s', '--switch', metavar = "SWITCHID")
         parser.add_argument('-f', '--file', metavar="<path>",
@@ -948,12 +941,23 @@ class OFToolParser(object):
                             default="./flow.json")
         parser.add_argument('-U', action="store_true", dest="usage",
                             help=argparse.SUPPRESS)
+        parser.add_argument('--dry-run', action="store_true",
+                            dest='dry_run', default=False)
         args = parser.parse_args(options)
+        
         if(args.usage):
             parser.print_usage()
             print "\n".strip()
             return
-    
+        
+        if(args.dry_run):
+            flows = self.read_flows(args.flow_file)
+            if flows:
+                for flow in flows:
+                    print json.dumps(flow, indent=4)
+            
+            return
+        
         if (args.switch == None):
             msg = "option -s (or --switch) is required"
             parser.error(msg)
@@ -983,7 +987,8 @@ class OFToolParser(object):
                     print "Flow id '%s', failure, reason: %s" % (fid, status.detailed())
             print "\n".strip()
         except(Exception) as e:
-            print "Error: %s" % e
+            msg = "Error: %s" % repr(e)
+            dbg_print(msg)
     
     #---------------------------------------------------------------------------
     # 
@@ -1032,7 +1037,8 @@ class OFToolParser(object):
     def read_flows(self, path):
         try:
             with open(path, 'r') as f:
-                objs = json.load(f, cls=ConcatJSONObjects)
+                objs = json.load(f, cls=ConcatJSONObjects,
+                                 object_pairs_hook=OrderedDict)
                 if not objs:
                     raise ValueError('no data')
                 return objs
