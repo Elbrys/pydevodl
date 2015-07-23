@@ -110,6 +110,8 @@ class ConcatJSONObjects(json.JSONDecoder):
                 if cnt%2 == 0:   # single-line comment substring is outside
                     l = l[:idx]  # of the JSON body, ignore comment part
             
+            # remove whitespaces preceding stripped comments (if any)
+            l = l.rstrip()
             json_string += l
         
         return json_string
@@ -120,11 +122,16 @@ class ConcatJSONObjects(json.JSONDecoder):
     def decode(self, s):
         objs = []
         json_string = self._strip_comments(s)
-        idx = 0
-        js_len = len(json_string)
-        while idx < js_len:
-            obj, idx = self.raw_decode(json_string, idx)
-            objs.append(obj)
+        try:
+            idx = 0
+            js_len = len(json_string)
+            while idx < js_len:
+                obj, idx = self.raw_decode(json_string, idx)
+                objs.append(obj)
+        except(Exception) as e:
+            print "\n!!! JSON decode failed\n"
+            print "Decode string:\n%s\n" % json_string
+            print "Failure Reason: %s\n" % e
         
         return objs
     
