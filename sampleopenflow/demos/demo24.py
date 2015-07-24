@@ -114,10 +114,10 @@ if __name__ == "__main__":
     #     Actions:     'Pop MPLS Header'
     #                  'Output'
     instruction = Instruction(instruction_order = 0)
-    action = PopMplsHeaderAction(action_order = 0)
+    action = PopMplsHeaderAction(order = 0)
     action.set_eth_type(pop_ether_type)
     instruction.add_apply_action(action)
-    action = OutputAction(action_order = 1, port = output_port)
+    action = OutputAction(order = 1, port = output_port)
     instruction.add_apply_action(action)
     flow_entry.add_instruction(instruction)
     
@@ -145,7 +145,7 @@ if __name__ == "__main__":
         exit(0)
     
     
-    print ("\n")    
+    print ("\n")
     print ("<<< Get configured flow from the Controller")
     time.sleep(rundelay)
     result = ofswitch.get_configured_flow(table_id, flow_id)

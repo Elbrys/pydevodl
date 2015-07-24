@@ -164,7 +164,7 @@ if __name__ == "__main__":
     
     print "\n"
     print (">>> Remove '%s' NETCONF node from the Controller" % nodeName)
-    time.sleep(rundelay)    
+    time.sleep(rundelay)
     result = ctrl.delete_netconf_node(vrouter)
     status = result.get_status()
     if(status.eq(STATUS.OK)):

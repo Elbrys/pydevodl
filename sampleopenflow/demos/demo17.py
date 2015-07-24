@@ -118,7 +118,7 @@ if __name__ == "__main__":
     # --- Instruction: 'Apply-actions'
     #     Actions:     'Output'
     instruction = Instruction(instruction_order = 0)
-    action = OutputAction(action_order = 0, port = output_port)
+    action = OutputAction(order = 0, port = output_port)
     instruction.add_apply_action(action)
     flow_entry.add_instruction(instruction)
     
@@ -129,7 +129,7 @@ if __name__ == "__main__":
     #                   IP DSCP
     #                   UDP Source Port
     #                   UDP Destination Port
-    match = Match()    
+    match = Match()
     match.set_eth_type(eth_type)
     match.set_ipv6_src(ipv6_src)
     match.set_ipv6_dst(ipv6_dst)

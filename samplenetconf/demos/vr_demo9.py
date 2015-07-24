@@ -236,6 +236,7 @@ if __name__ == "__main__":
     vpn.set_l2tp_remote_access_user(name=uname2, pswd=upswd2)
     vpn.set_l2tp_remote_access_user(name=uname3, pswd=upswd3)
     
+    
     print "\n"
     print (">>> VPN configuration to be applied to the '%s'" % (nodeName))
     print vpn.get_payload()

@@ -113,11 +113,11 @@ if __name__ == "__main__":
     # --- Instruction: 'Apply-actions'
     #     Actions:     'Set Field'
     #                  'Output'
-    instruction = Instruction(instruction_order = 0)    
-    action = SetFieldAction(action_order = 0)
+    instruction = Instruction(instruction_order = 0)
+    action = SetFieldAction(order = 0)
     action.set_mpls_label(new_mpls_label)
     instruction.add_apply_action(action)
-    action = OutputAction(action_order = 1, port = 2)
+    action = OutputAction(order = 1, port = 2)
     instruction.add_apply_action(action)
     flow_entry.add_instruction(instruction)
     

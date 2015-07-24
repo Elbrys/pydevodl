@@ -97,7 +97,7 @@ if __name__ == "__main__":
     # --- Instruction: 'Apply-actions'
     #     Action:      'Drop'
     instruction = Instruction(instruction_order = 0)
-    action = DropAction(action_order = 0)
+    action = DropAction(order = 0)
     instruction.add_apply_action(action)
     flow_entry.add_instruction(instruction)
     

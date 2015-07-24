@@ -90,7 +90,7 @@ if __name__ == "__main__":
     flow_entry.set_flow_priority(1000)
     
     instruction = Instruction(instruction_order = 0)
-    action = DropAction(action_order = 0)
+    action = DropAction(order = 0)
     instruction.add_apply_action(action)
     flow_entry.add_instruction(instruction)
     
@@ -113,7 +113,7 @@ if __name__ == "__main__":
     flow_entry.set_flow_priority(2000)
     
     instruction = Instruction(instruction_order = 0)
-    action = OutputAction(action_order = 0, port="CONTROLLER", max_len=60)
+    action = OutputAction(order = 0, port="CONTROLLER", max_len=60)
     instruction.add_apply_action(action)
     flow_entry.add_instruction(instruction)
     
@@ -136,11 +136,11 @@ if __name__ == "__main__":
     flow_entry.set_flow_priority(3000)
     
     instruction = Instruction(instruction_order = 0)
-    action = OutputAction(action_order = 0, port=5)
+    action = OutputAction(order = 0, port=5)
     instruction.add_apply_action(action)
-    action = OutputAction(action_order = 1, port=6)
+    action = OutputAction(order = 1, port=6)
     instruction.add_apply_action(action)
-    action = OutputAction(action_order = 2, port=7)
+    action = OutputAction(order = 2, port=7)
     instruction.add_apply_action(action)
     
     flow_entry.add_instruction(instruction)
@@ -164,23 +164,23 @@ if __name__ == "__main__":
     
     instruction = Instruction(instruction_order = 0)
     
-    action = PushVlanHeaderAction(action_order = 0)
+    action = PushVlanHeaderAction(order = 0)
     action.set_eth_type(ETH_TYPE_QINQ)
     instruction.add_apply_action(action)
     
-    action = SetFieldAction(action_order = 1)
+    action = SetFieldAction(order = 1)
     action.set_vlan_id(100)
     instruction.add_apply_action(action)
     
-    action = PushVlanHeaderAction(action_order = 2)
+    action = PushVlanHeaderAction(order = 2)
     action.set_eth_type(ETH_TYPE_DOT1Q)
     instruction.add_apply_action(action)
     
-    action = SetFieldAction(action_order = 3)
+    action = SetFieldAction(order = 3)
     action.set_vlan_id(998)
     instruction.add_apply_action(action)
     
-    action = OutputAction(action_order = 4, port = 111)
+    action = OutputAction(order = 4, port = 111)
     instruction.add_apply_action(action)
     
     flow_entry.add_instruction(instruction)
@@ -206,23 +206,23 @@ if __name__ == "__main__":
     
     instruction = Instruction(instruction_order = 0)
     
-    action = PushVlanHeaderAction(action_order = 0)
+    action = PushVlanHeaderAction(order = 0)
     action.set_eth_type(ETH_TYPE_QINQ)
     instruction.add_apply_action(action)
     
-    action = SetFieldAction(action_order = 1)
+    action = SetFieldAction(order = 1)
     action.set_vlan_id(100)
     instruction.add_apply_action(action)
     
-    action = PushVlanHeaderAction(action_order = 2)
+    action = PushVlanHeaderAction(order = 2)
     action.set_eth_type(ETH_TYPE_DOT1Q)
     instruction.add_apply_action(action)
     
-    action = SetFieldAction(action_order = 3)
+    action = SetFieldAction(order = 3)
     action.set_vlan_id(998)
     instruction.add_apply_action(action)
     
-    action = OutputAction(action_order = 4, port = 111)
+    action = OutputAction(order = 4, port = 111)
     instruction.add_apply_action(action)
     
     flow_entry.add_instruction(instruction)
@@ -248,10 +248,10 @@ if __name__ == "__main__":
     
     instruction = Instruction(instruction_order = 0)
     
-    action = PopVlanHeaderAction(action_order = 0)
+    action = PopVlanHeaderAction(order = 0)
     instruction.add_apply_action(action)
     
-    action = OutputAction(action_order = 1, port = 110)
+    action = OutputAction(order = 1, port = 110)
     instruction.add_apply_action(action)
     
     flow_entry.add_instruction(instruction)
@@ -277,10 +277,10 @@ if __name__ == "__main__":
     
     instruction = Instruction(instruction_order = 0)
     
-    action = PopVlanHeaderAction(action_order = 0)
+    action = PopVlanHeaderAction(order = 0)
     instruction.add_apply_action(action)
     
-    action = OutputAction(action_order = 1, port = 110)
+    action = OutputAction(order = 1, port = 110)
     instruction.add_apply_action(action)
     
     flow_entry.add_instruction(instruction)

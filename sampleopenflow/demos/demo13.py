@@ -111,7 +111,7 @@ if __name__ == "__main__":
     # --- Instruction: 'Apply-actions'
     #     Action:      'Output' to port 7
     instruction = Instruction(instruction_order = 0)
-    action = OutputAction(action_order = 0, port = 7)
+    action = OutputAction(order = 0, port = 7)
     instruction.add_apply_action(action)
     flow_entry.add_instruction(instruction)
     
@@ -121,8 +121,8 @@ if __name__ == "__main__":
     #                   VLAN ID
     #                   VLAN PCP
     match = Match()
-    match.set_eth_type(eth_type)    
-    match.set_eth_src(eth_src)    
+    match.set_eth_type(eth_type)
+    match.set_eth_src(eth_src)
     match.set_eth_dst(eth_dst)
     match.set_vlan_id(vlan_id)
     match.set_vlan_pcp(vlan_pcp)

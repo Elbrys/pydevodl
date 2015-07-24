@@ -124,7 +124,7 @@ if __name__ == "__main__":
     # --- Instruction: 'Apply-actions'
     #     Action:      'Output' CONTROLLER
     instruction = Instruction(instruction_order = 0)
-    action = OutputAction(action_order = 0, port = "CONTROLLER")
+    action = OutputAction(order = 0, port = "CONTROLLER")
     instruction.add_apply_action(action)
     flow_entry.add_instruction(instruction)
     

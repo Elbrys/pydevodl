@@ -128,7 +128,7 @@ if __name__ == "__main__":
     # --- Instruction: 'Apply-actions'
     #     Action:      'Output' NORMAL
     instruction = Instruction(instruction_order = 0)
-    action = OutputAction(action_order = 0, port = "NORMAL")
+    action = OutputAction(order = 0, port = "NORMAL")
     instruction.add_apply_action(action)
     flow_entry.add_instruction(instruction)
     

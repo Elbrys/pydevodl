@@ -120,13 +120,13 @@ if __name__ == "__main__":
     #                  'Set Field'
     #                  'Output'
     instruction = Instruction(instruction_order = 0)
-    action = PushMplsHeaderAction(action_order = 0)
+    action = PushMplsHeaderAction(order = 0)
     action.set_eth_type(push_ether_type)
     instruction.add_apply_action(action)
-    action = SetFieldAction(action_order = 1)
+    action = SetFieldAction(order = 1)
     action.set_mpls_label(mpls_label)
     instruction.add_apply_action(action)
-    action = OutputAction(action_order = 2, port = output_port)
+    action = OutputAction(order = 2, port = output_port)
     instruction.add_apply_action(action)
     flow_entry.add_instruction(instruction)
     

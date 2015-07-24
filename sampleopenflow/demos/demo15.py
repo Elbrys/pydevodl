@@ -119,13 +119,13 @@ if __name__ == "__main__":
     #                  'SetField'
     #                  'Output'
     instruction = Instruction(instruction_order = 0)
-    action = PushVlanHeaderAction(action_order = 0)
+    action = PushVlanHeaderAction(order = 0)
     action.set_eth_type(eth_type = push_eth_type)
-    instruction.add_apply_action(action)    
-    action = SetFieldAction(action_order = 1)
+    instruction.add_apply_action(action)
+    action = SetFieldAction(order = 1)
     action.set_vlan_id(vid = push_vlan_id)
-    instruction.add_apply_action(action)    
-    action = OutputAction(action_order = 2, port = output_port)
+    instruction.add_apply_action(action)
+    action = OutputAction(order = 2, port = output_port)
     instruction.add_apply_action(action)
     flow_entry.add_instruction(instruction)
     
@@ -133,11 +133,11 @@ if __name__ == "__main__":
     #                   Ethernet Source Address
     #                   Ethernet Destination Address
     #                   Input Port
-    match = Match()    
+    match = Match()
     match.set_eth_type(eth_type)
     match.set_vlan_id(vlan_id)
     match.set_in_port(in_port = input_port)
-    flow_entry.add_match(match)   
+    flow_entry.add_match(match)
     
     
     print ("\n")

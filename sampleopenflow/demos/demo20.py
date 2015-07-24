@@ -130,7 +130,7 @@ if __name__ == "__main__":
     # --- Instruction: 'Apply-actions'
     #     Actions:     'Output'
     instruction = Instruction(instruction_order = 0)
-    action = OutputAction(action_order = 0, port = output_port)
+    action = OutputAction(order = 0, port = output_port)
     instruction.add_apply_action(action)
     flow_entry.add_instruction(instruction)
     
@@ -147,14 +147,14 @@ if __name__ == "__main__":
     match = Match()    
     match.set_eth_type(eth_type)
     match.set_ip_dscp(ip_dscp)
-    match.set_ip_ecn(ip_ecn)   
+    match.set_ip_ecn(ip_ecn)
     match.set_ipv6_src(ipv6_src)
     match.set_ipv6_dst(ipv6_dst)
     match.set_ipv6_flabel(ipv6_flabel)
     match.set_ip_proto(ip_proto)
     match.set_icmpv6_type(icmpv6_type)
     match.set_icmpv6_code(icmpv6_code)
-    match.set_metadata(metadata)    
+    match.set_metadata(metadata)
     flow_entry.add_match(match)
     
     

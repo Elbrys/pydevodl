@@ -105,10 +105,12 @@ if __name__ == "__main__":
     result = vrouter.get_firewalls_cfg()
     status = result.get_status()
     if (status.eq(STATUS.OK) == True):
-        print ("'%s' firewalls config:" % nodeName)
+        print ("'%s' firewall config:" % nodeName)
         cfg = result.get_data()
         data = json.loads(cfg)
         print json.dumps(data, indent=4)
+    elif (status.eq(STATUS.DATA_NOT_FOUND)):
+        print ("No firewalls configuration found")
     else:
         print ("\n")
         print ("!!!Demo terminated, reason: %s" % status.brief().lower())
@@ -117,16 +119,16 @@ if __name__ == "__main__":
     
     print "\n"
     firewallgroup = "FW-ACCEPT-SRC-172_22_17_108"
-    firewall = Firewall()    
-    rules = Rules(firewallgroup)    
+    firewall = Firewall()
+    rules = Rules(firewallgroup)
     rulenum = 33
     rule = Rule(rulenum)
     rule.add_action("accept")
-    rule.add_source_address("172.22.17.108")    
+    rule.add_source_address("172.22.17.108")
     rules.add_rule(rule)
     firewall.add_rules(rules)
     print ("<<< Create new firewall instance '%s' on '%s' " % (firewallgroup, nodeName))
-    time.sleep(rundelay)    
+    time.sleep(rundelay)
     result = vrouter.create_firewall_instance(firewall)
     status = result.get_status()
     if(status.eq(STATUS.OK) == True):
@@ -172,7 +174,7 @@ if __name__ == "__main__":
     print "\n"
     print ("<<< Remove firewall instance '%s' from '%s' " % (firewallgroup, nodeName))
     time.sleep(rundelay)
-    result = vrouter.delete_firewall_instance(firewall)  
+    result = vrouter.delete_firewall_instance(firewall)
     status = result.get_status()
     if(status.eq(STATUS.OK) == True):
         print ("Firewall instance '%s' was successfully deleted" % firewallgroup)
@@ -200,7 +202,7 @@ if __name__ == "__main__":
     
     print "\n"
     print (">>> Remove '%s' NETCONF node from the Controller" % nodeName)
-    time.sleep(rundelay)    
+    time.sleep(rundelay)
     result = ctrl.delete_netconf_node(vrouter)
     status = result.get_status()
     if(status.eq(STATUS.OK)):
