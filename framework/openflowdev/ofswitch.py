@@ -2129,14 +2129,18 @@ class SetFieldAction(Action):
             self.__init_from_dict__(d)
             return
         
-        self.set_field = {'vlan_match': None, 'protocol_match_fields' : None}
+        self.set_field = {'vlan_match': None,
+                          'protocol_match_fields' : None,
+                          'ip_match': None}
     
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
     def __init_from_dict__(self,d):
         if (d != None and isinstance(d, dict)):
-            self.set_field = {'vlan_match': None, 'protocol_match_fields' : None}
+            self.set_field = {'vlan_match': None,
+                              'protocol_match_fields' : None,
+                              'ip_match': None}
             for k,v in d.items():
                 if ('vlan_match' == k):
                     self.set_field[k] = VlanMatch(v)
@@ -2182,11 +2186,83 @@ class SetFieldAction(Action):
     #---------------------------------------------------------------------------
     def get_mpls_label(self):
         res = None
-        p = 'set_field'
-        if (hasattr(self, p)):
-            pm = getattr(self, p)['protocol_match_fields']
+        p1 = 'set_field'
+        p2 = 'protocol_match_fields'
+        if (hasattr(self, p1)):
+            pm = getattr(self, p1)[p2]
             if (pm != None):
                 res = pm.get_mpls_label()
+        
+        return res
+    
+    """
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_ip_proto(self, proto):
+        p = 'ip_match'
+        if(self.set_field[p] == None):
+            self.set_field[p] = IpMatch()
+        self.set_field[p].set_ip_proto(proto)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_ip_proto(self):
+        res = None
+        p1 = 'set_field'
+        p2 = 'ip_match'
+        if (hasattr(self, p1)):
+            vm = getattr(self, p1)[p2]
+            if (vm != None):
+                res = vm.get_ip_proto()
+        
+        return res
+    """
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_ip_dscp(self, dscp):
+        p = 'ip_match'
+        if(self.set_field[p] == None):
+            self.set_field[p] = IpMatch()
+        self.set_field[p].set_ip_dscp(dscp)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_ip_dscp(self):
+        res = None
+        p1 = 'set_field'
+        p2 = 'ip_match'
+        if (hasattr(self, p1)):
+            vm = getattr(self, p1)[p2]
+            if (vm != None):
+                res = vm.get_ip_dscp()
+        
+        return res
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_ip_ecn(self, ecn):
+        p = 'ip_match'
+        if(self.set_field[p] == None):
+            self.set_field[p] = IpMatch()
+        self.set_field[p].set_ip_ecn(ecn)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_ip_ecn(self):
+        res = None
+        p1 = 'set_field'
+        p2 = 'ip_match'
+        if (hasattr(self, p1)):
+            vm = getattr(self, p1)[p2]
+            if (vm != None):
+                res = vm.get_ip_ecn()
         
         return res
 
@@ -2253,6 +2329,41 @@ class LoopbackAction(Action):
     def __init__(self, order=0):
         super(LoopbackAction, self).__init__(order)
         self.loopback_action = {}
+
+class SetNwTosAction(Action):
+    ''' Modify IPv4 ToS bits.
+        Replace the existing IP ToS field. This action is only applied
+        to IPv4 packets.
+        NOTE: This is OpenFlow version 1.0 specific action type '''
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init__(self, order=None, d=None, tos=None):
+        super(SetNwTosAction, self).__init__(order)
+        
+        ''' Value with which to replace existing IPv4 ToS field
+            NOTE: The modern redefinition of the ToS field is a 6 bit
+                  Differentiated Services Code Point (DSCP) field (the
+                  6 upper bits of the original TOS field) and a 2 bit
+                  Explicit Congestion Notification (ECN) field. '''
+        self.set_nw_tos_action = {'tos' : tos }
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def set_tos(self, tos):
+        self.set_nw_tos_action['tos'] = tos
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_tos(self):
+        res = None
+        p = 'set_nw_tos_action'
+        if (hasattr(self, p)):
+            res = getattr(self, p)['tos']
+        
+        return res
 
 #-------------------------------------------------------------------------------
 # 
