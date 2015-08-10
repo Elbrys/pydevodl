@@ -534,57 +534,6 @@ class OFSwitch(OpenflowNode):
     def get_configured_FlowEntries(self, flow_table_id):
         return self.get_FlowEntries(flow_table_id, False)
 
-#---------------------------------------------------------------------------
-# 
-#---------------------------------------------------------------------------
-class ActionOutput():
-    ''' OpenFlow 'Output' action type '''
-    #---------------------------------------------------------------------------
-    # 
-    #---------------------------------------------------------------------------
-    def __init__(self, port=None, length=None, order=None):
-        self.type = 'output'
-        self.order = order
-        self.action = {'port': port, 'max_len': length}
-    
-    #---------------------------------------------------------------------------
-    # 
-    #---------------------------------------------------------------------------
-    def update(self, port=None, length=None, order=None):
-        self.action = {'port': port, 'max_len': length}
-        if(port != None):
-            self.action['port'] = port
-        if(length != None):
-            self.action['max_len'] = length
-        if(order != None):
-            self.order = order
-    
-    #---------------------------------------------------------------------------
-    # 
-    #---------------------------------------------------------------------------
-    def update_from_list(self, data):
-        if(data != None and type(data) is dict and ('output_action' in data)):
-            self.type = 'output'
-            self.order = find_key_value_in_dict(data, 'order')
-            self.action = {'port': None, 'max_len': None}
-            self.action['port'] = find_key_value_in_dict(data, 'output_node_connector')
-            self.action['max_len'] = find_key_value_in_dict(data, 'max_length')
-    
-    #---------------------------------------------------------------------------
-    # 
-    #---------------------------------------------------------------------------
-    def to_string(self):
-        s = ""
-        p = self.action['port']
-        l = self.action['max_len']
-        if(p != None and l != None):
-            if(p == 'CONTROLLER'):
-                s = '{}:{}'.format(p, l)
-            else:
-                s = '{}:{}'.format(self.type, p)
-        
-        return s
-
 #-------------------------------------------------------------------------------
 # 
 #-------------------------------------------------------------------------------
@@ -2194,31 +2143,6 @@ class SetFieldAction(Action):
                 res = pm.get_mpls_label()
         
         return res
-    
-    """
-    #---------------------------------------------------------------------------
-    # 
-    #---------------------------------------------------------------------------
-    def set_ip_proto(self, proto):
-        p = 'ip_match'
-        if(self.set_field[p] == None):
-            self.set_field[p] = IpMatch()
-        self.set_field[p].set_ip_proto(proto)
-    
-    #---------------------------------------------------------------------------
-    # 
-    #---------------------------------------------------------------------------
-    def get_ip_proto(self):
-        res = None
-        p1 = 'set_field'
-        p2 = 'ip_match'
-        if (hasattr(self, p1)):
-            vm = getattr(self, p1)[p2]
-            if (vm != None):
-                res = vm.get_ip_proto()
-        
-        return res
-    """
     
     #---------------------------------------------------------------------------
     # 

@@ -112,7 +112,7 @@ if __name__ == "__main__":
               match_ipv4_dst))
     print ("        Action: Set IPv4 ToS (tos %s)\n"
            "                Output (Port number %s)"
-           % (hex(mod_nw_tos),
+           % (mod_nw_tos,
               act_out_port))
     
     time.sleep(rundelay)
@@ -195,7 +195,7 @@ if __name__ == "__main__":
               match_ipv4_dst))
     print ("        Action: Set Field (IP DSCP %s)\n"
            "                Output (Port number %s)"
-           % (hex(mod_ip_dscp),
+           % (mod_ip_dscp,
               act_out_port))
     
     time.sleep(rundelay)
