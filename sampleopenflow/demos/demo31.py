@@ -94,13 +94,13 @@ if __name__ == "__main__":
     priority = 600
     cookie = 1000
     
-    match_in_port = 10
+    match_in_port = 109
     match_ip_eth_type = ETH_TYPE_IPv4
     match_ipv4_dst = "10.1.2.3/32"
     
     mod_nw_tos = 8
     
-    act_out_port = 15
+    act_out_port = 112
     
     print "\n"
     print ("<<< Set OpenFlow flow on the Controller")
@@ -167,7 +167,6 @@ if __name__ == "__main__":
         delete_flows(ofswitch, table_id, range(first_flow_id, flow_id+1))
         exit(0)
     
-    
     # ---------------------------------------------------
     # Second flow entry
     # ---------------------------------------------------
@@ -177,13 +176,13 @@ if __name__ == "__main__":
     priority = 600
     cookie = 1000
     
-    match_in_port = 11
+    match_in_port = 109
     match_eth_type = ETH_TYPE_IPv4
     match_ipv4_dst = "192.1.2.3/32"
     
     mod_ip_dscp = IP_DSCP_CS5
     
-    act_out_port = 15
+    act_out_port = 112
     
     print "\n"
     print ("<<< Set OpenFlow flow on the Controller")
@@ -262,4 +261,3 @@ if __name__ == "__main__":
     print (">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
     print (">>> Demo End")
     print (">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-    exit(0)

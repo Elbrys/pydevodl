@@ -3,9 +3,9 @@ ctrlIpAddr: "172.22.18.186"
 #ctrlIpAddr: "172.22.18.245"
 #ctrlIpAddr: "172.16.1.11"
 #ctrlIpAddr: "10.254.2.13"
-ctrlPortNum: "8181"     
-ctrlUname: 'admin' 
-ctrlPswd:  'admin'   
+ctrlPortNum: "8181"
+ctrlUname: 'admin'
+ctrlPswd:  'admin'
 
 # OpenflowNode specification
 # mininet switch 's1'

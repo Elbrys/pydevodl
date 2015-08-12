@@ -69,7 +69,7 @@ class Controller():
     def to_string(self):
         """ Returns string representation of this object. """
         return str(vars(self))
-
+    
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
@@ -84,7 +84,7 @@ class Controller():
              'adminName': self.adminName, 
              'adminPassword' : self.adminPassword}
         return json.dumps(d, default=lambda o: o.__dict__, sort_keys=True, indent=4)
-
+    
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------

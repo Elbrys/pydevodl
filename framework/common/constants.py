@@ -113,3 +113,9 @@ PCP_VO = 5  # Voice                  (priority 5)
 PCP_IC = 6  # Internetwork Control   (priority 6)
 PCP_NC = 7  # Network Control        (priority 7, highest)
 
+# OpenFlow Group types
+OFPGT_ALL      = "group-all"      # All (multicast/broadcast) group
+OFPGT_SELECT   = "group-select"   # Select group
+OFPGT_INDIRECT = "group-indirect" # Indirect group
+OFPGT_FF       = "group-ff"       # Fast failover group
+

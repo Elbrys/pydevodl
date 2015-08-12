@@ -160,6 +160,8 @@ class OpenFlowCapableNode():
     #---------------------------------------------------------------------------
     def __init__(self, inv_json=None, inv_dict=None):
         self.ports=[]
+        self.group_features = [] # Group support capabilities of the switch
+        self.groups = []         # Current groups on the switch
         
         if (inv_json):
             self.__init_from_json__(inv_json)
@@ -177,11 +179,19 @@ class OpenFlowCapableNode():
         obj = json.loads(s)
         d = dict_keys_dashed_to_underscored(obj)
         p1 = 'node_connector'
+        p2 = 'opendaylight_group_statistics:group_features'
+        p3 = 'flow_node_inventory:group'
         for k, v in d.items():
             if p1 == k and isinstance(v, list):
                 for p in v:
                     of_port = OpenFlowPort(p)
                     self.ports.append(of_port)
+            elif p2 == k:
+                self.group_features = GroupFeatures(v)
+            elif p3 == k and isinstance(v, list):
+                for g in v:
+                    of_group = GroupInfo(g)
+                    self.groups.append(of_group)
             else:
                 setattr(self, k, v)
     
@@ -424,6 +434,34 @@ class OpenFlowCapableNode():
                 port_obj = item
         
         return port_obj
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_group_features(self):
+        return self.group_features
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_groups_total_num(self):
+        return len(self.groups)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_group_ids(self):
+        ids = []
+        for item in self.groups:
+            ids.append(item.get_id())
+        
+        return sorted(ids)
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_group(self, group_id):
+        return None
 
 #-------------------------------------------------------------------------------
 # Class 'OpenFlowPort'
@@ -604,6 +642,150 @@ class OpenFlowPort():
             features = s.split()
         
         return features
+
+#-------------------------------------------------------------------------------
+# Class 'GroupInfo'
+#-------------------------------------------------------------------------------
+class GroupInfo():
+    """ Helper class that represents current state of an OpenFlow
+        group entry in the Controller's operational data store
+        (OpenFlow switch context specific data)
+    """
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init__(self, group_info):
+        if (isinstance(group_info, dict)):
+            d = dict_keys_dashed_to_underscored(group_info)
+            for k, v in d.items():
+                setattr(self, k, v)
+        else:
+            raise TypeError("[GroupInfo] wrong argument type '%s'"
+                            " (dictionary is expected)" % type(group_info))
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_id(self):
+        myid = ""
+        p = 'group_id'
+        if hasattr(self, p):
+            myid = getattr(self, p)
+        else:
+            assert(False)
+        
+        return myid
+
+#-------------------------------------------------------------------------------
+# Class 'OpenFlowPort'
+#-------------------------------------------------------------------------------
+class GroupFeatures():
+    """ Helper class that is used to represent group features on the switch
+        (group types, max number of groups for each type, group capabilities
+        and group supported actions) """
+    
+    # mapping of group type names to their numerical values
+    # in the OFPGT_* enum
+    group_types = {'group-all' : 0, 'group-select' : 1,
+                   'group-indirect' : 2, 'group-ff' : 3}
+    # mapping of group capability names to their bit positions
+    # in the OFPGFC_* bitmap
+    group_capabilities = {'select-weight' : 1, 'select-liveness' : 2,
+                          'chaining' : 4, 'chaining-checks' : 8}
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init__(self, features):
+        if (isinstance(features, dict)):
+            d = dict_keys_dashed_to_underscored(features)
+            for k, v in d.items():
+                setattr(self, k, v)
+        else:
+            raise TypeError("[GroupFeatures] wrong argument type '%s'"
+                            " (dictionary is expected)" % type(features))
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def _sort_key_capabilities(self, var):
+        return self.group_capabilities.get(var.lower())
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def _sort_key_types(self, var):
+        return self.group_types.get(var.lower())
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_max_groups(self):
+        """ The 'max_groups' field is the maximum number of groups
+            for each type of group
+        """
+        res = None
+        p = 'max_groups'
+        if hasattr(self, p):
+            res = self.max_groups
+        
+        return res
+        
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_capabilities(self):
+        """ The 'capabilities' field uses a combination of the
+            following flags:
+               OFPGFC_SELECT_WEIGHT   - Support weight for select groups
+               OFPGFC_SELECT_LIVENESS - Support liveness for select groups
+               OFPGFC_CHAINING        - Support chaining groups 
+               OFPGFC_CHAINING_CHECKS - Check chaining for loops and delete
+        """
+        res = None
+        p1 = 'group_capabilities_supported'
+        if hasattr(self, p1):
+            l = self.group_capabilities_supported
+            p2 = 'opendaylight-group-types:'
+            l1 = [i.encode('ascii','ignore').replace(p2, '').upper() for i in l]
+            res = sorted(l1, key=self._sort_key_capabilities)
+        
+        return res
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_types(self):
+        """ The 'types' field is a bitmap of group types supported
+            by the switch
+        """
+        res = None
+        p1 = 'group_types_supported'
+        if hasattr(self, p1):
+            l = self.group_types_supported
+            p2 = 'opendaylight-group-types:'
+            l1 = [i.encode('ascii','ignore').replace(p2, '').upper() for i in l]
+            res = sorted(l1, key=self._sort_key_types)
+        
+        return res
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def get_actions(self):
+        """ The 'actions' field is a set of bitmaps of actions supported
+            by each group type. The first bitmap applies to the OFPGT_ALL
+            group type. The bitmask uses the values from ofp_action_type
+            as the number of bits to shift left for an associated action.
+            For example, OFPAT_OUTPUT would use the mask 0x00000001
+        """
+        res = None
+        p = 'actions'
+        if hasattr(self, p):
+            res = self.actions
+        
+        return res
 
 #-------------------------------------------------------------------------------
 # Class 'NetconfCapableNode'
