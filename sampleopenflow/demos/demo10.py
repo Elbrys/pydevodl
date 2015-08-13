@@ -97,7 +97,8 @@ if __name__ == "__main__":
     input_port = 13
     
     
-    print ("<<< 'Controller': %s, 'OpenFlow' switch: '%s'" % (ctrlIpAddr, nodeName))
+    print ("<<< 'Controller': %s, 'OpenFlow' switch: '%s'" % (ctrlIpAddr,
+                                                              nodeName))
     
     print "\n"
     print ("<<< Set OpenFlow flow on the Controller")
