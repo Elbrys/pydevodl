@@ -157,7 +157,7 @@ if __name__ == "__main__":
     print ("                     [1] weight : %s")          % weight2
     print ("                         actions: Output (%s)") % out_port2
     print ("                     [2] weight : %s")          % weight3
-    print ("                     [2] actions: Output (%s)") % out_port3
+    print ("                         actions: Output (%s)") % out_port3
     time.sleep(rundelay)
     
     # Allocate a placeholder for the group entry
