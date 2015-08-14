@@ -36,7 +36,11 @@ from framework.controller.controller import Controller
 from framework.openflowdev.ofswitch import OFSwitch
 from framework.openflowdev.ofswitch import FlowEntry
 from framework.openflowdev.ofswitch import Instruction
-from framework.openflowdev.ofswitch import DropAction, OutputAction, PushVlanHeaderAction, SetFieldAction, PopVlanHeaderAction
+from framework.openflowdev.ofswitch import DropAction, \
+                                           OutputAction, \
+                                           PushVlanHeaderAction, \
+                                           SetFieldAction, \
+                                           PopVlanHeaderAction
 from framework.openflowdev.ofswitch import Match
 
 from framework.common.status import STATUS

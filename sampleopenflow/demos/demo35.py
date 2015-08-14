@@ -29,13 +29,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """
 
+import json
 import time
 
 from framework.controller.controller import Controller
 from framework.openflowdev.ofswitch import OFSwitch, \
                                            GroupEntry, \
                                            GroupBucket, \
-                                           OutputAction
+                                           OutputAction, \
+                                           PopVlanHeaderAction
 from framework.common.utils import load_dict_from_file
 from framework.common.status import STATUS
 from framework.common.constants import *
@@ -135,12 +137,10 @@ if __name__ == "__main__":
     print_groups(grp_ids_cfg, grp_ids_oper)
     
     # Create new group
-    group_id = 12
-    group_type = OFPGT_ALL
-    group_name = "Example of 'multicast/broadcast' group"
-    out_port1 = 110
-    out_port2 = 111
-    out_port3 = 112
+    group_id = 14
+    group_type = OFPGT_INDIRECT
+    group_name = "Example of 'set of common actions' group "
+    out_port = 110
     print "\n".strip()
     print ("<<< Create Group")
     print "\n".strip()
@@ -149,37 +149,29 @@ if __name__ == "__main__":
            "        Group Name : \"%s\"" % (group_type.strip('group-').upper(),
                                             group_id, group_name))
     print ("        Buckets    :")
-    print ("                     [0] actions: Output (%s)") % out_port1
-    print ("                     [1] actions: Output (%s)") % out_port2
-    print ("                     [2] actions: Output (%s)") % out_port3
+    print ("                     [0] actions : Pop VLAN")
+    print ("                                   Output (%s)") % out_port
     time.sleep(rundelay)
     
     # Allocate a placeholder for the group entry
     group_entry = GroupEntry(group_id, group_type)
     group_entry.set_group_name(group_name)
     
-    # Fill in group entry with action buckets
-    # ---------
+    # Fill actions bucket with the set of actions
     bucket_id = 0
-    bucket1 = GroupBucket(bucket_id)
-    action = OutputAction(order = 0, port = out_port1)
-    bucket1.add_action(action)
-    group_entry.add_bucket(bucket1)
+    bucket = GroupBucket(bucket_id)
     
-    # ---------
-    bucket_id += 1
-    bucket2 = GroupBucket(bucket_id)
-    action = OutputAction(order = 0, port = out_port2)
-    bucket2.add_action(action)
-    group_entry.add_bucket(bucket2)
+    action_order = 0
+    action1 = PopVlanHeaderAction(action_order)
+    bucket.add_action(action1)
     
-    # ---------
-    bucket_id += 1
-    bucket3 = GroupBucket(bucket_id)
-    action = OutputAction(order = 0, port = out_port3)
-    bucket3.add_action(action)
-    group_entry.add_bucket(bucket3)
+    action_order += 1
+    action2 = OutputAction(action_order)
+    action2.set_outport(out_port)
+    bucket.add_action(action2)
     
+    # Add actions bucket to the group entry
+    group_entry.add_bucket(bucket)
     
     # Request Controller to create the group
     print "\n".strip()
@@ -189,12 +181,58 @@ if __name__ == "__main__":
     result = ofswitch.add_modify_group(group_entry)
     status = result.get_status()
     if(status.eq(STATUS.OK)):
-        print ("<<< Group successfully added to the Controller")
+        print ("<<< Group successfully added")
         grp_ids_oper = result.get_data()
     else:
-        print ("\n")
+        print ("\n").strip()
         print ("!!!Demo terminated, reason: %s" % status.detailed())
         exit(0)
+    
+    
+    print ("\n").strip()
+    print ("<<< Get group '%s' configuration status") % group_id
+    time.sleep(rundelay)
+    result = ofswitch.get_configured_group(group_id)
+    status = result.get_status()
+    if(status.eq(STATUS.OK)):
+        grp = result.get_data()
+        print ("Group configuration info:")
+        group = result.get_data()
+        print json.dumps(group, indent=4)
+    else:
+        print ("\n").strip()
+        print ("!!!Demo terminated, reason: %s" % status.detailed())
+        exit(0)
+    
+    
+    print ("\n").strip()
+    print ("<<< Get group '%s' operational status") % group_id
+    time.sleep(rundelay)
+    result = ofswitch.get_group_description(group_id)
+    status = result.get_status()
+    if(status.eq(STATUS.OK)):
+        grp = result.get_data()
+        print ("Group operational info:")
+        group = result.get_data()
+        print json.dumps(group, indent=4)
+    else:
+        print ("\n").strip()
+        print ("!!!Error, reason: %s" % status.detailed())
+    
+    
+    print ("\n").strip()
+    print ("<<< Get group '%s' statistics information") % group_id
+    time.sleep(rundelay)
+    result = ofswitch.get_group_statistics(group_id)
+    status = result.get_status()
+    if(status.eq(STATUS.OK)):
+        grp = result.get_data()
+        print ("Group statistics info:")
+        group = result.get_data()
+        print json.dumps(group, indent=4)
+    else:
+        print ("\n").strip()
+        print ("!!!Error, reason: %s" % status.detailed())
     
     
     print ("\n").strip()
@@ -208,9 +246,8 @@ if __name__ == "__main__":
     elif(status.eq(STATUS.DATA_NOT_FOUND) == True):
         grp_ids_cfg = []
     else:
-        print ("\n")
-        print ("!!!Demo terminated, reason: %s" % status.detailed())
-        exit(0)
+        print ("\n").strip()
+        print ("!!!Error, reason: %s" % status.detailed())
     
     result = ofswitch.get_operational_group_ids()
     status = result.get_status()
@@ -219,15 +256,13 @@ if __name__ == "__main__":
     elif(status.eq(STATUS.DATA_NOT_FOUND)):
         grp_ids_oper = []
     else:
-        print ("\n")
-        print ("!!!Demo terminated, reason: %s" % status.detailed())
-        exit(0)
+        print ("\n").strip()
+        print ("!!!Error, reason: %s" % status.detailed())
     
     
     # Show current state of the Group Table in the Controller's
     # configuration and operational data stores
     print_groups(grp_ids_cfg, grp_ids_oper)
-    
     
     print "\n".strip()
     print ("<<< Remove all groups from the Controller")
@@ -238,7 +273,7 @@ if __name__ == "__main__":
             print ("<<< Group '%s' successfully removed from the Controller") \
             % group_id
         else:
-            print ("\n")
+            print ("\n").strip()
             print ("!!!Error, failed to remove group '%s', reason: %s" \
                    % (group_id, status.detailed()))
     
@@ -254,9 +289,9 @@ if __name__ == "__main__":
     elif(status.eq(STATUS.DATA_NOT_FOUND) == True):
         grp_ids_cfg = []
     else:
-        print ("\n")
-        print ("!!!Demo terminated, reason: %s" % status.detailed())
-        exit(0)
+        print ("\n").strip()
+        print ("!!!Error, reason: %s" % status.detailed())
+    
     
     result = ofswitch.get_operational_group_ids()
     status = result.get_status()
@@ -266,15 +301,14 @@ if __name__ == "__main__":
         grp_ids_oper = []
     else:
         print ("\n")
-        print ("!!!Demo terminated, reason: %s" % status.detailed())
-        exit(0)
+        print ("!!!Error, reason: %s" % status.detailed())
     
     
     # Show current state of the Group Table in the Controller's
     # configuration and operational data stores
     print_groups(grp_ids_cfg, grp_ids_oper)
     
-    print ("\n")
+    print ("\n").strip()
     print (">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
     print (">>> Demo End")
     print (">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")

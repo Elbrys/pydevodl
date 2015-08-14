@@ -135,9 +135,10 @@ if __name__ == "__main__":
     # configuration and operational data stores
     print_groups(grp_ids_cfg, grp_ids_oper)
     
-    group_id = 12
+    # Create new group
+    group_id = 13
     group_type = OFPGT_SELECT
-    group_name = "Example of load balancing group"
+    group_name = "Example of 'load balancing' group"
     weight1 = 60
     weight2 = 30
     weight3 = 10
@@ -190,7 +191,7 @@ if __name__ == "__main__":
     group_entry.add_bucket(bucket3)
     
     
-    # Request Controller to add the group
+    # Request Controller to create the group
     print "\n".strip()
     print ("<<< Group to create:")
     print group_entry.get_payload()
