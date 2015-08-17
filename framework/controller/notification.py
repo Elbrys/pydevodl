@@ -669,7 +669,7 @@ class PathInfo():
     """ Represents the path to the node in the Controller's internal data tree
         where the change has been detected.
         Helper subclass for the 'NetworkTopologyChangeNotification' and 
-       'InventoryChangeNotification' classes """
+        'InventoryChangeNotification' classes """
     
     #---------------------------------------------------------------------------
     # 

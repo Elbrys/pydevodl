@@ -2231,9 +2231,9 @@ class PushPBBHeaderAction(Action):
         The 'ethernet_type' is used as the Ethernet Type for the tag. Only
         Ethernet Type  0x88E7 should be used 
         PBB - Provider Backbone Bridges is an Ethernet data-plane technology
-              (also known as MAC-in-MAC) that involves encapsulating an
-              Ethernet datagram inside another one with new source and
-              destination addresses. '''
+        .     (also known as MAC-in-MAC) that involves encapsulating an
+        .     Ethernet datagram inside another one with new source and
+        .     destination addresses. '''
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
@@ -2254,9 +2254,9 @@ class PopPBBHeaderAction(Action):
     ''' Pop the outer-most PBB service instance header (I-TAG TCI)
         from the packet
         PBB - Provider Backbone Bridges is an Ethernet data-plane technology
-              (also known as MAC-in-MAC) that involves encapsulating an
-              Ethernet datagram inside another one with new source and
-              destination addresses. '''
+        .     (also known as MAC-in-MAC) that involves encapsulating an
+        .     Ethernet datagram inside another one with new source and
+        .     destination addresses. '''
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
@@ -2627,9 +2627,9 @@ class Match(object):
         
         ''' IP match fields:
             - Differentiated Service Code Point (DSCP). Part of the IPv4 ToS field or
-              the IPv6 Traffic Class field.
+            . the IPv6 Traffic Class field.
             - ECN bits of the IP header. Part of the IPv4 ToS field or
-              the IPv6 Traffic Class field 
+            . the IPv6 Traffic Class field 
             - IPv4 or IPv6 protocol number '''
         self.ip_match = None
         
