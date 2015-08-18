@@ -43,7 +43,8 @@ inventory.py: Controller's inventory parser
 import re
 import json
 
-from framework.common.utils import dict_keys_dashed_to_underscored
+from framework.common.utils import dict_keys_dashed_to_underscored, \
+                                   strip_none
 
 #-------------------------------------------------------------------------------
 # Class 'Inventory'
@@ -701,6 +702,37 @@ class GroupFeatures():
     # in the OFPGFC_* bitmap
     group_capabilities = {'select-weight' : 1, 'select-liveness' : 2,
                           'chaining' : 4, 'chaining-checks' : 8}
+    # mapping of bit positions for OFPAT_* action types to
+    # the corresponding action names
+    actions_bitmap = {
+       0  : 'OUTPUT',       # Output to switch port
+       1  : 'SET_VLAN_VID', # Set the 802.1q VLAN id
+       2  : 'SET_VLAN_PCP', # Set the 802.1q priority
+       3  : 'STRIP_VLAN',   # Strip the 802.1q header
+       4  : 'SET_DL_SRC',   # Ethernet source address
+       5  : 'SET_DL_DST',   # Ethernet destination address
+       6  : 'SET_NW_SRC',   # IP source address
+       7  : 'SET_NW_DST',   # IP destination address/
+       8  : 'SET_NW_TOS',   # IP ToS (DSCP field, 6 bits)
+       9  : 'SET_TP_SRC',   # TCP/UDP source port
+       10 : 'SET_TP_DST',   # TCP/UDP destination port
+       11 : 'COPY-TTL-OUT', # Copy TTL "outwards"
+       12 : 'COPY-TTL-IN',  # Copy TTL "inwards"
+       15 : 'SET-MPLS-TTL', # MPLS TTL
+       16 : 'DEC-MPLS-TTL', # Decrement MPLS TTL
+       17 : 'PUSH-VLAN',    # Push a new VLAN tag
+       18 : 'POP-VLAN',     # Pop the outer VLA
+       19 : 'PUSH-MPLS',    # Push a new MPLS tag
+       20 : 'POP-MPLS',     # Pop the outer MPLS tag
+       21 : 'SET-QUEUE',    # Set queue id when outputting to a port
+       22 : 'GROUP',        # Apply group
+       23 : 'SET-NW-TTL',   # IP TTL
+       24 : 'DEC-NW-TTL',   # Decrement IP TTL
+       25 : 'SET-FIELD',    # Set a header field using OXM TLV format
+       26 : 'PUSH-PBB',     # Push a new PBB service tag (I-TAG)
+       27 : 'POP-PBB'       # Pop the outer PBB service tag (I-TAG)
+    }
+    actions_bitmap_size = 28
     
     #---------------------------------------------------------------------------
     # 
@@ -788,12 +820,100 @@ class GroupFeatures():
             as the number of bits to shift left for an associated action.
             For example, OFPAT_OUTPUT would use the mask 0x00000001
         """
-        res = None
+        b1 = 0xffff
+        b2 = 0xffff
+        b3 = 0xffff
+        b4 = 0xffff
+        blist = [b1,b2,b3,b4]
+        
+        res = []
         p = 'actions'
         if hasattr(self, p):
-            res = self.actions
-        
+            bitmap_list = self.actions
+#            bitmap_list = blist
+            for bitmap in bitmap_list:
+                names = self._action_bitmap_to_names(bitmap)
+                res.append(names)
+#        print "!!! %s" % type(res)
+#        print "!!! %s" % len(res)
         return res
+    
+    def _action_bitmap_to_names(self, bitmap):
+        names = []
+        for i in range(0, self.actions_bitmap_size):
+            if (1<<i & bitmap):
+    #            print "i=%2d, act=%s" % (i, group_action_types.get(i))
+                name = self.actions_bitmap.get(i)
+                if name:
+                    names.append(name)
+        
+        return names
+
+
+#-------------------------------------------------------------------------------
+# Class 'GroupStatistics'
+#-------------------------------------------------------------------------------
+class GroupStatistics():
+    def __init__(self, stats):
+        if (isinstance(stats, dict)):
+            d = dict_keys_dashed_to_underscored(stats)
+            for k, v in d.items():
+                setattr(self, k, v)
+        else:
+            raise TypeError("[GroupStatistics] wrong argument type '%s'"
+                            " (dictionary is expected)" % type(stats))
+    
+    def to_json(self):
+        """ Return this object as JSON """
+        return json.dumps(self, default=lambda o: o.__dict__,
+                          sort_keys=True, indent=4)
+    
+    def to_yang_json(self, strip=False):
+        s = self.to_json()
+        # Convert all 'underscored' keywords to 'dash-separated' form used
+        # by ODL YANG models naming conventions
+        s = s.replace('_', '-')
+        if strip:
+            # ignore unassigned ("empty") attributes
+            d1 = json.loads(s)
+            d2 = strip_none(d1)
+            s = json.dumps(d2, sort_keys=True, indent=4)
+        
+        return s
+    
+    def get_group_id(self):
+        return self.group_id
+
+class GroupDescription():
+    def __init__(self, stats):
+        if (isinstance(stats, dict)):
+            d = dict_keys_dashed_to_underscored(stats)
+            for k, v in d.items():
+                setattr(self, k, v)
+        else:
+            raise TypeError("[GroupDescription] wrong argument type '%s'"
+                            " (dictionary is expected)" % type(stats))
+    
+    def to_json(self):
+        """ Return this object as JSON """
+        return json.dumps(self, default=lambda o: o.__dict__,
+                          sort_keys=True, indent=4)
+    
+    def to_yang_json(self, strip=False):
+        s = self.to_json()
+        # Convert all 'underscored' keywords to 'dash-separated' form used
+        # by ODL YANG models naming conventions
+        s = s.replace('_', '-')
+        if strip:
+            # ignore unassigned ("empty") attributes
+            d1 = json.loads(s)
+            d2 = strip_none(d1)
+            s = json.dumps(d2, sort_keys=True, indent=4)
+        
+        return s
+    
+    def get_group_id(self):
+        return self.group_id
 
 #-------------------------------------------------------------------------------
 # Class 'NetconfCapableNode'
@@ -1053,3 +1173,55 @@ class NetconfConfigModule():
             assert(False)
        
         return pswd
+
+
+
+
+if __name__ == "__main__":
+    actions_bitmap = {
+       0  : 'OUTPUT',       # Output to switch port
+       1  : 'SET_VLAN_VID', # Set the 802.1q VLAN id
+       2  : 'SET_VLAN_PCP', # Set the 802.1q priority
+       3  : 'STRIP_VLAN',   # Strip the 802.1q header
+       4  : 'SET_DL_SRC',   # Ethernet source address
+       5  : 'SET_DL_DST',   # Ethernet destination address
+       6  : 'SET_NW_SRC',   # IP source address
+       7  : 'SET_NW_DST',   # IP destination address/
+       8  : 'SET_NW_TOS',   # IP ToS (DSCP field, 6 bits)
+       9  : 'SET_TP_SRC',   # TCP/UDP source port
+       10 : 'SET_TP_DST',   # TCP/UDP destination port
+       11 : 'COPY-TTL-OUT', # Copy TTL "outwards"
+       12 : 'COPY-TTL-IN',  # Copy TTL "inwards"
+       15 : 'SET-MPLS-TTL', # MPLS TTL
+       16 : 'DEC-MPLS-TTL', # Decrement MPLS TTL
+       17 : 'PUSH-VLAN',    # Push a new VLAN tag
+       18 : 'POP-VLAN',     # Pop the outer VLA
+       19 : 'PUSH-MPLS',    # Push a new MPLS tag
+       20 : 'POP-MPLS',     # Pop the outer MPLS tag
+       21 : 'SET-QUEUE',    # Set queue id when outputting to a port
+       22 : 'GROUP',        # Apply group
+       23 : 'SET-NW-TTL',   # IP TTL
+       24 : 'DEC-NW-TTL',   # Decrement IP TTL
+       25 : 'SET-FIELD',    # Set a header field using OXM TLV format
+       26 : 'PUSH-PBB',     # Push a new PBB service tag (I-TAG)
+       27 : 'POP-PBB'       # Pop the outer PBB service tag (I-TAG)
+    }
+    actions_bitmap_size = 32
+    al = []
+    bitmap = 0x9800001
+#    print "0x%x" % bitmap
+#    print "0x%x" % bitmap
+#    print actions_bitmap[7]
+    for i in range(0, actions_bitmap_size):
+        if (1<<i & bitmap):
+#            print "i=%2d, act=%s" % (i, group_action_types.get(i))
+            al.append(actions_bitmap.get(i))
+    
+    print ", ".join(al)
+    '''
+    while(bitmap != 0):
+        print " +++ %x" % bitmap
+        bitmap = bitmap<<1
+    '''
+
+    

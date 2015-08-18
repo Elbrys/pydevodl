@@ -55,7 +55,9 @@ from framework.common.utils import find_dict_in_list
 from framework.common.utils import strip_none
 from framework.common.utils import dict_keys_dashed_to_underscored
 from framework.common.utils import dbg_print
-from framework.controller.inventory import GroupFeatures
+from framework.controller.inventory import GroupFeatures, \
+                                           GroupDescription, \
+                                           GroupStatistics
 
 #-------------------------------------------------------------------------------
 # 
@@ -330,6 +332,8 @@ class OFSwitch(OpenflowNode):
             status.set_status(STATUS.CTRL_INTERNAL_ERROR)
         elif (resp.status_code == 200):
             status.set_status(STATUS.OK)
+        elif (resp.status_code == 404):
+            status.set_status(STATUS.DATA_NOT_FOUND)
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
         
@@ -497,7 +501,7 @@ class OFSwitch(OpenflowNode):
         flowEntry = None
         result = self.get_flow(table_id, flow_id, operational)
         status = result.get_status()
-        if(status.eq(STATUS.OK) == True):
+        if(status.eq(STATUS.OK)):
             d = result.get_data()
             flowEntry = FlowEntry(flow_dict = d)
         
@@ -522,7 +526,7 @@ class OFSwitch(OpenflowNode):
         flows = [] # list of 'FlowEntry objects
         result = self.get_flows(tableid, operational)
         status = result.get_status()
-        if(status.eq(STATUS.OK) == True):
+        if(status.eq(STATUS.OK)):
             data = result.get_data()
             for item in data:
                 fe = FlowEntry(flow_dict = item)
@@ -638,6 +642,36 @@ class OFSwitch(OpenflowNode):
         
         return Result(status, resp)
     
+    def add_modify_group_json(self, group_id, group_json):
+        """ Create a new or modify an existing group in the configuration
+            data store of the Controller
+        """
+        status = OperStatus()
+        model_ref = "flow-node-inventory:group"
+        templateUrlExt = "/" + model_ref + "/{}"
+        headers = {'content-type': 'application/yang.data+json'}
+        resp = None
+        if isinstance(group_json, basestring):
+            ctrl = self.ctrl
+            url = ctrl.get_node_config_url(self.name)
+            urlext = templateUrlExt.format(group_id)
+            url += urlext
+            payload = {model_ref: json.loads(group_json)}
+            resp = ctrl.http_put_request(url, json.dumps(payload), headers)
+            if(resp == None):
+                status.set_status(STATUS.CONN_ERROR)
+            elif(resp.content == None):
+                status.set_status(STATUS.CTRL_INTERNAL_ERROR)
+            elif (resp.status_code == 200):
+                status.set_status(STATUS.OK)
+            else:
+                status.set_status(STATUS.HTTP_ERROR, resp)
+        else:
+            dbg_print("DEBUG: unsupported data format ")
+            status.set_status(STATUS.MALFORM_DATA)
+        
+        return Result(status, resp)
+    
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
@@ -659,6 +693,8 @@ class OFSwitch(OpenflowNode):
             status.set_status(STATUS.CTRL_INTERNAL_ERROR)
         elif (resp.status_code == 200):
             status.set_status(STATUS.OK)
+        elif (resp.status_code == 404):
+            status.set_status(STATUS.DATA_NOT_FOUND)
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
         
@@ -667,7 +703,7 @@ class OFSwitch(OpenflowNode):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def get_group(self, group_id, operational=True):
+    def get_group(self, group_id, operational=True, decode_object=False):
         """ Retrieve group information from the Controller,
             (refer to operational or configuration data store)
         """
@@ -693,7 +729,11 @@ class OFSwitch(OpenflowNode):
             p = 'flow-node-inventory:group'
             l = json.loads(resp.content).get(p, None)
             if (isinstance(l, list) and l):
-                group = l[0]
+                d = l[0]
+                if decode_object:
+                    group = GroupEntry(group_dict = d)
+                else:
+                    group = d
             
             status.set_status(STATUS.OK
                               if group
@@ -708,26 +748,42 @@ class OFSwitch(OpenflowNode):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def get_operational_group(self, group_id):
+    def get_operational_group(self, group_id, decode_object=False):
         """ Retrieve group information from the Controller's
             operational data store
         """
-        return self.get_group(group_id, operational=True)
+        return self.get_group(group_id, True, decode_object)
     
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def get_configured_group(self, group_id):
+    def get_configured_group(self, group_id, decode_object=False):
         """ Retrieve group information from the Controller's
             configuration data store
         """
-        return self.get_group(group_id, operational=False)
+        return self.get_group(group_id, False, decode_object)
+    
+    def get_configured_groups(self, decode_object=False):
+        groups = []
+        result = self.get_groups(operational=False)
+        status = result.get_status()
+        if(status.eq(STATUS.OK)):
+            data = result.get_data()
+            for d in data:
+                if decode_object:
+                    group = GroupEntry(group_dict = d)
+                else:
+                    group = d
+                
+                groups.append(group)
+        
+        return Result(status, groups)
     
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def get_group_description(self, group_id):
-        """ Retrieve description of the group (along with
+    def get_group_description(self, group_id, decode_object=False):
+        """ Retrieve description of the given group (along with
             the group's bucket actions) from the Controller's
             operational data store
         """
@@ -748,7 +804,11 @@ class OFSwitch(OpenflowNode):
             status.set_status(STATUS.CTRL_INTERNAL_ERROR)
         elif (resp.status_code == 200):
             p = 'opendaylight-group-statistics:group-desc'
-            group = json.loads(resp.content).get(p, None)
+            d = json.loads(resp.content).get(p, None)
+            if decode_object:
+                group = GroupDescription(d)
+            else:
+                group = d
             
             status.set_status(STATUS.OK
                               if group
@@ -760,11 +820,31 @@ class OFSwitch(OpenflowNode):
         
         return Result(status, group)
     
-    #---------------------------------------------------------------------------
-    # 
-    #---------------------------------------------------------------------------
-    def get_group_statistics(self, group_id):
-        """  Retrieve statistics for the group from the Controller's
+    def get_groups_description(self, decode_object=False):
+        """ Retrieve description of all groups (along with
+            the group's bucket actions) from the Controller's
+            operational data store
+        """
+        groups = []
+        result = self.get_groups(operational=True)
+        status = result.get_status()
+        if(status.eq(STATUS.OK)):
+            data = result.get_data()
+            p1 = 'opendaylight-group-statistics:group-desc'
+            for item in data:
+                d = item.get(p1)
+                if d:
+                    if decode_object:
+                        group = GroupDescription(d)
+                    else:
+                        group = d
+                        
+                    groups.append(group)
+        
+        return Result(status, groups)
+    
+    def get_group_statistics(self, group_id, decode_object=False):
+        """  Retrieve statistics for the given group in the Controller's
              operational data store
         """
         status = OperStatus()
@@ -784,7 +864,11 @@ class OFSwitch(OpenflowNode):
             status.set_status(STATUS.CTRL_INTERNAL_ERROR)
         elif (resp.status_code == 200):
             p = 'opendaylight-group-statistics:group-statistics'
-            group = json.loads(resp.content).get(p, None)
+            d = json.loads(resp.content).get(p, None)
+            if decode_object:
+                group = GroupStatistics(d)
+            else:
+                group = d
             
             status.set_status(STATUS.OK
                               if group
@@ -796,10 +880,32 @@ class OFSwitch(OpenflowNode):
         
         return Result(status, group)
     
+    def get_groups_statistics(self, decode_object=False):
+        """  Retrieve statistics for all groups in the Controller's
+             operational data store
+        """
+        groups = []
+        result = self.get_groups(operational=True)
+        status = result.get_status()
+        if(status.eq(STATUS.OK)):
+            data = result.get_data()
+            p1 = 'opendaylight-group-statistics:group-statistics'
+            for item in data:
+                d = item.get(p1)
+                if d:
+                    if decode_object:
+                        group = GroupStatistics(d)
+                    else:
+                        group = d
+                        
+                    groups.append(group)
+        
+        return Result(status, groups)
+    
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def get_group_features(self):
+    def get_group_features(self, decode_object=False):
         """ Retrieve from the Controller's operational data store
             group features information supported by this OpenFlow
             switch
@@ -820,8 +926,10 @@ class OFSwitch(OpenflowNode):
         elif (resp.status_code == 200):
             p = 'opendaylight-group-statistics:group-features'
             d = json.loads(resp.content).get(p, None)
-            if d:
+            if decode_object:
                 group_features = GroupFeatures(d)
+            else:
+                group_features = d
             
             status.set_status(STATUS.OK
                               if group_features
@@ -832,6 +940,75 @@ class OFSwitch(OpenflowNode):
             status.set_status(STATUS.HTTP_ERROR, resp)
         
         return Result(status, group_features)
+    
+    def get_groups(self, operational=True):
+        status = OperStatus()
+        groups = None
+        ctrl = self.ctrl
+        
+        url = ""
+        if (operational):
+            url = ctrl.get_node_operational_url(self.name)
+        else:
+            url = ctrl.get_node_config_url(self.name)
+        
+        resp = ctrl.http_get_request(url, data=None, headers=None)
+        if(resp == None):
+            status.set_status(STATUS.CONN_ERROR)
+        elif(resp.content == None):
+            status.set_status(STATUS.CTRL_INTERNAL_ERROR)
+        elif (resp.status_code == 200):
+            p1 = 'node'
+            d = json.loads(resp.content)
+            l1 = d.get(p1, None)
+            if (isinstance(l1, list) and l1):
+                p2 = 'flow-node-inventory:group'
+                l2 = l1[0].get(p2, None)
+                if (isinstance(l2, list) and l2):
+                    groups = l2
+            status.set_status(STATUS.OK
+                              if groups
+                              else STATUS.DATA_NOT_FOUND)
+        elif (resp.status_code == 404):
+            status.set_status(STATUS.DATA_NOT_FOUND)
+        else:
+            status.set_status(STATUS.HTTP_ERROR, resp)
+        
+        return Result(status, groups)
+    
+    def get_GroupEntry(self, group_id, operational=True):
+        groupEntry = None
+        result = self.get_group(group_id, operational)
+        status = result.get_status()
+        if(status.eq(STATUS.OK)):
+            d = result.get_data()
+            groupEntry = GroupEntry(group_dict = d)
+        
+        return Result(status, groupEntry)
+    
+    def get_operational_GroupEntry(self, group_id):
+        return self.get_GroupEntry(group_id, True)
+    
+    def get_configured_GroupEntry(self, group_id):
+        return self.get_GroupEntry(group_id, False)
+    
+    def get_GroupEntries(self, operational=True):
+        groups = [] # list of 'GroupEntry objects
+        result = self.get_groups(operational)
+        status = result.get_status()
+        if(status.eq(STATUS.OK)):
+            data = result.get_data()
+            for item in data:
+                ge = GroupEntry(group_dict = item)
+                groups.append(ge)
+        
+        return Result(status, groups)
+    
+    def get_operational_GroupEntries(self):
+        return self.get_GroupEntries(True)
+    
+    def get_configured_GroupEntries(self):
+        return self.get_GroupEntries(False)
 
 #-------------------------------------------------------------------------------
 # 
@@ -1577,7 +1754,7 @@ class Instructions():
         if (hasattr(self, p)):
             res = getattr(self, p)
             
-        return res    
+        return res
 
 #-------------------------------------------------------------------------------
 # 
@@ -4177,52 +4354,98 @@ class GroupEntry():
     ''' Reference name in the YANG data tree on the Controller '''
     _mn = "flow-node-inventory:group"
     
-    #---------------------------------------------------------------------------
-    # 
-    #---------------------------------------------------------------------------
-    def __init__(self, group_id, group_type):
-        
+    def __attrs__(self):
         ''' Uniquely identifies a group within a switch. '''
-        self.group_id = group_id
+        self.group_id = None
         
         ''' Group type, should be one of the following:
                OFPGT_ALL      - All group (multicast/broadcast)
                OFPGT_SELECT   - Select group
                OFPGT_INDIRECT - Indirect group
                OFPGT_FF       - Fast failover group
-         '''
-        self.group_type = group_type
+        '''
+        self.group_type = None
         
         ''' Associative name for this group.
-            Controller's specific attribute (optional) '''
+            Controller's specific attribute (optional)
+        '''
         self.group_name = None
         
-        ''' Unclear what is it for ???
-            Controller's specific attribute (optional) '''
+        ''' Unclear, what is it for ???
+            Controller's specific attribute (optional)
+        '''
         self.container_name = None
         
-        ''' Unclear what is it for ???
+        ''' Unclear, what is it for ???
             Would assume it serves for the same purpose as in FlowEntry.
-            Controller's specific attribute (optional) '''
+            Controller's specific attribute (optional)
+        '''
         self.barrier = None
         
         ''' An ordered list of action buckets in this group.
             Each action bucket contains a set of actions to execute
             and associated parameters.
-         '''
+        '''
         self.buckets = {'bucket': []}
     
-    #---------------------------------------------------------------------------
-    # 
-    #---------------------------------------------------------------------------
+    def __init__(self, group_id=None, group_type=None, group_dict=None):
+        self.__attrs__()
+        if (group_dict != None):
+            self.__init_from_dict__(group_dict)
+        else:
+            self.group_id = group_id
+            self.group_type = group_type
+    
+    def __init_from_json__(self, js):
+        if (js != None and isinstance(js, basestring)):
+            obj = json.loads(js)
+            d = dict_keys_dashed_to_underscored(obj)
+            p1 = 'buckets'
+            p2 = 'bucket'
+            for k, v in d.items():
+                if k == p1:
+                    b = d.get(p1).get(p2)
+                    if b:
+                        if isinstance(b, list):
+                            for i in b:
+                                bucket = GroupBucket(bucket_dict=i)
+                                self.buckets[p2].append(bucket)
+                else:
+                    setattr(self, k, v)
+        else:
+            raise TypeError("[GroupEntry] wrong argument type '%s'"
+                            " (JSON 'string' is expected)" % type(js))
+    
+    def __init_from_dict__(self, d):
+        if (d != None and isinstance(d, dict)):
+            js = json.dumps(d)
+            self.__init_from_json__(js)
+        else:
+            raise TypeError("[GroupEntry] wrong argument type '%s'"
+                            " ('dict' is expected)" % type(d))
+    
     def to_json(self):
         """ Return GroupEntry represented as JSON object """
         return json.dumps(self, default=lambda o: o.__dict__,
                           sort_keys=True, indent=4)
     
-    #---------------------------------------------------------------------------
-    # 
-    #---------------------------------------------------------------------------
+    def to_yang_json(self, strip=False):
+        s = self.to_json()
+        # Convert all 'underscored' keywords to 'dash-separated' form used
+        # by ODL YANG models naming conventions
+        s = s.replace('_', '-')
+        # Following are exceptions from the common ODL rules for having all
+        # multi-part keywords in YANG models being hash separated
+#        s = s.replace('table-id', 'table_id')
+#        s = s.replace('cookie-mask', 'cookie_mask')
+        if strip:
+            # ignore unassigned ("empty") attributes
+            d1 = json.loads(s)
+            d2 = strip_none(d1)
+            s = json.dumps(d2, sort_keys=True, indent=4)
+        
+        return s
+    
     def get_payload(self):
         """ Return GroupEntry as a payload for the HTTP request body """
         s = self.to_json()
@@ -4239,66 +4462,36 @@ class GroupEntry():
         return json.dumps(payload, default=lambda o: o.__dict__,
                           sort_keys=True, indent=4)
     
-    #---------------------------------------------------------------------------
-    # 
-    #---------------------------------------------------------------------------
     def set_group_id(self, group_id):
         self.group_id = group_id
     
-    #---------------------------------------------------------------------------
-    # 
-    #---------------------------------------------------------------------------
     def get_group_id(self):
         return self.group_id
     
-    #---------------------------------------------------------------------------
-    # 
-    #---------------------------------------------------------------------------
     def set_group_type(self, group_type):
         self.group_type = group_type
     
-    #---------------------------------------------------------------------------
-    # 
-    #---------------------------------------------------------------------------
     def get_group_type(self):
         return self.group_type
     
     def set_group_name(self, name):
         self.group_name = name
     
-    #---------------------------------------------------------------------------
-    # 
-    #---------------------------------------------------------------------------
     def get_group_name(self):
         return self.group_name
     
-    #---------------------------------------------------------------------------
-    # 
-    #---------------------------------------------------------------------------
     def set_container_name(self, name):
         self.container_name = name
     
-    #---------------------------------------------------------------------------
-    # 
-    #---------------------------------------------------------------------------
     def get_container_name(self):
         return self.container_name
     
-    #---------------------------------------------------------------------------
-    # 
-    #---------------------------------------------------------------------------
     def set_barrier(self, barrier):
         self.barrier = barrier
     
-    #---------------------------------------------------------------------------
-    # 
-    #---------------------------------------------------------------------------
     def get_barrier(self, barrier):
         return self.barrier
     
-    #---------------------------------------------------------------------------
-    # 
-    #---------------------------------------------------------------------------
     def add_bucket(self, bucket): 
         if isinstance(bucket, GroupBucket):
             self.buckets['bucket'].append(bucket)
@@ -4306,9 +4499,6 @@ class GroupEntry():
             raise TypeError("!!!Error, argument '%s' is of a wrong type "
                             "('GroupBucket' instance is expected)" % bucket)
     
-    #---------------------------------------------------------------------------
-    # 
-    #---------------------------------------------------------------------------
     def get_buckets(self):
         res = None
         p = 'buckets'
@@ -4325,83 +4515,84 @@ class GroupEntry():
 #-------------------------------------------------------------------------------
 class GroupBucket():
     """ Helper class for representing 'buckets' property
-        of the GroupEntry class """
+        of the GroupEntry class
+    """
     
-    #---------------------------------------------------------------------------
-    # 
-    #---------------------------------------------------------------------------
-    def __init__(self, bucket_id):
-        
+    def __attrs__(self):
         ''' Identifier (index) of the bucket within the group '''
-        self.bucket_id = bucket_id
+        self.bucket_id = None
         
         ''' Relative weight of this bucket.
-            Only defined for select groups. '''
+            Only defined for select groups.
+        '''
         self.weight = None
         
         ''' Port whose state affects whether this bucket is live.
             Indicates the port whose liveness controls whether this
             bucket is a candidate for forwarding.
             Only required for fast failover groups, but may be optionally
-            implemented for other group types also '''
+            implemented for other group types also
+        '''
         self.watch_port = None
         
         ''' Group whose state affects whether this bucket is live.
             Indicates the group whose liveness controls whether this
             bucket is a candidate for forwarding.
             Only required for fast failover groups, but may be optionally
-            implemented for other group types also '''
+            implemented for other group types also
+        '''
         self.watch_group = None
         
         ''' Set of actions to execute by this bucket '''
         self.action = []
     
-    #---------------------------------------------------------------------------
-    # 
-    #---------------------------------------------------------------------------
+    def __init__(self, bucket_id=None, bucket_dict=None):
+        self.__attrs__()
+        if (bucket_dict != None):
+            self.__init_from_dict__(bucket_dict)
+        else:
+            self.bucket_id = bucket_id
+    
+    def __init_from_json__(self, js):
+        if (js != None and isinstance(js, basestring)):
+            obj = json.loads(js)
+            d = dict_keys_dashed_to_underscored(obj)
+            for k, v in d.items():
+                setattr(self, k, v)
+        else:
+            raise TypeError("[GroupBucket] wrong argument type '%s'"
+                            " (JSON 'string' is expected)" % type(js))
+            
+    def __init_from_dict__(self, d):
+        if (d != None and isinstance(d, dict)):
+            js = json.dumps(d)
+            self.__init_from_json__(js)
+        else:
+            raise TypeError("[GroupBucket] wrong argument type '%s'"
+                            " ('dict' is expected)" % type(d))
+    
     def to_json(self):
-        """ Return 'GroupBucket' represented as JSON object """
+        """ Return this object represented as JSON """
         return json.dumps(self, default=lambda o: o.__dict__,
                           sort_keys=True, indent=4)
     
-    #---------------------------------------------------------------------------
-    # 
-    #---------------------------------------------------------------------------
     def set_weight(self, weight):
         self.weight = weight
     
-    #---------------------------------------------------------------------------
-    # 
-    #---------------------------------------------------------------------------
     def get_weight(self):
         return self.weight
     
-    #---------------------------------------------------------------------------
-    # 
-    #---------------------------------------------------------------------------
     def set_watch_port(self, port):
         self.watch_port = port
     
-    #---------------------------------------------------------------------------
-    # 
-    #---------------------------------------------------------------------------
     def get_watch_port(self):
         return self.watch_port
     
-    #---------------------------------------------------------------------------
-    # 
-    #---------------------------------------------------------------------------
     def set_watch_group(self, group_id):
         self.watch_group = group_id
         
-    #---------------------------------------------------------------------------
-    # 
-    #---------------------------------------------------------------------------
     def get_watch_group(self):
         return self.watch_group
         
-    #---------------------------------------------------------------------------
-    # 
-    #---------------------------------------------------------------------------
     def add_action(self, action):
         self.action.append(action)

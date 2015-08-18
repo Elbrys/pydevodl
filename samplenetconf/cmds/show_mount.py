@@ -71,7 +71,7 @@ if __name__ == "__main__":
     print "\n"
     print ("<<< NETCONF nodes configured on the Controller")
     ctrl = Controller(ctrlIpAddr, ctrlPortNum, ctrlUname, ctrlPswd)
-    result = ctrl.get_all_nodes_in_config()
+    result = ctrl.get_netconf_nodes_in_config()
     status = result.get_status()
     if(status.eq(STATUS.OK) == True):
         print "Nodes configured:"
@@ -85,7 +85,7 @@ if __name__ == "__main__":
   
     print "\n"
     print ("<<< NETCONF nodes connection status on the Controller")
-    result = ctrl.get_all_nodes_conn_status()
+    result = ctrl.get_netconf_nodes_conn_status()
     status = result.get_status()
     if(status.eq(STATUS.OK) == True):
         print "Nodes connection status:"

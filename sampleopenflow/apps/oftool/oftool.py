@@ -47,11 +47,16 @@ from collections import OrderedDict
 from framework.controller.controller import Controller
 from framework.common.status import STATUS
 from framework.common.utils import dbg_print
-from framework.openflowdev.ofswitch import OFSwitch, FlowEntry
+from framework.openflowdev.ofswitch import OFSwitch, \
+                                           FlowEntry, \
+                                           GroupEntry
 from framework.controller.topology import Topology, Node
 from framework.controller.inventory import Inventory, \
                                            OpenFlowCapableNode, \
-                                           OpenFlowPort
+                                           OpenFlowPort, \
+                                           GroupFeatures, \
+                                           GroupDescription, \
+                                           GroupStatistics
 
 #-------------------------------------------------------------------------------
 # Class 'CtrlCfg'
@@ -663,7 +668,7 @@ class FlowInfo():
         else:
             result = ofswitch.get_configured_FlowEntry(table_id, flow_id)
         status = result.get_status()
-        if(status.eq(STATUS.OK) == True):
+        if(status.eq(STATUS.OK)):
             flow_entry = result.get_data()
             assert(isinstance(flow_entry, FlowEntry))
         elif(status.eq(STATUS.DATA_NOT_FOUND)):
@@ -694,6 +699,215 @@ class FlowInfo():
         
         print "\n".strip()
 
+class GroupInfo():
+    """ Methods to retrieve and display OpenFlow groups information """
+    
+    #---------------------------------------------------------------------------
+    # 
+    #---------------------------------------------------------------------------
+    def __init__(self, ctrl, switch_id):
+        self.ctrl = ctrl
+        self.switchid = switch_id
+    
+    def show_table(self, config, description, stats, ofp):
+        group_entries = []
+        ofswitch = OFSwitch(self.ctrl, self.switchid)
+        s = ""
+        if description:
+            s = 'Device Operational Groups'
+            result = ofswitch.get_groups_description(decode_object=True)
+        elif stats:
+            s = 'Group Statistics'
+            result = ofswitch.get_groups_statistics(decode_object=True)
+        elif config:
+            s = 'Controller Cached  Groups'
+            result = ofswitch.get_configured_groups(decode_object=True)
+        else:
+            assert(False)
+            
+        status = result.get_status()
+        if(status.eq(STATUS.OK) == True):
+            data = result.get_data()
+            group_entries = sorted(data, key=lambda ge: ge.get_group_id())
+        elif(status.eq(STATUS.DATA_NOT_FOUND)):
+            print "\n".strip()
+            print " Requested data not found"
+            print "\n".strip()
+            exit(0)
+        else:
+            print ("\n")
+            print ("!!!Error, reason: %s" % status.brief().lower())
+            exit(0)
+        
+        print "\n".strip()
+        print " Switch '%s' - %s" % (self.switchid, s)
+        print "\n".strip()
+        
+        if len(group_entries) > 0:
+            for group_entry in group_entries:
+                assert(isinstance(group_entry, GroupEntry) or
+                       isinstance(group_entry, GroupDescription) or
+                       isinstance(group_entry, GroupStatistics))
+                if(ofp):
+                    print " -- Group id '%s'" % group_entry.get_group_id()
+                    print " %s" % group_entry.to_ofp_oxm_syntax()
+                else:
+                    lines = group_entry.to_yang_json(strip=True).split('\n')
+                    for line in lines:
+                        print " %s" % line
+        else:
+            print "   No groups found"
+        
+        print "\n".strip()
+        
+    
+    def show_group(self, group_id, config, description, stats, ofp):
+        ofswitch = OFSwitch(self.ctrl, self.switchid)
+        group_entry = None
+        s = ""
+        
+#        print "!!! group_id=%s, config=%s, description=%s, stats=%s, ofp=%s" \
+#              % (group_id, config, description, stats, ofp)
+        if description:
+            s = 'Description'
+            result = ofswitch.get_group_description(group_id,
+                                                    decode_object=True)
+        elif stats:
+            s = 'Statistics'
+            result = ofswitch.get_group_statistics(group_id, 
+                                                   decode_object=True)
+        elif config:
+            s = 'Config'
+            result = ofswitch.get_configured_group(group_id,
+                                                   decode_object=True)
+        else:
+            assert(False)
+        
+        status = result.get_status()
+        if(status.eq(STATUS.OK)):
+            group_entry = result.get_data()
+            assert(isinstance(group_entry, GroupEntry) or
+                   isinstance(group_entry, GroupDescription) or
+                   isinstance(group_entry, GroupStatistics))
+        elif(status.eq(STATUS.DATA_NOT_FOUND)):
+            print "\n".strip()
+            print " Requested data not found"
+            print "\n".strip()
+            exit(0)
+        else:
+            print ("\n")
+            print ("!!!Error, reason: %s" % status.brief().lower())
+            exit(0)
+        
+        print "\n".strip()
+        print " Group %s - Switch '%s'" % (s, self.switchid)
+        print "\n".strip()
+        
+        if(group_entry != None):
+            if(ofp):
+                print "[GroupInfo] show_group - TBD"
+#                print " -- Flow id '%s'" % flow_entry.get_flow_id()
+#                print " %s" % flow_entry.to_ofp_oxm_syntax()
+            else:
+                lines = group_entry.to_yang_json(strip=True).split('\n')
+                for line in lines:
+                    print " %s" % line
+        else:
+            print "   Not found"
+        
+        print "\n".strip()
+    
+    def show_features(self):
+        ofswitch = OFSwitch(self.ctrl, self.switchid)
+        result = ofswitch.get_group_features(decode_object=True)
+        status = result.get_status()
+        if(status.eq(STATUS.OK)):
+            print "\n".strip()
+            print (" Group Features - Switch '%s'") % self.switchid
+            print "\n".strip()
+            group_features = result.get_data()
+            assert(isinstance(group_features, GroupFeatures))
+            
+            s = 'Max groups'
+            alist = group_features.get_max_groups()
+            if alist:
+                q = 1   # number of list items to be in a single
+                        # output string chunk
+                chunks=[alist[x:x+q] for x in xrange(0, len(alist), q)]
+                print "  %s     :" % s,
+                for i in range(0, len(chunks)):
+                    n = 0 if i == 0 else len(s) + 9
+                    print "%s%s" % (" "*n, ", ".join(map(str, chunks[i])))
+            else:
+                print "  %s     : %s" % (s, "n/a")
+            
+            s = 'Group types'
+            alist = group_features.get_types()
+            if alist:
+                q = 1   # number of list items to be in a single
+                        # output string chunk
+                chunks=[alist[x:x+q] for x in xrange(0, len(alist), q)]
+                print "  %s    :" % s,
+                for i in range(0, len(chunks)):
+                    n = 0 if i == 0 else len(s) + 8
+                    print "%s%s" % (" "*n, ", ".join(chunks[i]))
+            else:
+                print "  %s    : %s" % (s, "n/a")
+            
+            s = 'Capabilities'
+            alist = group_features.get_capabilities()
+            if alist:
+                q = 1   # number of list items to be in a single
+                        # output string chunk
+                chunks=[alist[x:x+q] for x in xrange(0, len(alist), q)]
+                print "  %s   :" % s,
+                for i in range(0, len(chunks)):
+                    n = 0 if i == 0 else len(s) + 7
+                    print "%s%s" % (" "*n, ", ".join(chunks[i]))
+            else:
+                print "  %s   : %s" % (s, "n/a")
+            
+            s = 'Actions'
+            actions = group_features.get_actions()
+            if actions:
+                q = 4   # number of list items to be in a single
+                        # output string chunk
+                print "  %s        :" % s,
+                for i, alist in enumerate(actions):
+                    n = 0 if i == 0 else len(s) + 12
+                    chunks=[alist[x:x+q] for x in xrange(0, len(alist), q)]
+                    for j in range(0, len(chunks)):
+                        n = 0 if i == 0 and j == 0 else len(s) + 12
+                        print "%s%s" % (" "*n, ", ".join(chunks[j]))
+                    print "\n".strip()
+            else:
+                print "  %s     : %s" % (s, "n/a")
+                
+                
+                
+                
+            print "\n".strip()
+            
+        elif(status.eq(STATUS.DATA_NOT_FOUND)):
+            print "\n".strip()
+            print " Requested data not found"
+            print "\n".strip()
+            exit(0)
+        else:
+            print ("\n")
+            print ("!!!Error, reason: %s" % status.brief().lower())
+            exit(0)
+#        features = 
+    
+    def show_statistics(self):
+        print "[GroupInfo] show_statistics - TBD"
+    
+    def show_description(self):
+        print "[GroupInfo] show_description - TBD"
+    
+
+
+
 #-------------------------------------------------------------------------------
 # Class 'OFToolParser'
 #-------------------------------------------------------------------------------
@@ -716,6 +930,9 @@ class OFToolParser(object):
                      "\n   show-flow       Show OpenFlow flows information"
                      "\n   clear-flow      Delete OpenFlow flows"
                      "\n   add-flow        Add OpenFlow flows"
+                     "\n   show-group      Show OpenFlow groups information"
+                     "\n   clear-group     Delete OpenFlow groups"
+                     "\n   add-group       Add OpenFlow groups"
                      "\n"
                      "\n  '%(prog)s help <command>' provides details for a specific command")
         parser.add_argument('-C', metavar="<path>",
@@ -735,12 +952,13 @@ class OFToolParser(object):
             exit(1)
         
         # Invoke method that is matching the name of sub-command argument
-        cmd = args.command.replace('-', '_')
+        cmd_orig = args.command
+        cmd = cmd_orig.replace('-', '_')
         if hasattr(self, cmd):
             getattr(self, cmd)(remaining_args)
         else:
             print "\n".strip()
-            print ("Error, unrecognized command '%s'" % cmd)
+            print ("Error, unrecognized command '%s'" % cmd_orig)
             print "\n".strip()
             parser.print_help()
             exit(1)
@@ -888,7 +1106,7 @@ class OFToolParser(object):
                   "                         -t=TABLEID|--table=TABLEID\n"
                   "                          [-f=FLOWID|--flow=FLOWID]\n"
                   "\n\n"
-                  "Clear cached flows on the Controller\n\n"
+                  "Remove one or set of flows from the Controller\n\n"
                   "\n\n"
                   "Options:\n"
                   "  -s, --switch   switch identifier\n"
@@ -968,7 +1186,7 @@ class OFToolParser(object):
             return
         
         if(args.dry_run):
-            flows = self.read_flows(args.flow_file)
+            flows = self.read_data(args.flow_file)
             if flows:
                 for flow in flows:
                     print json.dumps(flow, indent=4)
@@ -979,7 +1197,7 @@ class OFToolParser(object):
             msg = "option -s (or --switch) is required"
             parser.error(msg)
         
-        flows = self.read_flows(args.flow_file)
+        flows = self.read_data(args.flow_file)
         if not flows:
             print "Failed to execute command, exit"
             exit(1)
@@ -998,10 +1216,216 @@ class OFToolParser(object):
                 js = json.dumps(flow, default=lambda o: o.__dict__)
                 result = ofswitch.add_modify_flow_json(table_id=tid, flow_id=fid,flow_json=js)
                 status = result.get_status()
-                if(status.eq(STATUS.OK) == True):
+                if(status.eq(STATUS.OK)):
                     print "Flow id '%s', success" % fid
                 else:
                     print "Flow id '%s', failure, reason: %s" % (fid, status.detailed())
+            print "\n".strip()
+        except(Exception) as e:
+            msg = "Error: %s" % repr(e)
+            dbg_print(msg)
+    
+    def show_group(self, options):
+        parser = argparse.ArgumentParser(
+            prog=self.prog,
+#            description='Show OpenFlow groups information',
+            usage="%(prog)s show-group -s=SWITCHID|--switch=SWITCHID\n"
+                  "                         [--features]\n"
+                  "                         [-g=GROUPID|--group=GROUPID]\n"
+#                  "                         [--config|--operational]\n"
+                  "                         [--config|--operational|--statistics]\n"
+                  "                         [--json|--ofp]"
+                  "\n\n"
+                  "Show OpenFlow groups information\n\n"
+                  "\n\n"
+                  "Options:\n"
+                  "  -s, --switch    switch identifier\n"
+                  "  --features      capabilities of groups on the switch\n"
+                  "  -g, --group     group identifier (integer)\n"
+                  "  --config        controller cached groups (default)\n"
+#                  "  --operational   device operational groups\n"
+#                  "  --description   set of groups on the switch\n"
+#                  "  --description   operational groups on the switch\n"
+                  "  --operational   operational groups on the switch\n"
+#                  "  --statistics    statistics for one or more groups\n"
+                  "  --statistics    statistics for groups on the switch\n"
+                  "  --json          display data in JSON format (default)\n"
+                  "  --ofp           display data in OpenFlow protocol format\n"
+                  )
+        parser.add_argument('-s', '--switch', metavar = "SWITCHID")
+        parser.add_argument('-g', '--group', metavar = "GROUPID")
+        group1 = parser.add_mutually_exclusive_group()
+        group1.add_argument('--features', action='store_true')
+        group1.add_argument('--config', action='store_true', default=True)
+        group1.add_argument('--oper', action='store_true', dest="description")
+#        group1.add_argument('--description', action='store_true')
+        group1.add_argument('--statistics', action='store_true')
+        group2 = parser.add_mutually_exclusive_group()
+        group2.add_argument('--json', action='store_true', default=True)
+        group2.add_argument('--ofp', action='store_true')
+        parser.add_argument('-U', action="store_true", dest="usage", 
+                            help=argparse.SUPPRESS)
+        args = parser.parse_args(options)
+        if(args.usage):
+            parser.print_usage()
+            print "\n".strip()
+            return
+        
+        if (args.switch == None):
+            msg = "option -s (or --switch) is required"
+            parser.error(msg)
+    
+        print "\n".strip()
+        print " [Controller '%s']" % self.ctrl_cfg.to_string()
+        ctrl = Controller(self.ctrl_cfg.ip_addr, self.ctrl_cfg.tcp_port,
+                          self.ctrl_cfg.admin_name, self.ctrl_cfg.admin_pswd)
+        
+        group = GroupInfo(ctrl, args.switch)
+        if(args.features):
+            group.show_features()
+        elif (args.group != None):
+            group.show_group(args.group,
+                             args.config, args.description,
+                             args.statistics, args.ofp)
+        else:
+            group.show_table(args.config, args.description,
+                             args.statistics, args.ofp)
+    
+    def clear_group(self, options):
+        parser = argparse.ArgumentParser(
+            prog=self.prog,
+            description='Clear OpenFlow flows',
+            usage="%(prog)s clear-group -s=SWITCHID|--switch=SWICTHID\n"
+                  "                          [-g=GROUPID|--group=GROUPID]\n"
+                  "\n\n"
+                  "Remove one or all groups from the Controller\n\n"
+                  "\n\n"
+                  "Options:\n"
+                  "  -s, --switch   switch identifier\n"
+                  "  -g, --group    group identifier (integer)\n"
+            
+            )
+        parser.add_argument('-s', '--switch', metavar = "SWITCHID")
+        parser.add_argument('-g', '--group', metavar = "GROUPID",
+                            type=self.positive_int)
+        parser.add_argument('-U', action="store_true", dest="usage",
+                            help=argparse.SUPPRESS)
+        args = parser.parse_args(options)
+        if(args.usage):
+            parser.print_usage()
+            print "\n".strip()
+            return
+        
+        if (args.switch == None):
+            msg = "option -s (or --switch) is required"
+            parser.error(msg)
+    
+        print "\n".strip()
+        print " [Controller '%s']" % self.ctrl_cfg.to_string()
+        ctrl = Controller(self.ctrl_cfg.ip_addr, self.ctrl_cfg.tcp_port,
+                          self.ctrl_cfg.admin_name, self.ctrl_cfg.admin_pswd)
+        ofswitch = OFSwitch(ctrl, args.switch)
+        if(args.group != None):
+            result = ofswitch.delete_group(args.group)
+            status = result.get_status()
+            print "\n".strip()
+            if(status.eq(STATUS.OK)):
+                print (" Group '%s' successfully removed") % args.group
+            elif(status.eq(STATUS.DATA_NOT_FOUND)):
+                print " Requested data not found"
+            else:
+                print (" Failed to remove group '%s', reason '%s'") \
+                        % (args.group, status.detailed())
+            print "\n".strip()
+        else:
+            result = ofswitch.get_group_ids(operational=False)
+            status = result.get_status()
+            print "\n".strip()
+            if(status.eq(STATUS.OK)):
+                group_ids = result.get_data()
+                for group in group_ids:
+                    result = ofswitch.delete_group(group)
+                    status = result.get_status()
+                    if(status.eq(STATUS.OK)):
+                        print (" Group '%s' successfully removed") % group
+                    else:
+                        print (" Failed to remove group '%s', reason '%s'") \
+                                % (group,status.detailed())
+            else:
+                msg = " Failed to get list of groups to be deleted"
+                print ("%s, reason '%s'") % (msg, status.detailed())
+            print "\n".strip()
+    
+    
+    
+    def add_group(self, options):
+        parser = argparse.ArgumentParser(
+            prog=self.prog,
+            description="Add flow entries to the Controller's cache",
+            usage="%(prog)s add-flow -s=SWITCHID|--switch=SWICTHID\n"
+                  "                       -f <path>|--file <path>\n"
+                  "                        [--dry-run]\n"
+                  "\n\n"
+                  "Add group table entries to the Controller's cache\n\n"
+                  "\n\n"
+                  "Options:\n"
+                  "  -s, --switch   switch identifier\n"
+                  "  -f, --file     path to the file containing group entries\n"
+                  "                 (default is './group.json')\n"
+                  "  -dry-run       show content of group(s) to be created"
+            )
+        parser.add_argument('-s', '--switch', metavar = "SWITCHID")
+        parser.add_argument('-f', '--file', metavar="<path>",
+                            dest='group_file',
+                            help="path to the file containing group entries "
+                                 "(default is './group.json')",
+                            default="./group.json")
+        parser.add_argument('-U', action="store_true", dest="usage",
+                            help=argparse.SUPPRESS)
+        parser.add_argument('--dry-run', action="store_true",
+                            dest='dry_run', default=False)
+        args = parser.parse_args(options)
+        
+        if(args.usage):
+            parser.print_usage()
+            print "\n".strip()
+            return
+        
+        if(args.dry_run):
+            groups = self.read_data(args.group_file)
+            if groups:
+                for group in groups:
+                    print json.dumps(group, indent=4)
+            
+            return
+        
+        if (args.switch == None):
+            msg = "option -s (or --switch) is required"
+            parser.error(msg)
+        
+        groups = self.read_data(args.group_file)
+        if not groups:
+            print "Failed to execute command, exit"
+            exit(1)
+        
+        print "\n".strip()
+        print " [Controller '%s']" % self.ctrl_cfg.to_string()
+        print "\n".strip()
+        ctrl = Controller(self.ctrl_cfg.ip_addr, self.ctrl_cfg.tcp_port,
+                          self.ctrl_cfg.admin_name, self.ctrl_cfg.admin_pswd)
+        ofswitch = OFSwitch(ctrl, args.switch)
+    
+        try:
+            for group in groups:
+                gid = group['group-id']
+                js = json.dumps(group, default=lambda o: o.__dict__)
+                result = ofswitch.add_modify_group_json(gid, js)
+                status = result.get_status()
+                if(status.eq(STATUS.OK)):
+                    print "Group id '%s', success" % gid
+                else:
+                    print ("Group id '%s', failure, reason: %s") \
+                             % (gid, status.detailed())
             print "\n".strip()
         except(Exception) as e:
             msg = "Error: %s" % repr(e)
@@ -1051,7 +1475,7 @@ class OFToolParser(object):
     #---------------------------------------------------------------------------
     # 
     #---------------------------------------------------------------------------
-    def read_flows(self, path):
+    def read_data(self, path):
         try:
             with open(path, 'r') as f:
                 objs = json.load(f, cls=ConcatJSONObjects,
