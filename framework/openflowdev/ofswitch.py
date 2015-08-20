@@ -4424,6 +4424,10 @@ class GroupEntry():
             raise TypeError("[GroupEntry] wrong argument type '%s'"
                             " ('dict' is expected)" % type(d))
     
+    def to_string(self):
+        """ Returns string representation of this object. """
+        return str(vars(self))
+    
     def to_json(self):
         """ Return GroupEntry represented as JSON object """
         return json.dumps(self, default=lambda o: o.__dict__,
@@ -4461,6 +4465,29 @@ class GroupEntry():
         payload = {self._mn : d2}
         return json.dumps(payload, default=lambda o: o.__dict__,
                           sort_keys=True, indent=4)
+    
+    
+    def to_ofp_oxm_syntax(self):
+        odc = OrderedDict()
+        print vars(self)
+        if (self.group_id):
+            odc['group_id'] = self.group_id
+        if (self.group_type):
+            odc['type'] = self.group_type.replace('group-', '')
+        gc = json.dumps(odc, separators=(',', '='))
+        gc = gc.translate(None, '"{} ').replace(':','=')
+        
+        gb = "buckets=["
+        buckets = self.buckets['bucket']
+        bl = []
+        for b in buckets:
+            s =  b.to_ofp_oxm_syntax()
+            bl.append(s)
+        if(bl):
+            gb += ",".join(bl)
+        gb += "]"
+        return gc + " " + gb
+    
     
     def set_group_id(self, group_id):
         self.group_id = group_id
@@ -4571,10 +4598,27 @@ class GroupBucket():
             raise TypeError("[GroupBucket] wrong argument type '%s'"
                             " ('dict' is expected)" % type(d))
     
+    def to_string(self):
+        """ Returns string representation of this object. """
+        return str(vars(self))
+    
     def to_json(self):
         """ Return this object represented as JSON """
         return json.dumps(self, default=lambda o: o.__dict__,
                           sort_keys=True, indent=4)
+    
+    def to_ofp_oxm_syntax(self):
+        print self.to_string()
+        od = OrderedDict()
+        if(self.weight):
+            od['weight'] = self.weight
+        if(self.watch_port):
+            od['watch_port'] = self.watch_port
+        if(self.watch_group):
+            od['watch_group'] = self.watch_group
+
+        s = json.dumps(od, separators=(',', '='))
+        return s
     
     def set_weight(self, weight):
         self.weight = weight

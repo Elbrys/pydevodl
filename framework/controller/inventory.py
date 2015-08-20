@@ -687,7 +687,7 @@ class GroupInfo():
         return myid
 
 #-------------------------------------------------------------------------------
-# Class 'OpenFlowPort'
+# Class 'GroupFeatures'
 #-------------------------------------------------------------------------------
 class GroupFeatures():
     """ Helper class that is used to represent group features on the switch

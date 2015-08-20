@@ -1,40 +1,42 @@
 #!/usr/bin/env python
 
+# Copyright (c) 2015,  BROCADE COMMUNICATIONS SYSTEMS, INC
+
+# All rights reserved.
+
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+
+# 1. Redistributions of source code must retain the above copyright notice,
+# this list of conditions and the following disclaimer.
+
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+# this list of conditions and the following disclaimer in the documentation
+# and/or other materials provided with the distribution.
+
+# 3. Neither the name of the copyright holder nor the names of its
+# contributors may be used to endorse or promote products derived from this
+# software without specific prior written permission.
+
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+# THE POSSIBILITY OF SUCH DAMAGE.
+
 """
-Copyright (c) 2015,  BROCADE COMMUNICATIONS SYSTEMS, INC
-
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-
-1. Redistributions of source code must retain the above copyright notice,
-this list of conditions and the following disclaimer.
-
-2. Redistributions in binary form must reproduce the above copyright notice,
-this list of conditions and the following disclaimer in the documentation
-and/or other materials provided with the distribution.
-
-3. Neither the name of the copyright holder nor the names of its
-contributors may be used to endorse or promote products derived from this
-software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-THE POSSIBILITY OF SUCH DAMAGE.
-
 
 @authors: Sergei Garbuzov
 @status: Development
 @version: 1.1.0
+
+oftool.py: OpenFlow tool command line utility (sample application)
 
 
 """
@@ -710,7 +712,7 @@ class GroupInfo():
         self.switchid = switch_id
     
     def show_table(self, config, description, stats, ofp):
-        group_entries = []
+        groups = []
         ofswitch = OFSwitch(self.ctrl, self.switchid)
         s = ""
         if description:
@@ -726,9 +728,9 @@ class GroupInfo():
             assert(False)
             
         status = result.get_status()
-        if(status.eq(STATUS.OK) == True):
+        if(status.eq(STATUS.OK)):
             data = result.get_data()
-            group_entries = sorted(data, key=lambda ge: ge.get_group_id())
+            groups = sorted(data, key=lambda ge: ge.get_group_id())
         elif(status.eq(STATUS.DATA_NOT_FOUND)):
             print "\n".strip()
             print " Requested data not found"
@@ -743,16 +745,16 @@ class GroupInfo():
         print " Switch '%s' - %s" % (self.switchid, s)
         print "\n".strip()
         
-        if len(group_entries) > 0:
-            for group_entry in group_entries:
-                assert(isinstance(group_entry, GroupEntry) or
-                       isinstance(group_entry, GroupDescription) or
-                       isinstance(group_entry, GroupStatistics))
+        if len(groups) > 0:
+            for group in groups:
+                assert(isinstance(group, GroupEntry) or
+                       isinstance(group, GroupDescription) or
+                       isinstance(group, GroupStatistics))
                 if(ofp):
-                    print " -- Group id '%s'" % group_entry.get_group_id()
-                    print " %s" % group_entry.to_ofp_oxm_syntax()
+                    print " -- Group id '%s'" % group.get_group_id()
+                    print " %s" % group.to_ofp_oxm_syntax()
                 else:
-                    lines = group_entry.to_yang_json(strip=True).split('\n')
+                    lines = group.to_yang_json(strip=True).split('\n')
                     for line in lines:
                         print " %s" % line
         else:
@@ -765,9 +767,6 @@ class GroupInfo():
         ofswitch = OFSwitch(self.ctrl, self.switchid)
         group_entry = None
         s = ""
-        
-#        print "!!! group_id=%s, config=%s, description=%s, stats=%s, ofp=%s" \
-#              % (group_id, config, description, stats, ofp)
         if description:
             s = 'Description'
             result = ofswitch.get_group_description(group_id,
