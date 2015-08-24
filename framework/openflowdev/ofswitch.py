@@ -174,7 +174,7 @@ class OFSwitch(OpenflowNode):
                     items = d[p2]
                     p3 = 'flow-node-inventory:port-number'
                     for item in items:
-                        if(isinstance(item, dict) and item in p3):
+                        if(isinstance(item, dict) and item.has_key(p3)):
                             plist.append(item[p3])
                 status.set_status(STATUS.OK)
             else:

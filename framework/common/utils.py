@@ -132,7 +132,7 @@ def find_key_value_in_dict(d, key):
 
 def find_dict_in_list(slist, key):
     for item in slist:
-        if (type(item) is dict and item in key):
+        if (type(item) is dict and item.has_key(key)):
             return item
     return None
 
