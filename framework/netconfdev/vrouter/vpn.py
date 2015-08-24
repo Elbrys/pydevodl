@@ -42,13 +42,10 @@ vpn.py: Virtual Private Network (VPN) specific properties and access methods
 
 import json
 
-# PEP8 recommends put all names being imported from same module with
-# the 'from' statement onto a single line. PEP8 is not overly clear on
-# what to do when line exceeds 80 characters length. For a such case
-# we would split the line. According to the Python syntax, it is still
-# a single line and therefore still conforms to PEP8 coding style guide.
-from framework.common.utils import strip_none, remove_empty_from_dict, \
-                                   dict_keys_underscored_to_dashed
+# Following import style conforms to PEP 0328
+from framework.common.utils import (strip_none,
+                                    remove_empty_from_dict,
+                                    dict_keys_underscored_to_dashed)
 
 
 class Vpn():

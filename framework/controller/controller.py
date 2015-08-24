@@ -48,18 +48,13 @@ from requests.auth import HTTPBasicAuth
 from requests.exceptions import ConnectionError, Timeout
 from framework.common.result import Result
 from framework.common.status import OperStatus, STATUS
-from framework.common.utils import find_key_values_in_dict
-from framework.common.utils import dbg_print
+from framework.common.utils import find_key_values_in_dict, dbg_print
 from framework.controller.topology import Topology
-# PEP8 recommends put all names being imported from same module with
-# the 'from' statement onto a single line. PEP8 is not overly clear on
-# what to do when line exceeds 80 characters length. For a such case
-# we would split the line. According to the Python syntax, it is still
-# a single line and therefore still conforms to PEP8 coding style guide.
-from framework.controller.inventory import Inventory, \
-                                           OpenFlowCapableNode, \
-                                           NetconfCapableNode, \
-                                           NetconfConfigModule
+# Following import style conforms to PEP 0328
+from framework.controller.inventory import (Inventory,
+                                            OpenFlowCapableNode,
+                                            NetconfCapableNode,
+                                            NetconfConfigModule)
 
 
 class Controller():
