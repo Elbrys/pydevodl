@@ -48,15 +48,21 @@ from collections import OrderedDict
 from framework.controller.openflownode import OpenflowNode
 from framework.common.result import Result
 from framework.common.status import OperStatus, STATUS
-from framework.common.utils import find_key_values_in_dict
-from framework.common.utils import replace_str_value_in_dict
-from framework.common.utils import find_key_value_in_dict
-from framework.common.utils import find_dict_in_list
-from framework.common.utils import strip_none
-from framework.common.utils import dict_keys_dashed_to_underscored
-from framework.common.utils import dbg_print
-from framework.controller.inventory import GroupFeatures, GroupDescription
-from framework.controller.inventory import GroupStatistics
+# PEP8 recommends put all names being imported from same module with
+# the 'from' statement onto a single line. PEP8 is not overly clear on
+# what to do when line exceeds 80 characters length. For a such case
+# we would split the line. According to the Python syntax, it is still
+# a single line and therefore still conforms to PEP8 coding style guide.
+from framework.common.utils import find_key_values_in_dict, \
+                                   replace_str_value_in_dict, \
+                                   find_key_value_in_dict, \
+                                   find_dict_in_list, \
+                                   strip_none, \
+                                   dict_keys_dashed_to_underscored, \
+                                   dbg_print
+from framework.controller.inventory import GroupFeatures, \
+                                           GroupDescription, \
+                                           GroupStatistics
 
 
 class OFSwitch(OpenflowNode):
@@ -113,7 +119,8 @@ class OFSwitch(OpenflowNode):
                 vlist = find_key_values_in_dict(dictionary, p6)
                 if (len(vlist) != 0):
                     info['description'] = vlist[0]
-                    status.set_status(STATUS.OK)
+                
+                status.set_status(STATUS.OK)
             else:
                 status.set_status(STATUS.DATA_NOT_FOUND)
         else:
@@ -475,7 +482,9 @@ class OFSwitch(OpenflowNode):
                         if gid:
                             group_ids.append(gid)
             
-            status.set_status(STATUS.OK if group_ids else STATUS.DATA_NOT_FOUND)
+            status.set_status(STATUS.OK
+                              if group_ids
+                              else STATUS.DATA_NOT_FOUND)
         elif (resp.status_code == 404):
             status.set_status(STATUS.DATA_NOT_FOUND)
         else:
@@ -775,7 +784,9 @@ class OFSwitch(OpenflowNode):
             else:
                 group_features = d
             
-            status.set_status(STATUS.OK if group_features else STATUS.DATA_NOT_FOUND)
+            status.set_status(STATUS.OK
+                              if group_features
+                              else STATUS.DATA_NOT_FOUND)
         elif (resp.status_code == 404):
             status.set_status(STATUS.DATA_NOT_FOUND)
         else:
@@ -860,7 +871,8 @@ class FlowEntry(object):
         assert_msg = "[FlowEntry] either '%s' or '%s' should be used, " \
                      "not both" % ('flow_json', 'flow_dict')
         # TODO check this
-        assert(((flow_json is not None) and (flow_dict is not None)) is False), assert_msg
+        assert(((flow_json is not None) and
+                (flow_dict is not None)) is False), assert_msg
         if (flow_dict is not None):
             self.__init_from_dict__(flow_dict)
             return
@@ -1020,106 +1032,106 @@ class FlowEntry(object):
             v = m.get_in_port()
             if (v is not None):
                 odm['in_port'] = v
-                v = m.get_eth_type()
+            v = m.get_eth_type()
             if (v is not None):
                 odm['eth_type'] = hex(int(v))
-                v = m.get_eth_src()
+            v = m.get_eth_src()
             if (v is not None):
                 odm['eth_src'] = v
-                v = m.get_eth_dst()
+            v = m.get_eth_dst()
             if (v is not None):
                 odm['eth_dst'] = v
-                v = m.get_vlan_id()
+            v = m.get_vlan_id()
             if (v is not None):
                 odm['vlan_vid'] = v
-                v = m.get_vlan_pcp()
+            v = m.get_vlan_pcp()
             if (v is not None):
                 odm['vlan_pcp'] = v
-                v = m.get_ip_proto()
+            v = m.get_ip_proto()
             if (v is not None):
                 odm['ip_proto'] = v
-                v = m.get_ip_dscp()
+            v = m.get_ip_dscp()
             if (v is not None):
                 odm['ip_dscp'] = v
-                v = m.get_ip_ecn()
+            v = m.get_ip_ecn()
             if (v is not None):
                 odm['ip_ecn'] = v
-                v = m.get_icmp4_type()
+            v = m.get_icmp4_type()
             if (v is not None):
                 odm['icmpv4_type'] = v
-                v = m.get_icmpv4_code()
+            v = m.get_icmpv4_code()
             if (v is not None):
                 odm['icmpv4_code'] = v
-                v = m.get_icmpv6_type()
+            v = m.get_icmpv6_type()
             if (v is not None):
                 odm['icmpv6_type'] = v
                 v = m.get_icmpv6_code()
             if (v is not None):
                 odm['icmpv6_code'] = v
-                v = m.get_ipv4_src()
+            v = m.get_ipv4_src()
             if (v is not None):
                 odm['ipv4_src'] = v
-                v = m.get_ipv4_dst()
+            v = m.get_ipv4_dst()
             if (v is not None):
                 odm['ipv4_dst'] = v
-                v = m.get_ipv6_src()
+            v = m.get_ipv6_src()
             if (v is not None):
                 odm['ipv6_src'] = v
-                v = m.get_ipv6_dst()
+            v = m.get_ipv6_dst()
             if (v is not None):
                 odm['ipv6_dst'] = v
                 v = m.get_ipv6_flabel()
             if (v is not None):
                 odm['ipv6_flabel'] = v
-                v = m.get_ipv6_exh_hdr()
+            v = m.get_ipv6_exh_hdr()
             if (v is not None):
                 odm['ipv6_exthdr'] = v
-                v = m.get_udp_src_port()
+            v = m.get_udp_src_port()
             if (v is not None):
                 odm['udp_src'] = v
-                v = m.get_udp_dst_port()
+            v = m.get_udp_dst_port()
             if (v is not None):
                 odm['udp_dst'] = v
-                v = m.get_tcp_src_port()
+            v = m.get_tcp_src_port()
             if (v is not None):
                 odm['tcp_src'] = v
-                v = m.get_tcp_dst_port()
+            v = m.get_tcp_dst_port()
             if (v is not None):
                 odm['tcp_dst'] = v
-                v = m.get_sctp_src_port()
+            v = m.get_sctp_src_port()
             if (v is not None):
                 odm['sctp_src'] = v
-                v = m.get_sctp_dst_port()
+            v = m.get_sctp_dst_port()
             if (v is not None):
                 odm['sctp_dst'] = v
-                v = m.get_arp_opcode()
+            v = m.get_arp_opcode()
             if (v is not None):
                 odm['arp_op'] = v
-                v = m.get_arp_src_transport_address()
+            v = m.get_arp_src_transport_address()
             if (v is not None):
                 odm['arp_spa'] = v
-                v = m.get_arp_tgt_transport_address()
+            v = m.get_arp_tgt_transport_address()
             if (v is not None):
                 odm['arp_tpa'] = v
-                v = m.get_arp_src_hw_address()
+            v = m.get_arp_src_hw_address()
             if (v is not None):
                 odm['arp_sha'] = v
-                v = m.get_arp_tgt_hw_address()
+            v = m.get_arp_tgt_hw_address()
             if (v is not None):
                 odm['arp_tpa'] = v
-                v = m.get_mpls_label()
+            v = m.get_mpls_label()
             if (v is not None):
                 odm['mpls_label'] = v
-                v = m.get_mpls_tc()
+            v = m.get_mpls_tc()
             if (v is not None):
                 odm['mpls_tc'] = v
-                v = m.get_mpls_bos()
+            v = m.get_mpls_bos()
             if (v is not None):
                 odm['mpls_bos'] = v
-                v = m.get_tunnel_id()
+            v = m.get_tunnel_id()
             if (v is not None):
                 odm['tunnel_id'] = v
-                v = m.get_metadata()
+            v = m.get_metadata()
             if (v is not None):
                 odm['metadata'] = v
             
@@ -1390,7 +1402,7 @@ class Instructions():
         p = 'instructions'
         if (hasattr(self, p)):
             res = getattr(self, p)
-            return res
+        return res
 
 
 class Instruction():
@@ -1481,7 +1493,8 @@ class Instruction():
             else:
                 msg = "can not find action in d='%s'" % d
                 dbg_print(msg)
-                return action
+            
+            return action
         else:
             raise TypeError("[Instruction] wrong argument type '%s'"
                             " ('dict' is expected)" % type(d))
@@ -1630,7 +1643,8 @@ class SetVlanCfiAction(Action):
         Ethernet and Token Ring networks. If a frame received at an Ethernet
         port had a CFI set to 1, then that frame would not be bridged to an
         untagged port.
-        Currently renamed as Drop eligible indicator (DEI).         May be used separately or in conjunction with PCP to indicate
+        Currently renamed as Drop eligible indicator (DEI).
+        May be used separately or in conjunction with PCP to indicate
         frames eligible to be dropped in the presence of congestion. '''
 
     def __init__(self, order=None, vlan_cfi=None):
@@ -2733,7 +2747,7 @@ class VlanMatch(Match):
     def set_vid(self, vid):
         if(self.vlan_id is None):
             self.vlan_id = VlanId()
-            self.vlan_id.set_vid(vid)
+        self.vlan_id.set_vid(vid)
 
     def get_vid(self):
         res = None
@@ -2761,7 +2775,9 @@ class VlanId(VlanMatch):
     def __init__(self, d=None):
         if (d is not None):
             self.__init_from_dict__(d)
-            return ''' VLAN-ID from 802.1Q header '''
+            return
+        
+        ''' VLAN-ID from 802.1Q header '''
         self.vlan_id = None
         ''' Flag that indicates that 'vlan_id' value is set and matching is
             only for packets with VID equal to 'vlan_id' value '''
