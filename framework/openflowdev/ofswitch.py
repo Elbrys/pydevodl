@@ -115,7 +115,8 @@ class OFSwitch(OpenflowNode):
                 vlist = find_key_values_in_dict(dictionary, p6)
                 if (len(vlist) != 0):
                     info['description'] = vlist[0]
-                    status.set_status(STATUS.OK)
+
+                status.set_status(STATUS.OK)
             else:
                 status.set_status(STATUS.DATA_NOT_FOUND)
         else:
@@ -177,10 +178,10 @@ class OFSwitch(OpenflowNode):
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
         return Result(status, sorted(plist))
+
     # ---------------------------------------------------------------------------
     #  TBD
     # ---------------------------------------------------------------------------
-
     def get_port_brief_info(self, portnum):
         pass
 
