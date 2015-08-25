@@ -39,6 +39,8 @@ constants.py: Standardized (well known) numbers
 
 """
 
+# flake8: noqa
+
 # Ethernet Types for some notable protocols
 ETH_TYPE_IPv4       = 2048   # (0x0800)
 ETH_TYPE_IPv6       = 34525  # (0x86DD)

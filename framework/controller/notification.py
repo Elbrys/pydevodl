@@ -46,16 +46,17 @@ import xmltodict
 from framework.common.utils import dbg_print
 
 yang_namespace_to_prefix_map = {
-    'urn:opendaylight:inventory' : 'inv',
-    'urn:opendaylight:netconf-node-inventory' : 'netinv"',
-    'urn:opendaylight:flow:inventory' : 'flownode',
-    'urn:opendaylight:flow:statistics' : 'fstat',
-    'urn:opendaylight:flow:table:statistics' : 'flowstat',
-    'urn:opendaylight:port:statistics' : 'portstat',
-    'urn:TBD:params:xml:ns:yang:network-topology' : 'nt',
-    'urn:opendaylight:model:topology:inventory' : 'nt1',
-    'urn:opendaylight:host-tracker' : 'host-track',
+    'urn:opendaylight:inventory': 'inv',
+    'urn:opendaylight:netconf-node-inventory': 'netinv"',
+    'urn:opendaylight:flow:inventory': 'flownode',
+    'urn:opendaylight:flow:statistics': 'fstat',
+    'urn:opendaylight:flow:table:statistics': 'flowstat',
+    'urn:opendaylight:port:statistics': 'portstat',
+    'urn:TBD:params:xml:ns:yang:network-topology': 'nt',
+    'urn:opendaylight:model:topology:inventory': 'nt1',
+    'urn:opendaylight:host-tracker': 'host-track',
 }
+
 
 def yang_nsname_to_prefix(nsname):
     if nsname in yang_namespace_to_prefix_map:
@@ -63,11 +64,12 @@ def yang_nsname_to_prefix(nsname):
     else:
         return nsname
 
+
 def yang_prefix_to_nsname(prefix):
     for k, v in yang_namespace_to_prefix_map:
         if v == prefix:
             return k
-    
+
     return prefix
 
 
@@ -276,15 +278,17 @@ class TopoChangeEvent():
                 for s in chunks:
                     idx = s.find(p)
                     if(idx >= 0):
-                        link_id = s[idx + len(p):].translate(None , "[]'\"")
+                        link_id = s[idx + len(p):].translate(None, "[]'\"")
                         break
         return link_id
 
     def do_print(self):
-        print " <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
+        print "\
+           <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
         print " operation: %s" % self.operation
         self.path_info.do_print()
-        print " >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+        print "\
+           >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
 
 
 class InventoryChangeNotification():
@@ -472,10 +476,12 @@ class InventoryChangeEvent():
         return flow_id
 
     def do_print(self):
-        print " <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
+        print "\
+             <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
         print " operation: %s" % self.operation
         self.path_info.do_print()
-        print " >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+        print "\
+             >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
 
 
 class FlowInfo():
@@ -514,7 +520,7 @@ class FlowInfo():
 class PathInfo():
     """ Represents the path to the node in the Controller's internal data tree
         where the change has been detected.
-        Helper subclass for the 'NetworkTopologyChangeNotification' and 
+        Helper subclass for the 'NetworkTopologyChangeNotification' and
         'InventoryChangeNotification' classes """
     def __init__(self, info):
         self.namespaces = None
@@ -548,4 +554,3 @@ class PathInfo():
         for ns in self.namespaces:
             print " namespace: %s (prefix: %s)" % (ns['ns'], ns['pfx'])
         print " path: %s" % self.path
-

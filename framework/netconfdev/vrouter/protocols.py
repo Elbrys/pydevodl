@@ -78,7 +78,8 @@ class StaticRoute():
 
     def to_json(self):
         """ Return this object as JSON """
-        return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+        return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True,
+                          indent=4)
 
     def get_payload(self):
         s = self.to_json()
@@ -86,8 +87,9 @@ class StaticRoute():
         obj1 = strip_none(obj)
         obj2 = remove_empty_from_dict(obj1)
         obj3 = dict_keys_underscored_to_dashed(obj2)
-        payload = {self._mn1: {self._mn2:[obj3]}}
-        return json.dumps(payload, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+        payload = {self._mn1: {self._mn2: [obj3]}}
+        return json.dumps(payload, default=lambda o: o.__dict__,
+                          sort_keys=True, indent=4)
 
     def set_interface_route(self, ip_prefix):
         route = self._find_create_interface_route(ip_prefix)
@@ -102,7 +104,7 @@ class StaticRoute():
 
     def _find_create_interface_route(self, ip_prefix):
         route = None
-        for item in self.interface_route :
+        for item in self.interface_route:
             if (item.tagnode == ip_prefix):
                 route = item
                 break
