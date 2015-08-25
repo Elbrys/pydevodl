@@ -210,9 +210,9 @@ def progress_wait_secs(msg=None, waitTime=None, sym="."):
         # sys.stdout.write ("waiting for %s seconds: " % waitTime)
         if (msg is not None):
             sys.stdout.write("%s" % msg)
-        for i in range(0, waitTime, 1):
-            print "%s" % sym, # <- no newline
-            sys.stdout.flush() #<- makes python print it anyway
+        for dummy in range(0, waitTime, 1):
+            print "%s" % sym,   # <- no newline
+            sys.stdout.flush()  # <- makes python print it anyway
             time.sleep(1)
         sys.stdout.write("\n")
 

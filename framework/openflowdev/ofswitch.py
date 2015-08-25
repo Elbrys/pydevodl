@@ -526,7 +526,7 @@ class OFSwitch(OpenflowNode):
             dbg_print("DEBUG: unsupported data format ")
             status.set_status(STATUS.MALFORM_DATA)
         return Result(status, resp)
-    
+
     def add_modify_group_json(self, group_id, group_json):
         """ Create a new or modify an existing group in the configuration
             data store of the Controller
@@ -543,9 +543,9 @@ class OFSwitch(OpenflowNode):
             url += urlext
             payload = {model_ref: json.loads(group_json)}
             resp = ctrl.http_put_request(url, json.dumps(payload), headers)
-            if(resp == None):
+            if(resp is None):
                 status.set_status(STATUS.CONN_ERROR)
-            elif(resp.content == None):
+            elif(resp.content is None):
                 status.set_status(STATUS.CTRL_INTERNAL_ERROR)
             elif (resp.status_code == 200):
                 status.set_status(STATUS.OK)
@@ -554,9 +554,9 @@ class OFSwitch(OpenflowNode):
         else:
             dbg_print("DEBUG: unsupported data format ")
             status.set_status(STATUS.MALFORM_DATA)
-        
+
         return Result(status, resp)
-    
+
     def delete_group(self, group_id):
         """ Remove given group from the configuration data store
             of the Controller
@@ -606,10 +606,10 @@ class OFSwitch(OpenflowNode):
             if (isinstance(l, list) and l):
                 d = l[0]
                 if decode_object:
-                    group = GroupEntry(group_dict = d)
+                    group = GroupEntry(group_dict=d)
                 else:
                     group = d
-            
+
             status.set_status(STATUS.OK if group else STATUS.DATA_NOT_FOUND)
         elif (resp.status_code == 404):
             status.set_status(STATUS.DATA_NOT_FOUND)
@@ -628,7 +628,7 @@ class OFSwitch(OpenflowNode):
             configuration data store
         """
         return self.get_group(group_id, False, decode_object)
-    
+
     def get_configured_groups(self, decode_object=False):
         groups = []
         result = self.get_groups(operational=False)
@@ -637,14 +637,14 @@ class OFSwitch(OpenflowNode):
             data = result.get_data()
             for d in data:
                 if decode_object:
-                    group = GroupEntry(group_dict = d)
+                    group = GroupEntry(group_dict=d)
                 else:
                     group = d
-                
+
                 groups.append(group)
-        
+
         return Result(status, groups)
-    
+
     def get_group_description(self, group_id, decode_object=False):
         """ Retrieve description of the given group (along with
             the group's bucket actions) from the Controller's
@@ -670,14 +670,14 @@ class OFSwitch(OpenflowNode):
                 group = GroupDescription(d)
             else:
                 group = d
-            
+
             status.set_status(STATUS.OK if group else STATUS.DATA_NOT_FOUND)
         elif (resp.status_code == 404):
             status.set_status(STATUS.DATA_NOT_FOUND)
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
         return Result(status, group)
-    
+
     def get_groups_description(self, decode_object=False):
         """ Retrieve description of all groups (along with
             the group's bucket actions) from the Controller's
@@ -696,11 +696,11 @@ class OFSwitch(OpenflowNode):
                         group = GroupDescription(d)
                     else:
                         group = d
-                        
+
                     groups.append(group)
-        
+
         return Result(status, groups)
-    
+
     def get_group_statistics(self, group_id, decode_object=False):
         """  Retrieve statistics for the given group in the Controller's
              operational data store
@@ -725,14 +725,14 @@ class OFSwitch(OpenflowNode):
                 group = GroupStatistics(d)
             else:
                 group = d
-            
+
             status.set_status(STATUS.OK if group else STATUS.DATA_NOT_FOUND)
         elif (resp.status_code == 404):
             status.set_status(STATUS.DATA_NOT_FOUND)
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
         return Result(status, group)
-    
+
     def get_groups_statistics(self, decode_object=False):
         """  Retrieve statistics for all groups in the Controller's
              operational data store
@@ -750,11 +750,11 @@ class OFSwitch(OpenflowNode):
                         group = GroupStatistics(d)
                     else:
                         group = d
-                        
+
                     groups.append(group)
-        
+
         return Result(status, groups)
-    
+
     def get_group_features(self, decode_object=False):
         """ Retrieve from the Controller's operational data store
             group features information supported by this OpenFlow
@@ -779,7 +779,7 @@ class OFSwitch(OpenflowNode):
                 group_features = GroupFeatures(d)
             else:
                 group_features = d
-            
+
             status.set_status(STATUS.OK
                               if group_features
                               else STATUS.DATA_NOT_FOUND)
@@ -788,22 +788,22 @@ class OFSwitch(OpenflowNode):
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
         return Result(status, group_features)
-    
+
     def get_groups(self, operational=True):
         status = OperStatus()
         groups = None
         ctrl = self.ctrl
-        
+
         url = ""
         if (operational):
             url = ctrl.get_node_operational_url(self.name)
         else:
             url = ctrl.get_node_config_url(self.name)
-        
+
         resp = ctrl.http_get_request(url, data=None, headers=None)
-        if(resp == None):
+        if(resp is None):
             status.set_status(STATUS.CONN_ERROR)
-        elif(resp.content == None):
+        elif(resp.content is None):
             status.set_status(STATUS.CTRL_INTERNAL_ERROR)
         elif (resp.status_code == 200):
             p1 = 'node'
@@ -821,42 +821,43 @@ class OFSwitch(OpenflowNode):
             status.set_status(STATUS.DATA_NOT_FOUND)
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
-        
+
         return Result(status, groups)
-    
+
     def get_GroupEntry(self, group_id, operational=True):
         groupEntry = None
         result = self.get_group(group_id, operational)
         status = result.get_status()
         if(status.eq(STATUS.OK)):
             d = result.get_data()
-            groupEntry = GroupEntry(group_dict = d)
-        
+            groupEntry = GroupEntry(group_dict=d)
+
         return Result(status, groupEntry)
-    
+
     def get_operational_GroupEntry(self, group_id):
         return self.get_GroupEntry(group_id, True)
-    
+
     def get_configured_GroupEntry(self, group_id):
         return self.get_GroupEntry(group_id, False)
-    
+
     def get_GroupEntries(self, operational=True):
-        groups = [] # list of 'GroupEntry objects
+        groups = []  # list of 'GroupEntry objects
         result = self.get_groups(operational)
         status = result.get_status()
         if(status.eq(STATUS.OK)):
             data = result.get_data()
             for item in data:
-                ge = GroupEntry(group_dict = item)
+                ge = GroupEntry(group_dict=item)
                 groups.append(ge)
-        
+
         return Result(status, groups)
-    
+
     def get_operational_GroupEntries(self):
         return self.get_GroupEntries(True)
-    
+
     def get_configured_GroupEntries(self):
         return self.get_GroupEntries(False)
+
 
 class FlowEntry(object):
     """ Class for creating and interacting with OpenFlow flows """
@@ -867,15 +868,16 @@ class FlowEntry(object):
         assert_msg = "[FlowEntry] either '%s' or '%s' should be used, " \
                      "not both" % ('flow_json', 'flow_dict')
         # TODO check this
-        assert(((flow_json is not None) and
-                (flow_dict is not None)) is False), assert_msg
+        assert(not ((flow_json is not None) and
+                    (flow_dict is not None))), assert_msg
         if (flow_dict is not None):
             self.__init_from_dict__(flow_dict)
             return
         if (flow_json is not None):
             self.__init_from_json__(flow_json)
             return
-        ''' Unique identifier of this FlowEntry in the Controller's data store '''
+        ''' Unique identifier of this FlowEntry in the Controller's
+            data store '''
         self.id = None
         ''' Opaque Controller-issued identifier '''
         self.cookie = None
@@ -1139,7 +1141,7 @@ class FlowEntry(object):
             v = m.get_metadata()
             if (v is not None):
                 odm['metadata'] = v
-            
+
             sm = json.dumps(odm, separators=(',', '='))
             sm = sm.translate(None, '"{} ')
             sm = "matches={" + sm + "}"
@@ -1194,11 +1196,11 @@ class FlowEntry(object):
                     elif (isinstance(action, DropAction)):
                         s = "drop"
                         drop_list.append(s)
-                    
+
                 apply_actions_list = pop_mpls_list + push_mpls_list + \
-                                     pop_vlan_list + push_vlan_list + \
-                                     set_field_list + drop_list + output_list
-        
+                    pop_vlan_list + push_vlan_list + \
+                    set_field_list + drop_list + output_list
+
         sa = "actions={"
         actions_list = apply_actions_list
         if(actions_list):
@@ -1500,7 +1502,7 @@ class Instruction():
             else:
                 msg = "can not find action in d='%s'" % d
                 dbg_print(msg)
-            
+
             return action
         else:
             raise TypeError("[Instruction] wrong argument type '%s'"
@@ -1622,7 +1624,7 @@ class GroupAction(Action):
 
 class SetVlanIdAction(Action):
     ''' Set the 802.1q VLAN id '''
-   
+
     def __init__(self, order=None, vid=None):
         super(SetVlanIdAction, self).__init__(order)
         self.set_vlan_id_action = {'vlan_id': vid}
@@ -2791,7 +2793,7 @@ class VlanId(VlanMatch):
         if (d is not None):
             self.__init_from_dict__(d)
             return
-        
+
         ''' VLAN-ID from 802.1Q header '''
         self.vlan_id = None
         ''' Flag that indicates that 'vlan_id' value is set and matching is
@@ -3144,7 +3146,7 @@ class GroupEntry():
     """ Class that represents a group entry in the OpenFlow Group Table """
     ''' Reference name in the YANG data tree on the Controller '''
     _mn = "flow-node-inventory:group"
-    
+
     def __attrs__(self):
         ''' Uniquely identifies a group within a switch. '''
         self.group_id = None
@@ -3161,7 +3163,7 @@ class GroupEntry():
         ''' Unclear what is it for ???
             Controller's specific attribute (optional) '''
         self.container_name = None
-        
+
         ''' Unclear, what is it for ???
             Would assume it serves for the same purpose as in FlowEntry.
             Controller's specific attribute (optional) '''
@@ -3171,17 +3173,17 @@ class GroupEntry():
             and associated parameters.
         '''
         self.buckets = {'bucket': []}
-    
+
     def __init__(self, group_id=None, group_type=None, group_dict=None):
         self.__attrs__()
-        if (group_dict != None):
+        if (group_dict is not None):
             self.__init_from_dict__(group_dict)
         else:
             self.group_id = group_id
             self.group_type = group_type
-    
+
     def __init_from_json__(self, js):
-        if (js != None and isinstance(js, basestring)):
+        if (js is not None and isinstance(js, basestring)):
             obj = json.loads(js)
             d = dict_keys_dashed_to_underscored(obj)
             p1 = 'buckets'
@@ -3199,24 +3201,24 @@ class GroupEntry():
         else:
             raise TypeError("[GroupEntry] wrong argument type '%s'"
                             " (JSON 'string' is expected)" % type(js))
-    
+
     def __init_from_dict__(self, d):
-        if (d != None and isinstance(d, dict)):
+        if (d is not None and isinstance(d, dict)):
             js = json.dumps(d)
             self.__init_from_json__(js)
         else:
             raise TypeError("[GroupEntry] wrong argument type '%s'"
                             " ('dict' is expected)" % type(d))
-    
+
     def to_string(self):
         """ Returns string representation of this object. """
         return str(vars(self))
-    
+
     def to_json(self):
         """ Return GroupEntry represented as JSON object """
         return json.dumps(self, default=lambda o: o.__dict__,
                           sort_keys=True, indent=4)
-    
+
     def to_yang_json(self, strip=False):
         s = self.to_json()
         # Convert all 'underscored' keywords to 'dash-separated' form used
@@ -3231,9 +3233,9 @@ class GroupEntry():
             d1 = json.loads(s)
             d2 = strip_none(d1)
             s = json.dumps(d2, sort_keys=True, indent=4)
-        
+
         return s
-    
+
     def get_payload(self):
         """ Return GroupEntry as a payload for the HTTP request body """
         s = self.to_json()
@@ -3249,8 +3251,7 @@ class GroupEntry():
         payload = {self._mn: d2}
         return json.dumps(payload, default=lambda o: o.__dict__,
                           sort_keys=True, indent=4)
-    
-    
+
     def to_ofp_oxm_syntax(self):
         odc = OrderedDict()
         print vars(self)
@@ -3259,20 +3260,19 @@ class GroupEntry():
         if (self.group_type):
             odc['type'] = self.group_type.replace('group-', '')
         gc = json.dumps(odc, separators=(',', '='))
-        gc = gc.translate(None, '"{} ').replace(':','=')
-        
+        gc = gc.translate(None, '"{} ').replace(':', '=')
+
         gb = "buckets=["
         buckets = self.buckets['bucket']
         bl = []
         for b in buckets:
-            s =  b.to_ofp_oxm_syntax()
+            s = b.to_ofp_oxm_syntax()
             bl.append(s)
         if(bl):
             gb += ",".join(bl)
         gb += "]"
         return gc + " " + gb
-    
-    
+
     def set_group_id(self, group_id):
         self.group_id = group_id
 
@@ -3325,11 +3325,10 @@ class GroupBucket():
     """ Helper class for representing 'buckets' property
         of the GroupEntry class
     """
-    
+
     def __attrs__(self):
         ''' Identifier (index) of the bucket within the group '''
         self.bucket_id = None
-        
         ''' Relative weight of this bucket.
             Only defined for select groups. '''
         self.weight = None
@@ -3347,16 +3346,16 @@ class GroupBucket():
         self.watch_group = None
         ''' Set of actions to execute by this bucket '''
         self.action = []
-    
+
     def __init__(self, bucket_id=None, bucket_dict=None):
         self.__attrs__()
-        if (bucket_dict != None):
+        if (bucket_dict is not None):
             self.__init_from_dict__(bucket_dict)
         else:
             self.bucket_id = bucket_id
-    
+
     def __init_from_json__(self, js):
-        if (js != None and isinstance(js, basestring)):
+        if (js is not None and isinstance(js, basestring)):
             obj = json.loads(js)
             d = dict_keys_dashed_to_underscored(obj)
             for k, v in d.items():
@@ -3364,24 +3363,24 @@ class GroupBucket():
         else:
             raise TypeError("[GroupBucket] wrong argument type '%s'"
                             " (JSON 'string' is expected)" % type(js))
-            
+
     def __init_from_dict__(self, d):
-        if (d != None and isinstance(d, dict)):
+        if (d is not None and isinstance(d, dict)):
             js = json.dumps(d)
             self.__init_from_json__(js)
         else:
             raise TypeError("[GroupBucket] wrong argument type '%s'"
                             " ('dict' is expected)" % type(d))
-    
+
     def to_string(self):
         """ Returns string representation of this object. """
         return str(vars(self))
-    
+
     def to_json(self):
         """ Return this object represented as JSON """
         return json.dumps(self, default=lambda o: o.__dict__,
                           sort_keys=True, indent=4)
-    
+
     def to_ofp_oxm_syntax(self):
         print self.to_string()
         od = OrderedDict()
@@ -3394,7 +3393,7 @@ class GroupBucket():
 
         s = json.dumps(od, separators=(',', '='))
         return s
-    
+
     def set_weight(self, weight):
         self.weight = weight
 

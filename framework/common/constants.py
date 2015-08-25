@@ -100,7 +100,7 @@ IP_DSCP_AF43 = 38         # binary '100110' - equivalent IP precedence value 4
 # Expedited Forwarding
 IP_DSCP_EF = 46           # binary '101110' - equivalent IP precedence value 5
 
-# The Explicit Congestion Notification (ECN) 
+# The Explicit Congestion Notification (ECN)
 # ECN uses the two least significant (right-most) bits of the DiffServ field
 # in the IPv4 or IPv6 header to encode four different code points
 IP_ECN_NON_ECT = 0  # binary '00' - Non ECN-Capable Transport, NON-ECT
@@ -127,4 +127,3 @@ OFPGT_ALL      = "group-all"      # All (multicast/broadcast) group
 OFPGT_SELECT   = "group-select"   # Select group
 OFPGT_INDIRECT = "group-indirect" # Indirect group
 OFPGT_FF       = "group-ff"       # Fast failover group
-

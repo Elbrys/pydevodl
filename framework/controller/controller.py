@@ -1119,7 +1119,8 @@ class Controller():
 
     def delete_netconf_node(self, netconfdev):
         """ Disconnect a netconf device from the controller
-        :param netconfdev: :class:`framework.controller.netconfnode.NetconfNode`
+        :param netconfdev:
+                         :class:`framework.controller.netconfnode.NetconfNode`
         :return: Status, None.
         :rtype: :class:`framework.common.status.OperStatus`,
                  JSON providing response from adding netconf noed.
@@ -1159,7 +1160,8 @@ class Controller():
     def modify_netconf_node_in_config(self, netconfdev):
         """ Modify connected netconf device's info in the controller
 
-        :param netconfdev: :class:`framework.controller.netconfnode.NetconfNode`
+        :param netconfdev:
+                         :class:`framework.controller.netconfnode.NetconfNode`
         :return: Status, None.
         :rtype: :class:`framework.common.status.OperStatus`,
                  JSON providing response from adding netconf noed.
