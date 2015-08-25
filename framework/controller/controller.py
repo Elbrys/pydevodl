@@ -1051,60 +1051,57 @@ class Controller():
         templateUrl = "http://{}:{}/restconf/config/" + \
                       "opendaylight-inventory:nodes/node/" + \
                       "controller-config/yang-ext:mount/config:modules"
+        ns = "urn:opendaylight:params:xml:ns:yang:controller"
         xmlPayloadTemplate = '''
-        <module xmlns="urn:opendaylight:params:xml:ns:yang:controller:config">
-          <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:md
-          :sal:connector:netconf">prefix:sal-netconf-connector</type>
+        <module xmlns="{}:config">
+          <type xmlns:prefix="{}:md:sal:connector:netconf">
+             prefix:sal-netconf-connector
+          </type>
           <name>{}</name>
-          <address xmlns="urn:opendaylight:params:xml:ns:yang:controller:md:sal
-          :connector:netconf">{}</address>
-          <port xmlns="urn:opendaylight:params:xml:ns:yang:controller:md:sal:co
-          nnector:netconf">{}</port>
-          <username xmlns="urn:opendaylight:params:xml:ns:yang:controller:md:sa
-          l:connector:netconf">{}</username>
-          <password xmlns="urn:opendaylight:params:xml:ns:yang:controller:md:sa
-          l:connector:netconf">{}</password>
-          <tcp-only xmlns="urn:opendaylight:params:xml:ns:yang:controller:md:sa
-          l:connector:netconf">{}</tcp-only>
-          <event-executor xmlns="urn:opendaylight:params:xml:ns:yang:controller
-          :md:sal:connector:netconf">
-            <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:
-            netty">prefix:netty-event-executor</type>
+          <address xmlns="{}:md:sal:connector:netconf">{}</address>
+          <port xmlns="{}:md:sal:connector:netconf">{}</port>
+          <username xmlns="{}:md:sal:connector:netconf">{}</username>
+          <password xmlns="{}:md:sal:connector:netconf">{}</password>
+          <tcp-only xmlns="{}:md:sal:connector:netconf">{}</tcp-only>
+          <event-executor xmlns="{}:md:sal:connector:netconf">
+            <type xmlns:prefix="{}:netty">prefix:netty-event-executor</type>
             <name>global-event-executor</name>
           </event-executor>
-          <binding-registry xmlns="urn:opendaylight:params:xml:ns:yang:controll
-          er:md:sal:connector:netconf">
-            <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:
-            md:sal:binding">prefix:binding-broker-osgi-registry</type>
+          <binding-registry xmlns="{}:md:sal:connector:netconf">
+            <type xmlns:prefix="{}:md:sal:binding">
+               prefix:binding-broker-osgi-registry
+            </type>
             <name>binding-osgi-broker</name>
           </binding-registry>
-          <dom-registry xmlns="urn:opendaylight:params:xml:ns:yang:controller:m
-          d:sal:connector:netconf">
-            <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:
-            md:sal:dom">prefix:dom-broker-osgi-registry</type>
+          <dom-registry xmlns="{}:md:sal:connector:netconf">
+            <type xmlns:prefix="{}:md:sal:dom">
+               prefix:dom-broker-osgi-registry
+            </type>
             <name>dom-broker</name>
           </dom-registry>
-          <client-dispatcher xmlns="urn:opendaylight:params:xml:ns:yang:control
-          ler:md:sal:connector:netconf">
-            <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:
-            config:netconf">prefix:netconf-client-dispatcher</type>
+          <client-dispatcher xmlns="{}:md:sal:connector:netconf">
+            <type xmlns:prefix="{}:config:netconf">
+               prefix:netconf-client-dispatcher
+            </type>
             <name>global-netconf-dispatcher</name>
           </client-dispatcher>
-          <processing-executor xmlns="urn:opendaylight:params:xml:ns:yang:contr
-          oller:md:sal:connector:netconf">
-            <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:
-            threadpool">prefix:threadpool</type>
+          <processing-executor xmlns="{}:md:sal:connector:netconf">
+            <type xmlns:prefix="{}:threadpool">prefix:threadpool</type>
             <name>global-netconf-processing-executor</name>
           </processing-executor>
         </module>
         '''
-        payload = xmlPayloadTemplate.format(node.name, node.ipAddr,
-                                            node.portNum, node.adminName,
-                                            node.adminPassword, node.tcpOnly)
+        payload = xmlPayloadTemplate.format(ns, ns, node.name,
+                                            ns, node.ipAddr,
+                                            ns, node.portNum,
+                                            ns, node.adminName,
+                                            ns, node.adminPassword,
+                                            ns, node.tcpOnly,
+                                            ns, ns, ns, ns, ns,
+                                            ns, ns, ns, ns, ns)
         url = templateUrl.format(self.ipAddr, self.portNum)
         headers = {'content-type': 'application/xml',
                    'accept': 'application/xml'}
-
         resp = self.http_post_request(url, payload, headers)
         if(resp is None):
             status.set_status(STATUS.CONN_ERROR)
@@ -1137,7 +1134,7 @@ class Controller():
                       "controller-config/" + \
                       "yang-ext:mount/config:modules/module/" + \
                       "odl-sal-netconf-connector-cfg:sal-netconf-connector/{}"
-        url = templateUrl.format(self.ipAddr, self.portNum, netconfdev.id)
+        url = templateUrl.format(self.ipAddr, self.portNum, netconfdev.name)
 
         resp = self.http_delete_request(url, data=None, headers=None)
         if(resp is None):
@@ -1177,18 +1174,19 @@ class Controller():
                       "opendaylight-inventory:nodes/node/" + \
                       "controller-config/yang-ext:mount/config:modules"
         url = templateUrl.format(self.ipAddr, self.portNum)
+        ns = "urn:opendaylight:params:xml:ns:yang:controller"
         xmlPayloadTemplate = '''
-        <module xmlns="urn:opendaylight:params:xml:ns:yang:controller:config">
-          <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:md
-          :sal:connector:netconf">prefix:sal-netconf-connector</type>
+        <module xmlns="{}:config">
+          <type xmlns:prefix="{}:md:sal:connector:netconf">
+             prefix:sal-netconf-connector
+          </type>
           <name>{}</name>
-          <username xmlns="urn:opendaylight:params:xml:ns:yang:controller:md:sa
-          l:connector:netconf">{}</username>
-          <password xmlns="urn:opendaylight:params:xml:ns:yang:controller:md:sa
-          l:connector:netconf">{}</password>
+          <username xmlns="{}:md:sal:connector:netconf">{}</username>
+          <password xmlns="{}:md:sal:connector:netconf">{}</password>
         </module>
         '''
-        payload = xmlPayloadTemplate.format(netconfdev.devName,
+        payload = xmlPayloadTemplate.format(ns, ns,
+                                            netconfdev.devName,
                                             netconfdev.adminName,
                                             netconfdev.adminPassword)
         headers = {'content-type': 'application/xml',
@@ -1440,9 +1438,11 @@ class Controller():
             try:
                 p1 = 'node'
                 d = json.loads(resp.content)[p1]
-                inv_obj = NetconfCapableNode(inv_dict=d[0])
+                inv_obj = NetconfCapableNode(clazz='VRouter5600',
+                                             inv_dict=d[0])
                 status.set_status(STATUS.OK)
-            except(Exception):
+            except(Exception) as e:
+                print "!!! %s" % e
                 dbg_print("DEBUG: data not found in the received reply")
                 status.set_status(STATUS.DATA_NOT_FOUND)
         else:

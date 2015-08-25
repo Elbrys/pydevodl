@@ -52,29 +52,25 @@ if __name__ == "__main__":
     ctrlPortNum = '8181'
     ctrlUname = 'admin'
     ctrlPswd = 'admin'
-    
+
     netconf_ids = []
     netconf_nodes = []
-    
+
     print ("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
     print ("<<< Demo Start")
     print ("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
-    
-    
+
     rundelay = 2
-    
-    
+
     print "\n"
     ctrl = Controller(ctrlIpAddr, ctrlPortNum, ctrlUname, ctrlPswd)
     print ("<<< Controller '%s:%s'" % (ctrlIpAddr, ctrlPortNum))
     time.sleep(rundelay)
-    
-    
+
     print "\n"
     print ("<<< Get NETCONF Inventory Information")
     time.sleep(rundelay)
-    
-    
+
     result = ctrl.get_netconf_nodes_in_config()
     status = result.get_status()
     if(status.eq(STATUS.OK)):
@@ -85,14 +81,13 @@ if __name__ == "__main__":
                "failed to get list of NETCONF devices, "
                "reason: %s" % status.brief())
         exit(0)
-        
+
     print "\n"
     print ("<<< NETCONF devices")
     print "\n".strip()
     for node_id in netconf_ids:
         print "         %s" % node_id
-    
-    
+
     for node_id in netconf_ids:
         result = ctrl.build_netconf_node_inventory_object(node_id)
         status = result.get_status()
@@ -106,12 +101,11 @@ if __name__ == "__main__":
                    "failed to build object for NETCONF device '%s', "
                    "reason: %s" % (node_id, status.brief()))
             exit(0)
-    
-    
+
     for node in netconf_nodes:
         time.sleep(rundelay)
         print "\n".strip()
-        print "<<< Information for '{}' device".format(node_id)
+        print "<<< Information for '{}' device".format(node.get_id())
         print "\n".strip()
         print "         Device Name       : {}".format(node.get_id())
         print "         Connection status : {}".format(node.get_conn_status())
@@ -121,8 +115,7 @@ if __name__ == "__main__":
         clist = node.get_initial_capabilities()
         for item in clist:
             print "         {}".format(item)
-    
-    
+
     print ("\n")
     print (">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
     print (">>> Demo End")

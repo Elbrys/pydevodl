@@ -145,7 +145,8 @@ if __name__ == "__main__":
         print ("Firewall instance '%s' was successfully created" % firewallgroup)
     else:
         print ("\n")
-        print ("!!!Demo terminated, reason: %s" % status.brief().lower())
+#        print ("!!!Demo terminated, reason: %s" % status.brief().lower())
+        print ("!!!Demo terminated, reason: %s" % status.detailed())
         exit(0)
     
     
