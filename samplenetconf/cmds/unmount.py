@@ -46,10 +46,10 @@ from framework.common.utils import load_dict_from_file
 
 
 if __name__ == "__main__":
-    
+
     f = "cfg.yml"
     d = {}
-    if(load_dict_from_file(f, d) == False):
+    if(load_dict_from_file(f, d) is False):
         print("Config file '%s' read error: " % f)
         exit()
 
@@ -69,12 +69,14 @@ if __name__ == "__main__":
         exit(0)
 
     ctrl = Controller(ctrlIpAddr, ctrlPortNum, ctrlUname, ctrlPswd)
-    node = NetconfNode(ctrl, nodeName, nodeIpAddr, nodePortNum, nodeUname, nodePswd)
+    node = NetconfNode(ctrl, nodeName, nodeIpAddr, nodePortNum,
+                       nodeUname, nodePswd)
 
-    print (">>> Removing '%s' from the Controller '%s'" % (nodeName, ctrlIpAddr))
+    print (">>> Removing '%s' from the Controller '%s'"
+           % (nodeName, ctrlIpAddr))
     result = ctrl.delete_netconf_node(node)
     status = result.get_status()
-    if(status.eq(STATUS.OK) == True):
+    if(status.eq(STATUS.OK)):
         print ("'%s' was successfully removed from the Controller" % nodeName)
     else:
         print ("\n")

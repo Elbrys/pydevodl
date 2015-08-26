@@ -45,7 +45,7 @@ import json
 from framework.controller.netconfnode import NetconfNode
 from framework.common.result import Result
 from framework.common.status import OperStatus, STATUS
-from framework.netconfdev.vrouter.protocols import StaticRoute
+# from framework.netconfdev.vrouter.protocols import StaticRoute
 
 
 class NOS(NetconfNode):

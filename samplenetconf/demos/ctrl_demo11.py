@@ -1,36 +1,36 @@
 #!/usr/bin/python
 
+# Copyright (c) 2015,  BROCADE COMMUNICATIONS SYSTEMS, INC
+
+# All rights reserved.
+
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+
+# 1. Redistributions of source code must retain the above copyright notice,
+# this list of conditions and the following disclaimer.
+
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+# this list of conditions and the following disclaimer in the documentation
+# and/or other materials provided with the distribution.
+
+# 3. Neither the name of the copyright holder nor the names of its
+# contributors may be used to endorse or promote products derived from this
+# software without specific prior written permission.
+
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+# THE POSSIBILITY OF SUCH DAMAGE.
+
 """
-Copyright (c) 2015,  BROCADE COMMUNICATIONS SYSTEMS, INC
-
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-
-1. Redistributions of source code must retain the above copyright notice,
-this list of conditions and the following disclaimer.
-
-2. Redistributions in binary form must reproduce the above copyright notice,
-this list of conditions and the following disclaimer in the documentation
-and/or other materials provided with the distribution.
-
-3. Neither the name of the copyright holder nor the names of its
-contributors may be used to endorse or promote products derived from this
-software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-THE POSSIBILITY OF SUCH DAMAGE.
-
 
 @authors: Sergei Garbuzov
 @status: Development
@@ -49,13 +49,13 @@ from framework.common.utils import load_dict_from_file
 
 
 if __name__ == "__main__":
-    
+
     f = "cfg3.yml"
     d = {}
-    if(load_dict_from_file(f, d) == False):
+    if(load_dict_from_file(f, d) is False):
         print("Config file '%s' read error: " % f)
-        exit()
-    
+        exit(0)
+
     try:
         ctrlIpAddr = d['ctrlIpAddr']
         ctrlPortNum = d['ctrlPortNum']
@@ -70,21 +70,19 @@ if __name__ == "__main__":
     except:
         print ("Failed to get Controller or NETCONF device attributes")
         exit(0)
-    
-    
+
     print ("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
     print ("<<< Demo Start")
     print ("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
-    
+
     rundelay = 5
-    
+
     print ("\n")
     print ("<<< Creating Controller instance")
     ctrl = Controller(ctrlIpAddr, ctrlPortNum, ctrlUname, ctrlPswd)
     print ("'Controller':")
     print ctrl.to_json()
-    
-    
+
     print "\n"
     print ("<<< Show NETCONF nodes configured on the Controller")
     time.sleep(rundelay)
@@ -94,23 +92,23 @@ if __name__ == "__main__":
         print "Nodes configured:"
         nlist = result.get_data()
         for item in nlist:
-            print "   '{}'".format(item)   
+            print "   '{}'".format(item)
     else:
         print ("\n")
         print ("!!!Demo terminated, reason: %s" % status.brief())
         exit(0)
-    
-    
+
     print ("\n")
-    time.sleep(rundelay)    
+    time.sleep(rundelay)
     print ("<<< Creating new '%s' NETCONF node" % nodeName)
-    node = NetconfNode(ctrl, nodeName, nodeIpAddr, nodePortNum, nodeUname, nodePswd)
+    node = NetconfNode(ctrl, nodeName, nodeIpAddr, nodePortNum,
+                       nodeUname, nodePswd)
     print ("'%s':" % nodeName)
     print node.to_json()
-    
-    
+
     print ("\n")
-    print ("<<< Check '%s' NETCONF node availability on the network" % nodeName)
+    print ("<<< Check '%s' NETCONF node availability "
+           "on the network" % nodeName)
     time.sleep(rundelay)
     response = os.system("ping -c 1 " + nodeIpAddr)
 
@@ -120,21 +118,20 @@ if __name__ == "__main__":
         print nodeIpAddr, 'is down!'
         print ("!!!Demo terminated")
         exit(0)
-    
-    
+
     print ("\n")
     print ("<<< Add '%s' NETCONF node to the Controller" % nodeName)
-    time.sleep(rundelay)    
+    time.sleep(rundelay)
     result = ctrl.add_netconf_node(node)
     status = result.get_status()
     if(status.eq(STATUS.OK)):
-        print ("'%s' NETCONF node was successfully added to the Controller" % nodeName)
+        print ("'%s' NETCONF node was successfully added "
+               "to the Controller" % nodeName)
     else:
         print ("\n")
         print ("!!!Demo terminated, reason: %s" % status.brief())
         exit(0)
-    
-    
+
     print "\n"
     print ("<<< Show NETCONF nodes configured on the Controller")
     time.sleep(rundelay)
@@ -144,13 +141,12 @@ if __name__ == "__main__":
         print "Nodes configured:"
         nlist = result.get_data()
         for item in nlist:
-            print "   '{}'".format(item)   
+            print "   '{}'".format(item)
     else:
         print ("\n")
         print ("!!!Demo terminated, reason: %s" % status.brief())
         exit(0)
-    
-    
+
     print "\n"
     print ("<<< Find the '%s' NETCONF node on the Controller" % nodeName)
     time.sleep(rundelay)
@@ -162,10 +158,10 @@ if __name__ == "__main__":
         print ("\n")
         print ("!!!Demo terminated, reason: %s" % status.brief())
         exit(0)
-    
-    
+
     print "\n"
-    print ("<<< Show connection status for all NETCONF nodes configured on the Controller")
+    print ("<<< Show connection status for all NETCONF nodes "
+           "configured on the Controller")
     time.sleep(rundelay)
     result = ctrl.get_netconf_nodes_conn_status()
     status = result.get_status()
@@ -174,17 +170,16 @@ if __name__ == "__main__":
         nlist = result.get_data()
         for item in nlist:
             status = ""
-            if (item['connected'] == True):
+            if (item['connected'] is True):
                 status = "connected"
             else:
                 status = "not connected"
-            print "   '{}' is {}".format(item['node'], status )
+            print "   '{}' is {}".format(item['node'], status)
     else:
         print ("\n")
         print ("!!!Demo terminated, reason: %s" % status.brief())
         exit(0)
-    
-    
+
     print "\n"
     print ("<<< Show connection status for the '%s' NETCONF node" % nodeName)
     time.sleep(rundelay)
@@ -200,21 +195,20 @@ if __name__ == "__main__":
         print ("\n")
         print ("!!!Demo terminated, reason: %s" % status.brief())
         exit(0)
-    
-    
+
     print "\n"
     print (">>> Remove '%s' NETCONF node from the Controller" % nodeName)
-    time.sleep(rundelay)    
+    time.sleep(rundelay)
     result = ctrl.delete_netconf_node(node)
     status = result.get_status()
     if(status.eq(STATUS.OK)):
-        print ("'%s' NETCONF node was successfully removed from the Controller" % nodeName)
+        print ("'%s' NETCONF node was successfully removed "
+               "from the Controller" % nodeName)
     else:
         print ("\n")
         print ("!!!Demo terminated, reason: %s" % status.brief())
         exit(0)
-    
-    
+
     print "\n"
     print ("<<< Show NETCONF nodes configured on the Controller")
     time.sleep(rundelay)
@@ -224,13 +218,12 @@ if __name__ == "__main__":
         print "Nodes configured:"
         nlist = result.get_data()
         for item in nlist:
-            print "   '{}'".format(item)   
+            print "   '{}'".format(item)
     else:
         print ("\n")
         print ("!!!Demo terminated, reason: %s" % status.brief())
         exit(0)
-    
-    
+
     print "\n"
     print ("<<< Show connection status for the '%s' NETCONF node" % nodeName)
     time.sleep(rundelay)
@@ -246,10 +239,8 @@ if __name__ == "__main__":
         print ("\n")
         print ("!!!Demo terminated, reason: %s" % status.brief())
         exit(0)
-    
-    
+
     print ("\n")
     print (">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
     print (">>> Demo End")
     print (">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-    
