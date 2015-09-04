@@ -67,8 +67,8 @@ def delete_flows(ofswitch, table_id, flow_ids):
             print ("<<< Flow with id of '%s' successfully removed "
                    "from the Controller" % flow_id)
         else:
-            print ("!!!Flow '%s' removal error, reason: %s"
-                   % (flow_id, status.brief()))
+            print ("!!!Flow '%s' removal error, reason: %s" %
+                   (flow_id, status.brief()))
 
 if __name__ == "__main__":
 
@@ -111,8 +111,8 @@ if __name__ == "__main__":
     customer_vlan_id = 998          # Customer VLAN
     first_flow_id = 31
 
-    print ("<<< 'Controller': %s, 'OpenFlow' switch: '%s'"
-           % (ctrlIpAddr, nodeName))
+    print ("<<< 'Controller': %s, 'OpenFlow' switch: '%s'" %
+           (ctrlIpAddr, nodeName))
 
     # ---------------------------------------------------
     # First flow entry
@@ -121,16 +121,16 @@ if __name__ == "__main__":
     print ("<<< Set OpenFlow flow on the Controller")
     print ("        Match:  Ethernet Type (%s)\n"
            "                VLAN ID (%s)\n"
-           "                Input Port (%s)"
-           % (hex(arp_eth_type), customer_vlan_id, customer_port))
+           "                Input Port (%s)" %
+           (hex(arp_eth_type), customer_vlan_id, customer_port))
     print ("        Action: Push VLAN (Ethernet Type %s)\n"
            "                Set Field (VLAN ID %s)\n"
            "                Push VLAN (Ethernet Type %s)\n"
            "                Set Field (VLAN ID %s)\n"
-           "                Output (Physical Port number %s)"
-           % (hex(qinq_eth_type), provider_vlan_id,
-              hex(dot1q_eth_type), customer_vlan_id,
-              provider_port))
+           "                Output (Physical Port number %s)" %
+           (hex(qinq_eth_type), provider_vlan_id,
+            hex(dot1q_eth_type), customer_vlan_id,
+            provider_port))
 
     time.sleep(rundelay)
 
@@ -205,16 +205,16 @@ if __name__ == "__main__":
     print ("<<< Set OpenFlow flow on the Controller")
     print ("        Match:  Ethernet Type (%s)\n"
            "                VLAN ID (%s)\n"
-           "                Input Port (%s)"
-           % (hex(ip_eth_type), customer_vlan_id, customer_port))
+           "                Input Port (%s)" %
+           (hex(ip_eth_type), customer_vlan_id, customer_port))
     print ("        Action: Push VLAN (Ethernet Type %s)\n"
            "                Set Field (VLAN ID %s)\n"
            "                Push VLAN (Ethernet Type %s)\n"
            "                Set Field (VLAN ID %s)\n"
-           "                Output (Physical Port number %s)"
-           % (hex(qinq_eth_type), provider_vlan_id,
-              hex(dot1q_eth_type), customer_vlan_id,
-              provider_port))
+           "                Output (Physical Port number %s)" %
+           (hex(qinq_eth_type), provider_vlan_id,
+            hex(dot1q_eth_type), customer_vlan_id,
+            provider_port))
 
     time.sleep(rundelay)
 
@@ -288,11 +288,11 @@ if __name__ == "__main__":
     print ("<<< Set OpenFlow flow on the Controller")
     print ("        Match:  Ethernet Type (%s)\n"
            "                VLAN ID (%s)\n"
-           "                Input Port (%s)"
-           % (hex(arp_eth_type), provider_vlan_id, provider_port))
+           "                Input Port (%s)" %
+           (hex(arp_eth_type), provider_vlan_id, provider_port))
     print ("        Action: Pop VLAN\n"
-           "                Output (Physical Port number %s)"
-           % (customer_port))
+           "                Output (Physical Port number %s)" %
+           (customer_port))
 
     time.sleep(rundelay)
 
@@ -349,11 +349,11 @@ if __name__ == "__main__":
     print ("<<< Set OpenFlow flow on the Controller")
     print ("        Match:  Ethernet Type (%s)\n"
            "                VLAN ID (%s)\n"
-           "                Input Port (%s)"
-           % (hex(ip_eth_type), provider_vlan_id, provider_port))
+           "                Input Port (%s)" %
+           (hex(ip_eth_type), provider_vlan_id, provider_port))
     print ("        Action: Pop VLAN\n"
-           "                Output (Physical Port number %s)"
-           % (customer_port))
+           "                Output (Physical Port number %s)" %
+           (customer_port))
 
     time.sleep(rundelay)
 

@@ -99,8 +99,8 @@ if __name__ == "__main__":
     # (name used by Controller for default topology instance)
     topo_id = 'flow:1'
     print "\n".strip()
-    print ("<<< 'Controller': %s, Topology Identifier: '%s'"
-           % (ctrlIpAddr, topo_id))
+    print ("<<< 'Controller': %s, Topology Identifier: '%s'" %
+           (ctrlIpAddr, topo_id))
     time.sleep(rundelay)
 
     # Data store for the changes

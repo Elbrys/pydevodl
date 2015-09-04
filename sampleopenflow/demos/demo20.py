@@ -106,8 +106,8 @@ if __name__ == "__main__":
     # --- Flow Actions: Output (CONTROLLER)
     output_port = "CONTROLLER"
 
-    print ("<<< 'Controller': %s, 'OpenFlow' switch: '%s'"
-           % (ctrlIpAddr, nodeName))
+    print ("<<< 'Controller': %s, 'OpenFlow' switch: '%s'" %
+           (ctrlIpAddr, nodeName))
 
     print "\n"
     print ("<<< Set OpenFlow flow on the Controller")
@@ -119,12 +119,11 @@ if __name__ == "__main__":
            "                IPv6 Flow Label (%s)\n"
            "                ICMPv6 Type (%s)\n"
            "                ICMPv6 Code (%s)\n"
-           "                Metadata (%s)"
-           % (hex(eth_type), ip_dscp, ip_ecn,
-              ipv6_src, ipv6_dst, ipv6_flabel,
-              icmpv6_type, icmpv6_code, metadata))
-    print ("        Action: Output (to %s)"
-           % (output_port))
+           "                Metadata (%s)" %
+           (hex(eth_type), ip_dscp, ip_ecn,
+            ipv6_src, ipv6_dst, ipv6_flabel,
+            icmpv6_type, icmpv6_code, metadata))
+    print ("        Action: Output (to %s)" % (output_port))
 
     time.sleep(rundelay)
 
@@ -200,8 +199,8 @@ if __name__ == "__main__":
 
     print ("\n")
     print ("<<< Delete flow with id of '%s' from the Controller's cache "
-           "and from the table '%s' on the '%s' node"
-           % (flow_id, table_id, nodeName))
+           "and from the table '%s' on the '%s' node" %
+           (flow_id, table_id, nodeName))
     time.sleep(rundelay)
     result = ofswitch.delete_flow(flow_entry.get_flow_table_id(),
                                   flow_entry.get_flow_id())

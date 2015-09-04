@@ -106,8 +106,8 @@ if __name__ == "__main__":
     ofswitch = OFSwitch(ctrl, nodeName)
 
     print "\n".strip()
-    print ("<<< 'Controller': %s, 'OpenFlow' switch: '%s'"
-           % (ctrlIpAddr, nodeName))
+    print ("<<< 'Controller': %s, 'OpenFlow' switch: '%s'" %
+           (ctrlIpAddr, nodeName))
 
     grp_ids_cfg = []
     grp_ids_oper = []
@@ -157,21 +157,22 @@ if __name__ == "__main__":
     print "\n".strip()
     print ("        Group Type : %s\n"
            "        Group ID   : %s\n"
-           "        Group Name : \"%s\"" % (group_type.strip('group-').upper(),
-                                            group_id, group_name))
+           "        Group Name : \"%s\"" %
+           (group_type.strip('group-').upper(),
+            group_id, group_name))
     print ("        Buckets    :")
-    print ("                     [0] watch-port: %s"
-           % watch_port1)
-    print ("                         actions: Output (%s)"
-           % out_port1)
-    print ("                     [1] watch-port: %s"
-           % watch_port2)
-    print ("                         actions: Output (%s)"
-           % out_port2)
-    print ("                     [2] watch-port: %s"
-           % watch_port3)
-    print ("                         actions: Output (%s)"
-           % out_port3)
+    print ("                     [0] watch-port: %s" %
+           watch_port1)
+    print ("                         actions: Output (%s)" %
+           out_port1)
+    print ("                     [1] watch-port: %s" %
+           watch_port2)
+    print ("                         actions: Output (%s)" %
+           out_port2)
+    print ("                     [2] watch-port: %s" %
+           watch_port3)
+    print ("                         actions: Output (%s)" %
+           out_port3)
     time.sleep(rundelay)
 
     # Allocate a placeholder for the group entry
@@ -295,12 +296,12 @@ if __name__ == "__main__":
         result = ofswitch.delete_group(group_id)
         status = result.get_status()
         if(status.eq(STATUS.OK)):
-            print ("<<< Group '%s' successfully removed from the Controller"
-                   % group_id)
+            print ("<<< Group '%s' successfully removed from the Controller" %
+                   group_id)
         else:
             print ("\n").strip()
-            print ("!!!Error, failed to remove group '%s', reason: %s"
-                   % (group_id, status.detailed()))
+            print ("!!!Error, failed to remove group '%s', reason: %s" %
+                   (group_id, status.detailed()))
 
     print ("\n").strip()
     print ("<<< Get OpenFlow Groups Information")

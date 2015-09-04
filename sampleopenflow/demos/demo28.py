@@ -92,8 +92,8 @@ if __name__ == "__main__":
         assert(isinstance(inv_obj, Inventory))
     else:
         print ("\n")
-        print ("!!!Error, failed to obtain inventory info, reason: %s"
-               % status.brief().lower())
+        print ("!!!Error, failed to obtain inventory info, reason: %s" %
+               status.brief().lower())
         exit(0)
 
     assert(inv_obj)

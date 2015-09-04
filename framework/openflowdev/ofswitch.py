@@ -179,9 +179,9 @@ class OFSwitch(OpenflowNode):
             status.set_status(STATUS.HTTP_ERROR, resp)
         return Result(status, sorted(plist))
 
-    # ---------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     #  TBD
-    # ---------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def get_port_brief_info(self, portnum):
         pass
 
@@ -895,11 +895,13 @@ class FlowEntry(object):
         self.hard_timeout = None
         ''' Modify/Delete entry strictly matching wildcards and priority '''
         self.strict = None
-        ''' For OFPFC_DELETE* commands, require matching entries to include this as an
-            output port. A value of OFPP_ANY indicates no restriction. '''
+        ''' For OFPFC_DELETE* commands, require matching entries to include
+            this as an output port.
+            A value of OFPP_ANY indicates no restriction. '''
         self.out_port = None
-        ''' For OFPFC_DELETE* commands, require matching entries to include this as an
-            output group. A value of OFPG_ANY indicates no restriction '''
+        ''' For OFPFC_DELETE* commands, require matching entries to include
+            this as an output group.
+            A value of OFPG_ANY indicates no restriction '''
         self.out_group = None
         ''' Bitmap of OFPFF_* flags '''
         self.flags = None
@@ -1333,8 +1335,8 @@ class FlowEntry(object):
             self.instructions['instruction'].append(instruction)
         else:
             raise TypeError("!!!Error, argument '%s' is of a wrong type "
-                            "('Instruction' instance is expected)"
-                            % instruction)
+                            "('Instruction' instance is expected)" %
+                            instruction)
 
     def get_instructions(self):
         res = None
@@ -1353,8 +1355,8 @@ class FlowEntry(object):
                 self.add_instruction(instruction)
         else:
             raise TypeError("!!!Error, argument '%s' is of a wrong type "
-                            "('Instructions' instance is expected)"
-                            % instructions)
+                            "('Instructions' instance is expected)" %
+                            instructions)
 
     def add_match(self, match):
         if isinstance(match, Match):
@@ -2117,11 +2119,13 @@ class Match(object):
         if (d is not None):
             self.__init_from_dict__(d)
             return
-        ''' Ingress port. Numerical representation of in-coming port, starting at 1
-            (may be a physical or switch-defined logical port) '''
+        ''' Ingress port. Numerical representation of in-coming port,
+            starting at 1 (may be a physical or switch-defined logical port)
+        '''
         self.in_port = None
-        ''' Physical port (in 'ofp_packet_in messages'), underlying physical port when
-            packet received on a logical port) '''
+        ''' Physical port (in 'ofp_packet_in messages'), underlying physical
+            port when packet received on a logical port)
+        '''
         self.in_phy_port = None
         ''' Ethernet match fields:
             - ethernet destination MAC address

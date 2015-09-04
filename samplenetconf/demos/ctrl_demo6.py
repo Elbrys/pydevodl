@@ -68,7 +68,7 @@ if __name__ == "__main__":
     print ("<<< Demo Start")
     print ("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
 
-    rundelay = 5
+    rundelay = 3
 
     print ("\n")
     print ("<<< Creating Controller instance")

@@ -93,13 +93,13 @@ if __name__ == "__main__":
     eth_src = "00:ab:fe:01:03:31"
     eth_dst = "ff:ff:ff:ff:ff:ff"
     arp_opcode = ARP_REQUEST
-    arp_src_ipv4_addr = "192.168.4.1"
-    arp_tgt_ipv4_addr = "10.21.22.23"
+    arp_src_ipv4_addr = "192.168.4.1/32"
+    arp_tgt_ipv4_addr = "10.21.22.23/32"
     arp_src_hw_addr = "12:34:56:78:98:ab"
     arp_tgt_hw_addr = "fe:dc:ba:98:76:54"
 
-    print ("<<< 'Controller': %s, 'OpenFlow' switch: '%s'"
-           % (ctrlIpAddr, nodeName))
+    print ("<<< 'Controller': %s, 'OpenFlow' switch: '%s'" %
+           (ctrlIpAddr, nodeName))
 
     print "\n"
     print ("<<< Set OpenFlow flow on the Controller")
@@ -110,13 +110,13 @@ if __name__ == "__main__":
            "                ARP Source IPv4 Address (%s)\n"
            "                ARP Target IPv4 Address (%s)\n"
            "                ARP Source Hardware Address (%s)\n"
-           "                ARP Target Hardware Address (%s)"
-           % (hex(eth_type), eth_src,
-              eth_dst, arp_opcode,
-              arp_src_ipv4_addr,
-              arp_tgt_ipv4_addr,
-              arp_src_hw_addr,
-              arp_tgt_hw_addr))
+           "                ARP Target Hardware Address (%s)" %
+           (hex(eth_type), eth_src,
+            eth_dst, arp_opcode,
+            arp_src_ipv4_addr,
+            arp_tgt_ipv4_addr,
+            arp_src_hw_addr,
+            arp_tgt_hw_addr))
     print ("        Action: Output (CONTROLLER)")
 
     time.sleep(rundelay)
@@ -166,7 +166,7 @@ if __name__ == "__main__":
         print ("<<< Flow successfully added to the Controller")
     else:
         print ("\n")
-        print ("!!!Demo terminated, reason: %s" % status.brief().lower())
+        print ("!!!Demo terminated, reason: %s" % status.detailed())
         exit(0)
 
     print ("\n")
@@ -181,13 +181,13 @@ if __name__ == "__main__":
         print json.dumps(flow, indent=4)
     else:
         print ("\n")
-        print ("!!!Demo terminated, reason: %s" % status.brief().lower())
+        print ("!!!Demo terminated, reason: %s" % status.detailed())
         exit(0)
 
     print ("\n")
     print ("<<< Delete flow with id of '%s' from the Controller's cache "
-           "and from the table '%s' on the '%s' node"
-           % (flow_id, table_id, nodeName))
+           "and from the table '%s' on the '%s' node" %
+           (flow_id, table_id, nodeName))
     time.sleep(rundelay)
     result = ofswitch.delete_flow(flow_entry.get_flow_table_id(),
                                   flow_entry.get_flow_id())

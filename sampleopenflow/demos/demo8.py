@@ -99,8 +99,8 @@ if __name__ == "__main__":
     ip_dscp = IP_DSCP_CS3  # 'Class Selector' = 'Flash'
     input_port = 13
 
-    print ("<<< 'Controller': %s, 'OpenFlow' switch: '%s'"
-           % (ctrlIpAddr, nodeName))
+    print ("<<< 'Controller': %s, 'OpenFlow' switch: '%s'" %
+           (ctrlIpAddr, nodeName))
 
     print "\n"
     print ("<<< Set OpenFlow flow on the Controller")
@@ -111,11 +111,11 @@ if __name__ == "__main__":
            "                IPv4 Destination Address (%s)\n"
            "                IP Protocol Number (%s)\n"
            "                IP DSCP (%s)\n"
-           "                Input Port (%s)"
-           % (hex(eth_type), eth_src,
-              eth_dst, ipv4_src, ipv4_dst,
-              ip_proto, ip_dscp,
-              input_port))
+           "                Input Port (%s)" %
+           (hex(eth_type), eth_src,
+            eth_dst, ipv4_src, ipv4_dst,
+            ip_proto, ip_dscp,
+            input_port))
     print ("        Action: Output (CONTROLLER)")
 
     time.sleep(rundelay)
@@ -185,8 +185,8 @@ if __name__ == "__main__":
 
     print ("\n")
     print ("<<< Delete flow with id of '%s' from the Controller's cache "
-           "and from the table '%s' on the '%s' node"
-           % (flow_id, table_id, nodeName))
+           "and from the table '%s' on the '%s' node" %
+           (flow_id, table_id, nodeName))
     time.sleep(rundelay)
     result = ofswitch.delete_flow(flow_entry.get_flow_table_id(),
                                   flow_entry.get_flow_id())

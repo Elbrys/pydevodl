@@ -63,8 +63,8 @@ def delete_flows(ofswitch, table_id, flow_ids):
             print ("<<< Flow with id of '%s' successfully removed "
                    "from the Controller" % flow_id)
         else:
-            print ("!!!Flow '%s' removal error, reason: %s"
-                   % (flow_id, status.brief()))
+            print ("!!!Flow '%s' removal error, reason: %s" %
+                   (flow_id, status.brief()))
 
 if __name__ == "__main__":
 
@@ -95,8 +95,8 @@ if __name__ == "__main__":
     ctrl = Controller(ctrlIpAddr, ctrlPortNum, ctrlUname, ctrlPswd)
     ofswitch = OFSwitch(ctrl, nodeName)
 
-    print ("<<< 'Controller': %s, 'OpenFlow' switch: '%s'"
-           % (ctrlIpAddr, nodeName))
+    print ("<<< 'Controller': %s, 'OpenFlow' switch: '%s'" %
+           (ctrlIpAddr, nodeName))
 
     first_flow_id = 110
     # ---------------------------------------------------
@@ -120,13 +120,13 @@ if __name__ == "__main__":
     print ("<<< Set OpenFlow flow on the Controller")
     print ("        Match:  Input Port (%s)\n"
            "                Ethernet Type (%s)\n"
-           "                IPv4 Destination Address (%s)"
-           % (match_in_port,
-              hex(match_ip_eth_type),
-              match_ipv4_dst))
+           "                IPv4 Destination Address (%s)" %
+           (match_in_port,
+            hex(match_ip_eth_type),
+            match_ipv4_dst))
     print ("        Action: Set IPv4 ToS (tos %s)\n"
-           "                Output (Port number %s)"
-           % (mod_nw_tos, act_out_port))
+           "                Output (Port number %s)" %
+           (mod_nw_tos, act_out_port))
 
     time.sleep(rundelay)
 
@@ -201,13 +201,13 @@ if __name__ == "__main__":
     print ("<<< Set OpenFlow flow on the Controller")
     print ("        Match:  Input Port (%s)\n"
            "                Ethernet Type (%s)\n"
-           "                IPv4 Destination Address (%s)"
-           % (match_in_port,
-              hex(match_ip_eth_type),
-              match_ipv4_dst))
+           "                IPv4 Destination Address (%s)" %
+           (match_in_port,
+            hex(match_ip_eth_type),
+            match_ipv4_dst))
     print ("        Action: Set Field (IP DSCP %s)\n"
-           "                Output (Port number %s)"
-           % (mod_ip_dscp, act_out_port))
+           "                Output (Port number %s)" %
+           (mod_ip_dscp, act_out_port))
 
     time.sleep(rundelay)
 

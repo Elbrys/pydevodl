@@ -61,7 +61,7 @@ if __name__ == "__main__":
     d = {}
     if(load_dict_from_file(f, d) is False):
         print("Config file '%s' read error: " % f)
-        exit()
+        exit(0)
 
     try:
         ctrlIpAddr = d['ctrlIpAddr']
@@ -99,8 +99,8 @@ if __name__ == "__main__":
     # --- Flow Actions: Output (CONTROLLER)
     output_port = "CONTROLLER"
 
-    print ("<<< 'Controller': %s, 'OpenFlow' switch: '%s'"
-           % (ctrlIpAddr, nodeName))
+    print ("<<< 'Controller': %s, 'OpenFlow' switch: '%s'" %
+           (ctrlIpAddr, nodeName))
 
     print "\n"
     print ("<<< Set OpenFlow flow on the Controller")
@@ -109,11 +109,11 @@ if __name__ == "__main__":
            "                IPv6 Destination Address (%s)\n"
            "                IP DSCP (%s)\n"
            "                UDP Source Port (%s)\n"
-           "                UDP Destination Port (%s)"
-           % (hex(eth_type), ipv6_src, ipv6_dst,
-              ip_dscp, udp_src_port, udp_dst_port))
-    print ("        Action: Output (to %s)"
-           % (output_port))
+           "                UDP Destination Port (%s)" %
+           (hex(eth_type), ipv6_src, ipv6_dst,
+            ip_dscp, udp_src_port, udp_dst_port))
+    print ("        Action: Output (to %s)" %
+           (output_port))
 
     time.sleep(rundelay)
 
@@ -181,8 +181,8 @@ if __name__ == "__main__":
 
     print ("\n")
     print ("<<< Delete flow with id of '%s' from the Controller's cache "
-           "and from the table '%s' on the '%s' node"
-           % (flow_id, table_id, nodeName))
+           "and from the table '%s' on the '%s' node" %
+           (flow_id, table_id, nodeName))
     time.sleep(rundelay)
     result = ofswitch.delete_flow(flow_entry.get_flow_table_id(),
                                   flow_entry.get_flow_id())

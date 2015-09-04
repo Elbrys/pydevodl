@@ -81,7 +81,7 @@ if __name__ == "__main__":
           "Site-to-Site Mode with Preshared Secret")
     print("\n")
 
-    rundelay = 5
+    rundelay = 3
 
     ctrl = Controller(ctrlIpAddr, ctrlPortNum, ctrlUname, ctrlPswd)
     vrouter = VRouter5600(ctrl, nodeName, nodeIpAddr, nodePortNum,
@@ -91,14 +91,29 @@ if __name__ == "__main__":
 
     print ("\n")
     time.sleep(rundelay)
-    result = ctrl.add_netconf_node(vrouter)
+    node_configured = False
+    result = ctrl.check_node_config_status(nodeName)
     status = result.get_status()
-    if(status.eq(STATUS.OK)):
-        print ("<<< '%s' added to the Controller" % nodeName)
+    if(status.eq(STATUS.NODE_CONFIGURED)):
+        node_configured = True
+        print ("<<< '%s' is configured on the Controller" % nodeName)
+    elif(status.eq(STATUS.DATA_NOT_FOUND)):
+        node_configured = False
     else:
         print ("\n")
-        print ("!!!Demo terminated, reason: %s" % status.brief().lower())
+        print "Failed to get configuration status for the '%s'" % nodeName
+        print ("!!!Demo terminated, reason: %s" % status.detailed())
         exit(0)
+
+    if node_configured is False:
+        result = ctrl.add_netconf_node(vrouter)
+        status = result.get_status()
+        if(status.eq(STATUS.OK)):
+            print ("<<< '%s' added to the Controller" % nodeName)
+        else:
+            print ("\n")
+            print ("!!!Demo terminated, reason: %s" % status.detailed())
+            exit(0)
 
     print ("\n")
     time.sleep(rundelay)
@@ -211,7 +226,7 @@ if __name__ == "__main__":
         exit(0)
 
     print "\n"
-    print ("<<< Show subnet '%s' static route configuration on the '%s'"
+    print ("<<< Show '%s' subnet static route configuration on the '%s'"
            % (ip_prefix, nodeName))
     time.sleep(rundelay)
     result = vrouter.get_protocols_static_interface_route_cfg(ip_prefix)

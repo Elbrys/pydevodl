@@ -93,18 +93,18 @@ if __name__ == "__main__":
     new_mpls_label = 44
     output_port = 14
 
-    print ("<<< 'Controller': %s, 'OpenFlow' switch: '%s'"
-           % (ctrlIpAddr, nodeName))
+    print ("<<< 'Controller': %s, 'OpenFlow' switch: '%s'" %
+           (ctrlIpAddr, nodeName))
 
     print "\n"
     print ("<<< Set OpenFlow flow on the Controller")
     print ("        Match:  Ethernet Type (%s)\n"
            "                Input Port (%s)\n"
-           "                MPLS Label (%s)"
-           % (hex(eth_type), in_port, mpls_label))
+           "                MPLS Label (%s)" %
+           (hex(eth_type), in_port, mpls_label))
     print ("        Action: Set Field (MPLS Label %s)\n"
-           "                Output (Physical Port number %s)"
-           % (new_mpls_label, output_port))
+           "                Output (Physical Port number %s)" %
+           (new_mpls_label, output_port))
 
     time.sleep(rundelay)
 
@@ -170,8 +170,8 @@ if __name__ == "__main__":
 
     print ("\n")
     print ("<<< Delete flow with id of '%s' from the Controller's cache "
-           "and from the table '%s' on the '%s' node"
-           % (flow_id, table_id, nodeName))
+           "and from the table '%s' on the '%s' node" %
+           (flow_id, table_id, nodeName))
     time.sleep(rundelay)
     result = ofswitch.delete_flow(flow_entry.get_flow_table_id(),
                                   flow_entry.get_flow_id())

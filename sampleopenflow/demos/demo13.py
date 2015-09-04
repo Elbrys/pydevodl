@@ -92,8 +92,8 @@ if __name__ == "__main__":
     vlan_id = 100
     vlan_pcp = PCP_CA  # 'Critical Applications' (priority 3)
 
-    print ("<<< 'Controller': %s, 'OpenFlow' switch: '%s'"
-           % (ctrlIpAddr, nodeName))
+    print ("<<< 'Controller': %s, 'OpenFlow' switch: '%s'" %
+           (ctrlIpAddr, nodeName))
 
     print "\n"
     print ("<<< Set OpenFlow flow on the Controller")
@@ -101,9 +101,9 @@ if __name__ == "__main__":
            "                Ethernet Source Address (%s)\n"
            "                Ethernet Destination Address (%s)\n"
            "                VLAN ID (%s)\n"
-           "                VLAN PCP(%s)"
-           % (hex(eth_type), eth_src,
-              eth_dst, vlan_id, vlan_pcp))
+           "                VLAN PCP(%s)" %
+           (hex(eth_type), eth_src,
+            eth_dst, vlan_id, vlan_pcp))
     print ("        Action: Output (to Physical Port Number)")
 
     time.sleep(rundelay)
@@ -167,8 +167,8 @@ if __name__ == "__main__":
 
     print ("\n")
     print ("<<< Delete flow with id of '%s' from the Controller's cache "
-           "and from the table '%s' on the '%s' node"
-           % (flow_id, table_id, nodeName))
+           "and from the table '%s' on the '%s' node" %
+           (flow_id, table_id, nodeName))
     time.sleep(rundelay)
     result = ofswitch.delete_flow(flow_entry.get_flow_table_id(),
                                   flow_entry.get_flow_id())

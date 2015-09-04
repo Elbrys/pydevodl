@@ -3,6 +3,8 @@
 #--------------------------------------
 
 # IP address
+#ipaddr: 172.16.1.12
+#ipaddr: 52.4.28.152
 ipaddr: 172.22.18.186
 #ipaddr: 54.85.62.30
 #ipaddr: 172.16.1.11
@@ -11,6 +13,8 @@ ipaddr: 172.22.18.186
 
 # TCP port number
 port: 8181
+#port: 8106
+#port: 8181
 #port: 8181
 #port: 8080
 #port: 8102

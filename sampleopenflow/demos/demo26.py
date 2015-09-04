@@ -87,8 +87,8 @@ if __name__ == "__main__":
     ctrl = Controller(ctrlIpAddr, ctrlPortNum, ctrlUname, ctrlPswd)
     ofswitch = OFSwitch(ctrl, nodeName)
 
-    print ("<<< 'Controller': %s, 'OpenFlow' switch: '%s'"
-           % (ctrlIpAddr, nodeName))
+    print ("<<< 'Controller': %s, 'OpenFlow' switch: '%s'" %
+           (ctrlIpAddr, nodeName))
 
     flow_table_id = 0
     flow_id_base = 12
@@ -334,8 +334,8 @@ if __name__ == "__main__":
         else:
             success = False
             print ("\n")
-            print ("!!!Demo terminated, failed to add flow:\n '%s'"
-                   % fe.to_ofp_oxm_syntax())
+            print ("!!!Demo terminated, failed to add flow:\n '%s'" %
+                   fe.to_ofp_oxm_syntax())
             print (" Failure reason: %s" % status.detailed())
 
     if success:
