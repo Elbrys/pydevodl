@@ -48,7 +48,6 @@ from collections import OrderedDict
 from framework.controller.openflownode import OpenflowNode
 from framework.common.result import Result
 from framework.common.status import OperStatus, STATUS
-# Following import style conforms to PEP 0328
 from framework.common.utils import (find_key_values_in_dict,
                                     replace_str_value_in_dict,
                                     find_key_value_in_dict,

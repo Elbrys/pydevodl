@@ -48,9 +48,10 @@ from requests.auth import HTTPBasicAuth
 from requests.exceptions import ConnectionError, Timeout
 from framework.common.result import Result
 from framework.common.status import OperStatus, STATUS
-from framework.common.utils import find_key_values_in_dict, dbg_print
+from framework.common.utils import (find_key_values_in_dict,
+                                    dbg_print,
+                                    find_key_value_in_dict)
 from framework.controller.topology import Topology
-# Following import style conforms to PEP 0328
 from framework.controller.inventory import (Inventory,
                                             OpenFlowCapableNode,
                                             NetconfCapableNode,
@@ -689,18 +690,20 @@ class Controller():
                 # If format of the response differs from our expectation then
                 # code in 'except' clause suppose to handle such condition
                 try:
-                    doc = xmltodict.parse(resp.content)
-                    p1 = 'get-schema'
-                    p2 = 'output'
-                    p3 = 'data'
-                    schema = doc[p1][p2][p3]
-                    status.set_status(STATUS.OK)
+                    doc = xmltodict.parse(resp.content, xml_attribs=False)
+                    p1 = 'data1'
+                    data = find_key_value_in_dict(doc, p1)
+                    if(data and isinstance(data, basestring)):
+                        schema = data
+                        status.set_status(STATUS.OK)
+                    else:
+                        raise ValueError()
                 except(Exception):
                     dbg_print("DEBUG: data not found in the received reply")
                     status.set_status(STATUS.DATA_NOT_FOUND)
             else:
-                status.set_status(STATUS.DATA_NOT_FOUND)
                 print "DEBUG: TBD (not implemented content type parser)"
+                status.set_status(STATUS.DATA_NOT_FOUND)
         else:
             status.set_status(STATUS.HTTP_ERROR, resp)
 

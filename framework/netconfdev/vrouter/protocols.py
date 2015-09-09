@@ -42,7 +42,6 @@ protocols.py: Protocols specific properties and access methods
 
 import json
 
-# Following import style conforms to PEP 0328
 from framework.common.utils import (strip_none,
                                     remove_empty_from_dict,
                                     dict_keys_underscored_to_dashed)

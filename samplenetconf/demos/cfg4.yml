@@ -9,6 +9,7 @@ ctrlPswd:  'admin'
 nodeName: "vRouter"
 #nodeIpAddr: "172.22.17.109"
 nodeIpAddr: "172.22.17.110"
+#nodeIpAddr: "10.6.6.140"
 nodePortNum: 830
 nodeUname: "vyatta"
 nodePswd: "vyatta"
