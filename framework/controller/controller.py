@@ -118,7 +118,7 @@ class Controller():
 
     def http_post_request(self, url, data, headers):
         """ Sends HTTP POST request to a remote server
-           and returns the response.
+            and returns the response.
 
         :param string url: The complete url including protocol:
                            http://www.example.com/path/to/resource
@@ -173,8 +173,8 @@ class Controller():
         return (resp)
 
     def http_delete_request(self, url, data, headers):
-        """ Sends HTTP DELETE request to a remote server and returns
-            the response.
+        """ Sends HTTP DELETE request to a remote server
+            and returns the response.
 
         :param string url: The complete url including protocol:
                            http://www.example.com/path/to/resource
@@ -183,7 +183,7 @@ class Controller():
         :param dict headers: The headers to include in the request.
         :return: The response from the http request.
         :rtype: None or `requests.response`
-             <http://docs.python-requests.org/en/latest/api/#requests.Response>
+            <http://docs.python-requests.org/en/latest/api/#requests.Response>
 
         """
         resp = None
@@ -691,7 +691,7 @@ class Controller():
                 # code in 'except' clause suppose to handle such condition
                 try:
                     doc = xmltodict.parse(resp.content, xml_attribs=False)
-                    p1 = 'data1'
+                    p1 = 'data'
                     data = find_key_value_in_dict(doc, p1)
                     if(data and isinstance(data, basestring)):
                         schema = data

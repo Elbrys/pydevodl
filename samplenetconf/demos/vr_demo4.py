@@ -148,8 +148,8 @@ if __name__ == "__main__":
     rule.add_action("accept")
     rule.add_source_address("172.22.17.108")
     firewall.add_rule(rule)
-    print ("<<< Create new firewall instance '%s' on '%s'"
-           % (fw_name, nodeName))
+    print ("<<< Create new firewall instance '%s' on '%s'" %
+           (fw_name, nodeName))
     print firewall.get_payload()
     time.sleep(rundelay)
     result = vrouter.add_modify_firewall_instance(firewall)
@@ -162,8 +162,8 @@ if __name__ == "__main__":
         exit(0)
 
     print("\n")
-    print ("<<< Show content of the firewall instance '%s' on '%s'"
-           % (fw_name, nodeName))
+    print ("<<< Show content of the firewall instance '%s' on '%s'" %
+           (fw_name, nodeName))
     time.sleep(rundelay)
     result = vrouter.get_firewall_instance_cfg(fw_name)
     status = result.get_status()
@@ -193,14 +193,13 @@ if __name__ == "__main__":
         exit(0)
 
     print "\n"
-    print ("<<< Remove firewall instance '%s' from '%s'"
-           % (fw_name, nodeName))
+    print ("<<< Remove firewall instance '%s' from '%s'" %
+           (fw_name, nodeName))
     time.sleep(rundelay)
     result = vrouter.delete_firewall_instance(firewall)
     status = result.get_status()
     if(status.eq(STATUS.OK)):
-        print ("Firewall instance '%s' was successfully deleted"
-               % fw_name)
+        print ("Firewall instance '%s' was successfully deleted" % fw_name)
     else:
         print ("\n")
         print ("!!!Demo terminated, reason: %s" % status.brief().lower())

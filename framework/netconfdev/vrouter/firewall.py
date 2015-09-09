@@ -78,8 +78,8 @@ class Firewall():
                           sort_keys=True, indent=4)
 
     def get_url_extension(self):
-        s = ("%s/%s/name/%s"
-             % (self._mn1, self._mn2, urllib2.quote(self.tagnode)))
+        s = ("%s/%s/name/%s" %
+             (self._mn1, self._mn2, urllib2.quote(self.tagnode)))
         return s
 
     def add_rule(self, rule):

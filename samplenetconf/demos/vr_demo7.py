@@ -175,7 +175,6 @@ if __name__ == "__main__":
     rule.add_action("drop")
     rule.add_icmp_typename("ping")
     firewall2.add_rule(rule)
-#    print firewall2.to_json()
     print firewall2.get_payload()
     time.sleep(rundelay)
     result = vrouter.add_modify_firewall_instance(firewall2)

@@ -66,7 +66,6 @@ if __name__ == "__main__":
         print ("Failed to get Controller device attributes")
         exit(0)
 
-    openflow_node_ids = []
     openflow_nodes = []
 
     print ("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")

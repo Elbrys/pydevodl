@@ -226,7 +226,7 @@ if __name__ == "__main__":
         exit(0)
 
     print "\n"
-    print ("<<< Show '%s' subnet static route configuration on the '%s'"
+    print ("<<< Show subnet '%s' static route configuration on the '%s'"
            % (ip_prefix, nodeName))
     time.sleep(rundelay)
     result = vrouter.get_protocols_static_interface_route_cfg(ip_prefix)

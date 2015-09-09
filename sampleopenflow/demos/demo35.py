@@ -94,9 +94,6 @@ if __name__ == "__main__":
         print ("Failed to get Controller device attributes")
         exit(0)
 
-    openflow_node_ids = []
-    openflow_nodes = []
-
     print ("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
     print ("<<< Demo Start")
     print ("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
@@ -203,7 +200,6 @@ if __name__ == "__main__":
     result = ofswitch.get_configured_group(group_id)
     status = result.get_status()
     if(status.eq(STATUS.OK)):
-        grp = result.get_data()
         print ("Group configuration info:")
         group = result.get_data()
         print json.dumps(group, indent=4)
@@ -218,7 +214,6 @@ if __name__ == "__main__":
     result = ofswitch.get_group_description(group_id)
     status = result.get_status()
     if(status.eq(STATUS.OK)):
-        grp = result.get_data()
         print ("Group operational info:")
         group = result.get_data()
         print json.dumps(group, indent=4)
@@ -232,7 +227,6 @@ if __name__ == "__main__":
     result = ofswitch.get_group_statistics(group_id)
     status = result.get_status()
     if(status.eq(STATUS.OK)):
-        grp = result.get_data()
         print ("Group statistics info:")
         group = result.get_data()
         print json.dumps(group, indent=4)

@@ -181,7 +181,7 @@ if __name__ == "__main__":
                 for i in l:
                     print " [%s] removed flow entry: %s" % (timestamp,
                                                             i.to_string())
-    except(KeyboardInterrupt) as e:
+    except(KeyboardInterrupt):
         print "Interrupted from keyboard, exit\n"
 
     websock.close()

@@ -79,7 +79,7 @@ if __name__ == "__main__":
     time.sleep(rundelay)
 
     print ("\n")
-    print ("<<< Get Network Topology information")
+    print ("<<< Get OpenFlow Network Topology information")
     time.sleep(rundelay)
 
     topology_ids = []
@@ -130,9 +130,9 @@ if __name__ == "__main__":
             exit(0)
 
     for topo in topologies:
-        time.sleep(rundelay)
         if topo.get_id() != of_topo_id:
             continue
+        time.sleep(rundelay)
         print "\n"
         print ("<<< Information for '%s' network topology:") % topo.get_id()
         print "\n".strip()
